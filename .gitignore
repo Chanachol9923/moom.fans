@@ -48,3 +48,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Google OAuth client downloads contain the client secret
+client_secret*.json
