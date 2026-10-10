@@ -1,0 +1,30 @@
+# Pings the Supabase database once a day so a free-tier project is not paused for inactivity.
+# Works before the app is deployed. Needs two repository secrets (Settings > Secrets and variables > Actions):
+#   SUPABASE_URL                  e.g. https://xxxx.supabase.co
+#   SUPABASE_PUBLISHABLE_KEY      the publishable (anon) key
+# Not needed once the project is on a paid Supabase plan.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # 03:17 UTC every day
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Query the database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          test -n "$SUPABASE_URL" && test -n "$SUPABASE_PUBLISHABLE_KEY" || { echo "Missing SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY secrets"; exit 1; }
+          curl --fail --silent --show-error --max-time 30 \
+            "$SUPABASE_URL/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" > /dev/null
+          echo "ok"

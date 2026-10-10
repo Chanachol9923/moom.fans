@@ -69,7 +69,26 @@
    - ToS / Privacy Policy (PDPA) และนโยบายห้ามเนื้อหา 18+
 8. **ทีหลัง**: การเก็บเงินของแพลตฟอร์ม, ระบบสมาชิกรายเดือน, แอป Tauri (global hotkey, เสียงแยก device), YouTube chat สำหรับสัตว์เลี้ยง
 
-## เริ่มในเครื่อง
+## ใช้ Supabase บน cloud (แทน Docker)
+
+1. ใส่ `NEXT_PUBLIC_SUPABASE_URL` และ `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` ใน `.env.local` (ไฟล์นี้ถูก git ignore ไว้)
+2. ใส่ `SUPABASE_SECRET_KEY` (Settings > API Keys > secret) ใน `.env.local` เช่นกัน **ห้าม commit**
+3. สร้างตาราง: เปิด Supabase > SQL Editor แล้ววางเนื้อหาทั้งไฟล์ `supabase/migrations/*.sql` เรียงตามชื่อ
+   หรือใช้ CLI: `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push`
+4. Authentication > URL Configuration: ใส่ Site URL `http://localhost:3000` และ Redirect URL `http://localhost:3000/**`
+   (ค่าใน `supabase/config.toml` ใช้กับ Docker เท่านั้น ไม่มีผลกับ cloud)
+5. อีเมล magic link ของ Supabase ที่ให้มาในตัวส่งได้จำกัดมากต่อชั่วโมง ถ้าจะใช้จริงต้องตั้ง SMTP ของตัวเอง
+
+### ปิงฐานข้อมูลทุกวัน (กันโปรเจกต์ฟรีถูกพัก)
+
+โปรเจกต์ฟรีของ Supabase ถูกพักถ้าไม่มี database activity ครบ 7 วัน ([เอกสาร](https://supabase.com/docs/guides/platform/free-project-pausing)) มีตัวปิงให้ 2 ทาง ทำงานพร้อมกันได้:
+- **GitHub Actions** (`.github/workflows/keepalive.yml`) ทำงานได้ตั้งแต่ตอนนี้ แม้ยังไม่ deploy:
+  ไปที่ repo > Settings > Secrets and variables > Actions เพิ่ม `SUPABASE_URL` กับ `SUPABASE_PUBLISHABLE_KEY` แล้วกด Run workflow ที่แท็บ Actions เพื่อลอง
+- **Vercel Cron** (`vercel.json` → `/api/cron/keepalive`) ทำงานหลัง deploy
+
+ต้องสร้างตารางก่อน (ข้อ 3) เพราะตัวปิงอ่านตาราง `profiles` เมื่ออัปเป็น Pro แล้วลบตัวปิงทิ้งได้
+
+## เริ่มในเครื่อง (Docker)
 
 ```bash
 npm install
