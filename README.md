@@ -79,6 +79,20 @@
    (ค่าใน `supabase/config.toml` ใช้กับ Docker เท่านั้น ไม่มีผลกับ cloud)
 5. อีเมล magic link ของ Supabase ที่ให้มาในตัวส่งได้จำกัดมากต่อชั่วโมง ถ้าจะใช้จริงต้องตั้ง SMTP ของตัวเอง
 
+### เปิดล็อกอินด้วย Google
+
+โค้ดพร้อมแล้ว ปุ่ม Google จะโผล่หน้า `/login` เองเมื่อเปิดผู้ให้บริการใน Supabase (ไม่ต้อง redeploy ไม่ต้องตั้ง env) สถานะตอนนี้: ยังปิดอยู่ ขั้นตอนที่ต้องทำเอง:
+
+1. [Google Cloud Console](https://console.cloud.google.com/) > APIs & Services > **OAuth consent screen** ตั้งชื่อแอปและอีเมล แล้วกด **Publish app** (ถ้าไม่กด จะมีแต่บัญชีทดสอบที่ล็อกอินได้) ใช้แค่ scope พื้นฐาน (email, profile, openid) ไม่ต้องส่งตรวจสอบ
+2. Credentials > Create credentials > **OAuth client ID** > ชนิด *Web application*
+   - Authorized JavaScript origins: `https://moom-fans.vercel.app` และ `http://localhost:3000`
+   - Authorized redirect URIs: `https://baieububvwdyeehayhyx.supabase.co/auth/v1/callback`
+3. Supabase > Authentication > Sign In / Providers > **Google** เปิดใช้ แล้ววาง Client ID กับ Client Secret
+4. Supabase > Authentication > URL Configuration
+   - Site URL: `https://moom-fans.vercel.app`
+   - Redirect URLs: `https://moom-fans.vercel.app/**` และ `http://localhost:3000/**`
+5. ลองที่ `/login` ถ้าบัญชี Google มีอีเมลตรงกับที่เคยล็อกอินด้วย magic link Supabase จะผูกเป็นบัญชีเดียวกันให้
+
 ### Deploy บน Vercel
 
 - โปรเจกต์ Vercel ชื่อ `moom-fans` ผูกกับ GitHub repo นี้แล้ว push ขึ้น `main` จะ deploy เอง

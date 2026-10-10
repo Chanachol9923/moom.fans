@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { publicEnv } from "@/lib/env";
+import { enabledProviders } from "@/lib/auth-providers";
 import { siteUrl } from "@/lib/hosts";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,8 +24,8 @@ export async function sendMagicLink(_prev: LoginState, form: FormData): Promise<
 
 export async function signInWithProvider(form: FormData) {
   const provider = form.get("provider");
-  const allowed =
-    (provider === "discord" && publicEnv.authDiscord) || (provider === "google" && publicEnv.authGoogle);
+  const on = await enabledProviders();
+  const allowed = (provider === "discord" && on.discord) || (provider === "google" && on.google);
   if (!allowed) redirect("/login?error=provider");
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({

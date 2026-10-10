@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Panel } from "@/components/ui";
-import { isSupabaseConfigured, publicEnv } from "@/lib/env";
+import { enabledProviders } from "@/lib/auth-providers";
+import { isSupabaseConfigured } from "@/lib/env";
 import { rootDomain } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";
 import { getUser } from "@/lib/supabase/server";
@@ -15,6 +16,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { error } = await searchParams;
   const configured = isSupabaseConfigured();
   if (configured && (await getUser()).user) redirect("/dashboard");
+  const providers = configured ? await enabledProviders() : { discord: false, google: false };
 
   return (
     <>
@@ -25,8 +27,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           {error && <p className="mb-4 text-tomato">{d.auth.failed}</p>}
           {configured ? (
             <LoginForm
-              discord={publicEnv.authDiscord}
-              google={publicEnv.authGoogle}
+              discord={providers.discord}
+              google={providers.google}
               devHint={rootDomain().startsWith("localhost")}
             />
           ) : (
