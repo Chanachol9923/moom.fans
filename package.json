@@ -12,7 +12,8 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.gen.ts"
+    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.gen.ts",
+    "test:integration": "vitest run -c vitest.integration.config.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

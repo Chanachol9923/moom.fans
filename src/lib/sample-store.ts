@@ -8,6 +8,7 @@ export function sampleStore(locale: Locale, pageOverrides: Record<string, unknow
   const th = locale === "th";
   return {
     slug: "noknoi",
+    basePath: "",
     displayName: th ? "น้องนกน้อย ch." : "Noknoi ch.",
     bio: th
       ? "VTuber นกพิราบ ไลฟ์เกมตอนดึก ร้องเพลงบ้างนานๆ ที\nขอบคุณทุกคนที่แวะมานะ"

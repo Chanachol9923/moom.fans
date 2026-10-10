@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { storeBasePath } from "@/lib/hosts";
 import { activeGoal, activePoll, wallData, type GoalView, type PollView, type SupporterView, type TopView } from "@/lib/domain/wall";
 import type { Locale } from "@/lib/i18n";
 import { parsePageConfig, type PageConfig } from "@/lib/page-config";
@@ -20,6 +21,8 @@ export type StoreLink = { label: string; url: string };
 
 export type Store = {
   slug: string;
+  /** "" on a subdomain, "/s/<slug>" when subdomains are off. Prefix for in-page links. */
+  basePath: string;
   displayName: string;
   bio: string;
   accent: string;
@@ -73,6 +76,7 @@ export const loadStore = cache(async (slug: string, locale: Locale): Promise<Sto
     : [];
   return {
     slug: p.slug,
+    basePath: storeBasePath(p.slug),
     displayName: p.display_name,
     bio: p.bio,
     accent: p.accent_color,

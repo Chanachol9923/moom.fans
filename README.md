@@ -79,6 +79,15 @@
    (ค่าใน `supabase/config.toml` ใช้กับ Docker เท่านั้น ไม่มีผลกับ cloud)
 5. อีเมล magic link ของ Supabase ที่ให้มาในตัวส่งได้จำกัดมากต่อชั่วโมง ถ้าจะใช้จริงต้องตั้ง SMTP ของตัวเอง
 
+### Deploy บน Vercel
+
+- โปรเจกต์ Vercel ชื่อ `moom-fans` ผูกกับ GitHub repo นี้แล้ว push ขึ้น `main` จะ deploy เอง
+- ตัวแปรที่ตั้งไว้ใน Vercel (Production): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SUBDOMAINS=false`, `CRON_SECRET`
+- **ยังไม่มีโดเมน** จึงปิดซับโดเมนไว้ (`NEXT_PUBLIC_SUBDOMAINS=false`) หน้าสตรีมเมอร์อยู่ที่ `<โดเมน>/s/<ชื่อ>` โดเมนหลักดึงจาก `VERCEL_PROJECT_PRODUCTION_URL` อัตโนมัติ
+- **พอซื้อโดเมนแล้ว:** เพิ่มทั้ง `moom.fans` และ `*.moom.fans` ใน Vercel (wildcard ต้องใช้ nameserver ของ Vercel) แล้วตั้ง `NEXT_PUBLIC_ROOT_DOMAIN=moom.fans` และลบ `NEXT_PUBLIC_SUBDOMAINS` ออก จากนั้น redeploy
+- ที่ Supabase > Authentication > URL Configuration ต้องใส่ URL ของเว็บที่ deploy แล้วด้วย (Site URL และ Redirect URL `https://<โดเมน>/**`)
+- ทดสอบกับฐานข้อมูลจริง: `npm run test:integration` (สร้างผู้ใช้ชั่วคราวแล้วลบทิ้งเอง)
+
 ### ปิงฐานข้อมูลทุกวัน (กันโปรเจกต์ฟรีถูกพัก)
 
 โปรเจกต์ฟรีของ Supabase ถูกพักถ้าไม่มี database activity ครบ 7 วัน ([เอกสาร](https://supabase.com/docs/guides/platform/free-project-pausing)) มีตัวปิงให้ 2 ทาง ทำงานพร้อมกันได้:

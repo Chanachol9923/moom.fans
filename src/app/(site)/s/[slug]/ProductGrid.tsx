@@ -122,7 +122,7 @@ function BuySheet({ store, product, onClose }: { store: Store; product: StorePro
       const key = json.error as keyof typeof d.store.errors;
       return setError(d.store.errors[key] ?? d.common.error);
     }
-    router.push(`/pay/${json.token}`);
+    router.push(`${store.basePath}/pay/${json.token}`);
   }
 
   return (

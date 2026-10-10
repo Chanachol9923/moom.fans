@@ -15,8 +15,29 @@ export function isValidSlug(slug: string): boolean {
   return SLUG_RE.test(slug) && !slug.includes("--") && !RESERVED_SLUGS.has(slug);
 }
 
+/**
+ * Main domain. NEXT_PUBLIC_ROOT_DOMAIN wins; on Vercel it falls back to the project's
+ * production URL so a first deploy works before any custom domain exists.
+ */
 export function rootDomain(): string {
-  return (process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000").toLowerCase();
+  return (
+    process.env.NEXT_PUBLIC_ROOT_DOMAIN ??
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+    "localhost:3000"
+  ).toLowerCase();
+}
+
+/**
+ * Streamer pages on <slug>.<root> need a wildcard domain. Without one (e.g. the default
+ * *.vercel.app domain) set NEXT_PUBLIC_SUBDOMAINS=false and pages live at <root>/s/<slug>.
+ */
+export function subdomainsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_SUBDOMAINS !== "false";
+}
+
+/** Prefix for links inside a streamer's pages: "" on a subdomain, "/s/<slug>" in path mode. */
+export function storeBasePath(slug: string): string {
+  return subdomainsEnabled() ? "" : `/s/${slug}`;
 }
 
 function isLocal(domain: string): boolean {
@@ -35,6 +56,7 @@ export function siteUrl(path = "/"): string {
 
 export function creatorUrl(slug: string, path = "/"): string {
   const d = rootDomain();
+  if (!subdomainsEnabled()) return `${protocolFor(d)}://${d}/s/${slug}${path === "/" ? "" : path}`;
   return `${protocolFor(d)}://${slug}.${d}${path}`;
 }
 

@@ -11,6 +11,7 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.test.ts", "src/**/*.test.ts"],
+    exclude: ["tests/integration/**", "node_modules/**"],
     testTimeout: 30_000,
   },
 });

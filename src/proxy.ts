@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { classifyHost, creatorUrl, siteUrl } from "@/lib/hosts";
+import { classifyHost, creatorUrl, siteUrl, subdomainsEnabled } from "@/lib/hosts";
 
 // Routing by host:
 //   <slug>.<root>/...      -> rewritten to /s/<slug>/...   (creator storefront)
@@ -12,7 +12,8 @@ const NEEDS_SESSION = /^\/(dashboard|onboarding|login|auth)(\/|$)/;
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
-  const host = classifyHost(request.headers.get("host"));
+  const subdomains = subdomainsEnabled();
+  const host = subdomains ? classifyHost(request.headers.get("host")) : ({ kind: "root" } as const);
 
   if (host.kind === "unknown") return new NextResponse("Not found", { status: 404 });
 
@@ -25,7 +26,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL(`/s/${host.slug}${rest}${url.search}`, request.url));
   }
 
-  if (url.pathname.startsWith("/s/")) {
+  if (subdomains && url.pathname.startsWith("/s/")) {
     const [, , slug, ...rest] = url.pathname.split("/");
     if (slug) return NextResponse.redirect(creatorUrl(slug, `/${rest.join("/")}${url.search}`));
   }

@@ -59,7 +59,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
       const key = json.error as keyof typeof d.store.errors;
       return setError(d.store.errors[key] ?? d.common.error);
     }
-    router.push(`/pay/${json.token}`);
+    router.push(`${store.basePath}/pay/${json.token}`);
   }
 
   const pick = (selected: boolean) => `px-btn px-btn-sm ${selected ? "px-btn-primary" : ""}`;

@@ -4,6 +4,7 @@ import { payView } from "@/lib/domain/pay-view";
 import { getTransactionByToken } from "@/lib/domain/transactions";
 import { isSupabaseConfigured } from "@/lib/env";
 import { admin } from "@/lib/supabase/admin";
+import { storeBasePath } from "@/lib/hosts";
 import { backgroundStyle, parsePageConfig, themeVars } from "@/lib/page-config";
 import { PayClient } from "./PayClient";
 
@@ -24,7 +25,7 @@ export default async function PayPage({ params }: PageProps<"/s/[slug]/pay/[toke
   const page = parsePageConfig(profile.page);
   return (
     <div style={{ ...themeVars(page, profile.accent_color), ...backgroundStyle(page, null) }} className="min-h-dvh">
-      <PayClient token={token} initial={payView(tx)} streamerName={profile.display_name} thanks={page.thanksMessage} />
+      <PayClient token={token} initial={payView(tx)} streamerName={profile.display_name} thanks={page.thanksMessage} basePath={storeBasePath(slug)} />
     </div>
   );
 }

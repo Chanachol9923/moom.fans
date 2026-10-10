@@ -13,12 +13,15 @@ export function PayClient({
   initial,
   streamerName,
   thanks,
+  basePath = "",
 }: {
   token: string;
   initial: PayView;
   streamerName: string;
   /** Streamer's own thank-you text from Page design. */
   thanks?: string;
+  /** "" on a subdomain, "/s/<slug>" when subdomains are off. */
+  basePath?: string;
 }) {
   const { d, locale } = useT();
   const [view, setView] = useState(initial);
@@ -68,7 +71,7 @@ export function PayClient({
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-8">
-      <Link href="/" className="font-display text-sm text-ink-soft hover:text-ink">
+      <Link href={basePath || "/"} className="font-display text-sm text-ink-soft hover:text-ink">
         ← {fmt(d.pay.backToPage, { name: streamerName })}
       </Link>
 
