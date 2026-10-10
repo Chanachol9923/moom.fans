@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+/*
+  Moom visual language: warm paper, dark ink, chunky pixel edges.
+  Borders are drawn with stacked box-shadows so corners come out notched,
+  like old console UI, instead of CSS rounded corners.
+*/
+
+:root {
+  --paper: #f2ead7;
+  --paper-2: #e6dbc2;
+  --paper-3: #d6c8a8;
+  --ink: #241e19;
+  --ink-soft: #5d5247;
+  --ink-faint: #8c806f;
+  --pigeon: #7d8ba1;
+  --pigeon-dark: #4f5b70;
+  --teal: #2f7a6a;
+  --teal-dark: #1f5549;
+  --plum: #7b4a74;
+  --beak: #e0a13a;
+  --tomato: #cc4e37;
+  --leaf: #5b8f45;
+  --sky: #9fc4d6;
+  --accent: var(--teal);
+  --field: #fffaf0;
+  --px: 3px;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-paper-3: var(--paper-3);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-pigeon: var(--pigeon);
+  --color-pigeon-dark: var(--pigeon-dark);
+  --color-teal: var(--teal);
+  --color-teal-dark: var(--teal-dark);
+  --color-plum: var(--plum);
+  --color-beak: var(--beak);
+  --color-tomato: var(--tomato);
+  --color-leaf: var(--leaf);
+  --color-sky: var(--sky);
+  --color-accent: var(--accent);
+  --font-display: var(--font-pixel), var(--font-thai-display), ui-monospace, monospace;
+  --font-sans: var(--font-thai-body), system-ui, sans-serif;
+  --font-mono: var(--font-pixel), ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--paper);
+    /* faint dot grid, like graph paper */
+    background-image: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+  ::selection {
+    background: var(--beak);
+    color: var(--ink);
+  }
+  :focus-visible {
+    outline: var(--px) dashed var(--ink);
+    outline-offset: 3px;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer components {
+  /* Notched pixel frame. */
+  .px-frame {
+    position: relative;
+    background: var(--paper);
+    box-shadow:
+      0 calc(var(--px) * -1) 0 0 var(--ink),
+      0 var(--px) 0 0 var(--ink),
+      calc(var(--px) * -1) 0 0 0 var(--ink),
+      var(--px) 0 0 0 var(--ink);
+    margin: var(--px);
+  }
+  .px-frame-raised {
+    box-shadow:
+      0 calc(var(--px) * -1) 0 0 var(--ink),
+      0 var(--px) 0 0 var(--ink),
+      calc(var(--px) * -1) 0 0 0 var(--ink),
+      var(--px) 0 0 0 var(--ink),
+      calc(var(--px) * 2) calc(var(--px) * 2) 0 0 color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+
+  .px-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    line-height: 1.1;
+    color: var(--ink);
+    background: var(--paper);
+    cursor: pointer;
+    user-select: none;
+    margin: var(--px);
+    box-shadow:
+      0 calc(var(--px) * -1) 0 0 var(--ink),
+      0 var(--px) 0 0 var(--ink),
+      calc(var(--px) * -1) 0 0 0 var(--ink),
+      var(--px) 0 0 0 var(--ink),
+      inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 color-mix(in srgb, var(--ink) 18%, transparent);
+    transition: transform 60ms steps(1);
+  }
+  .px-btn:hover:not(:disabled) {
+    filter: brightness(1.04);
+  }
+  .px-btn:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow:
+      0 calc(var(--px) * -1) 0 0 var(--ink),
+      0 var(--px) 0 0 var(--ink),
+      calc(var(--px) * -1) 0 0 0 var(--ink),
+      var(--px) 0 0 0 var(--ink),
+      inset var(--px) var(--px) 0 0 color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+  .px-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .px-btn-primary {
+    background: var(--accent);
+    color: #fffaf0;
+  }
+  .px-btn-beak {
+    background: var(--beak);
+  }
+  .px-btn-danger {
+    background: var(--tomato);
+    color: #fffaf0;
+  }
+  .px-btn-ghost {
+    background: transparent;
+  }
+  .px-btn-sm {
+    padding: 0.3rem 0.6rem 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .px-input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    background: var(--field);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    margin: var(--px) 0;
+    box-shadow:
+      0 calc(var(--px) * -1) 0 0 var(--ink),
+      0 var(--px) 0 0 var(--ink),
+      calc(var(--px) * -1) 0 0 0 var(--ink),
+      var(--px) 0 0 0 var(--ink),
+      inset var(--px) var(--px) 0 0 color-mix(in srgb, var(--ink) 10%, transparent);
+    border: none;
+    outline: none;
+  }
+  .px-input:focus {
+    background: color-mix(in srgb, var(--field) 85%, var(--accent));
+    box-shadow:
+      0 calc(var(--px) * -1) 0 0 var(--ink),
+      0 var(--px) 0 0 var(--ink),
+      calc(var(--px) * -1) 0 0 0 var(--ink),
+      var(--px) 0 0 0 var(--ink),
+      inset var(--px) var(--px) 0 0 color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .px-input::placeholder {
+    color: var(--ink-faint);
+  }
+
+  .px-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.15rem;
+  }
+
+  .px-tag {
+    display: inline-block;
+    padding: 0.1rem 0.45rem 0.05rem;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    background: var(--paper-2);
+    box-shadow:
+      0 -2px 0 0 var(--ink),
+      0 2px 0 0 var(--ink),
+      -2px 0 0 0 var(--ink),
+      2px 0 0 0 var(--ink);
+    margin: 2px;
+  }
+
+  .px-divider {
+    height: var(--px);
+    background-image: linear-gradient(90deg, var(--ink) 50%, transparent 50%);
+    background-size: calc(var(--px) * 4) var(--px);
+  }
+
+  /* Money must be unambiguous; the pixel face's 5 reads like an S. */
+  .font-num {
+    font-family: var(--font-thai-display), var(--font-thai-body), sans-serif;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+}
+
+@keyframes px-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.px-blink {
+  animation: px-blink 1s steps(1) infinite;
+}
+
+@keyframes px-pop {
+  0% { transform: translateY(24px) scale(0.9); opacity: 0; }
+  60% { transform: translateY(-4px) scale(1.02); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+
+@keyframes px-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes px-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.px-bob {
+  animation: px-bob 1.2s steps(2) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .px-blink, .px-bob {
+    animation: none;
+  }
+}
