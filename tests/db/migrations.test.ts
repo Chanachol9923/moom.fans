@@ -271,6 +271,37 @@ describe("aggregate functions", () => {
   });
 });
 
+describe("app_links", () => {
+  const hash = "a".repeat(64);
+  const challenge = "B".repeat(43);
+
+  it("stores hashed codes with a 5 minute expiry", async () => {
+    await db.exec(`insert into public.app_links (code_hash, user_id, challenge) values ('${hash}', '${ALICE}', '${challenge}')`);
+    const r = await db.query<{ mins: number }>(
+      `select round(extract(epoch from (expires_at - created_at)) / 60)::int as mins from public.app_links where code_hash = '${hash}'`,
+    );
+    expect(r.rows[0].mins).toBe(5);
+  });
+
+  it("rejects malformed hashes and challenges", async () => {
+    await expect(
+      db.exec(`insert into public.app_links (code_hash, user_id, challenge) values ('plain-code', '${ALICE}', '${challenge}')`),
+    ).rejects.toThrow();
+    await expect(
+      db.exec(`insert into public.app_links (code_hash, user_id, challenge) values ('${"b".repeat(64)}', '${ALICE}', 'short')`),
+    ).rejects.toThrow();
+  });
+
+  it("is invisible and unwritable to client roles", async () => {
+    await expect(as("authenticated", ALICE, () => db.query("select * from public.app_links"))).rejects.toThrow(/permission denied/);
+    await expect(
+      as("anon", null, () =>
+        db.exec(`insert into public.app_links (code_hash, user_id, challenge) values ('${"c".repeat(64)}', '${ALICE}', '${challenge}')`),
+      ),
+    ).rejects.toThrow(/permission denied/);
+  });
+});
+
 describe("row level security", () => {
   it("anon sees profiles and only published products", async () => {
     const r = await as("anon", null, () =>

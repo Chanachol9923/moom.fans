@@ -7,8 +7,8 @@ import { classifyHost, creatorUrl, siteUrl, subdomainsEnabled } from "@/lib/host
 //   <root>/s/<slug>/...    -> redirected to the subdomain   (one canonical URL)
 //   <root>/dashboard etc.  -> normal routes, with the Supabase session refreshed
 
-const ROOT_ONLY = /^\/(dashboard|login|onboarding|auth|overlay)(\/|$)/;
-const NEEDS_SESSION = /^\/(dashboard|onboarding|login|auth)(\/|$)/;
+const ROOT_ONLY = /^\/(dashboard|login|onboarding|auth|overlay|widget|dock|app)(\/|$)/;
+const NEEDS_SESSION = /^\/(dashboard|onboarding|login|auth|dock|app)(\/|$)/;
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl;

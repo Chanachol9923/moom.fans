@@ -81,3 +81,15 @@ export function classifyHost(hostHeader: string | null, root = rootDomain()): Ho
   }
   return { kind: "root" };
 }
+
+/** Where we may send someone after sign-in. Only our own pages, never another origin. */
+const NEXT_ALLOWED = /^\/(dashboard|app\/connect)(\/|\?|$)/;
+export function safeNext(next: string | null | undefined): string | null {
+  if (!next || next.length > 1000) return null;
+  if (!next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return null;
+  return NEXT_ALLOWED.test(next) ? next : null;
+}
+
+export function callbackUrl(next: string | null): string {
+  return siteUrl(next ? `/auth/callback?next=${encodeURIComponent(next)}` : "/auth/callback");
+}

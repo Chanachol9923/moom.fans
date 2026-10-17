@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { classifyHost, creatorUrl, isValidSlug, protocolFor, storeBasePath, subdomainsEnabled } from "./hosts";
+import { classifyHost, creatorUrl, isValidSlug, protocolFor, safeNext, storeBasePath, subdomainsEnabled } from "./hosts";
 
 describe("classifyHost", () => {
   it("handles production hosts", () => {
@@ -72,4 +72,18 @@ describe("path mode (no wildcard domain)", () => {
     process.env.NEXT_PUBLIC_SUBDOMAINS = "false";
     expect(creatorUrl("nok")).toBe("https://moom-fans.vercel.app/s/nok");
   });
+});
+
+describe("safeNext", () => {
+  it.each([
+    ["/dashboard", "/dashboard"],
+    ["/dashboard/review", "/dashboard/review"],
+    ["/app/connect?state=abc&challenge=x", "/app/connect?state=abc&challenge=x"],
+    ["//evil.test/app/connect", null],
+    ["https://evil.test/dashboard", null],
+    ["/\evil.test", null],
+    ["/s/nok", null],
+    ["", null],
+    [null, null],
+  ])("%s -> %s", (input, out) => expect(safeNext(input)).toBe(out));
 });

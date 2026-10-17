@@ -5,7 +5,18 @@ import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { sendMagicLink, signInWithProvider, type LoginState } from "./actions";
 
-export function LoginForm({ discord, google, devHint }: { discord: boolean; google: boolean; devHint: boolean }) {
+export function LoginForm({
+  discord,
+  google,
+  devHint,
+  next,
+}: {
+  discord: boolean;
+  google: boolean;
+  devHint: boolean;
+  /** Safe path to return to after sign-in (e.g. the desktop app connect page). */
+  next: string | null;
+}) {
   const { d } = useT();
   const [state, action, pending] = useActionState<LoginState, FormData>(sendMagicLink, { status: "idle" });
 
@@ -21,6 +32,7 @@ export function LoginForm({ discord, google, devHint }: { discord: boolean; goog
   return (
     <>
       <form action={action}>
+        {next && <input type="hidden" name="next" value={next} />}
         <Field label={d.auth.email} htmlFor="email" error={state.status === "error" ? d.auth.failed : undefined}>
           <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
         </Field>
@@ -35,6 +47,7 @@ export function LoginForm({ discord, google, devHint }: { discord: boolean; goog
             <span className="px-divider flex-1" /> {d.auth.or} <span className="px-divider flex-1" />
           </div>
           <form action={signInWithProvider} className="grid gap-2">
+            {next && <input type="hidden" name="next" value={next} />}
             {discord && (
               <Button type="submit" name="provider" value="discord" className="w-full">
                 {d.auth.discord}

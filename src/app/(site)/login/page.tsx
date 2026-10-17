@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Panel } from "@/components/ui";
 import { enabledProviders } from "@/lib/auth-providers";
 import { isSupabaseConfigured } from "@/lib/env";
-import { rootDomain } from "@/lib/hosts";
+import { rootDomain, safeNext } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";
 import { getUser } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
@@ -13,9 +13,11 @@ export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { d } = await getT();
-  const { error } = await searchParams;
+  const sp = await searchParams;
+  const error = sp.error;
+  const next = safeNext(typeof sp.next === "string" ? sp.next : null);
   const configured = isSupabaseConfigured();
-  if (configured && (await getUser()).user) redirect("/dashboard");
+  if (configured && (await getUser()).user) redirect(next ?? "/dashboard");
   const providers = configured ? await enabledProviders() : { discord: false, google: false };
 
   return (
@@ -30,6 +32,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               discord={providers.discord}
               google={providers.google}
               devHint={rootDomain().startsWith("localhost")}
+              next={next}
             />
           ) : (
             <p className="bg-beak/40 p-3 text-sm">

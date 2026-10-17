@@ -142,6 +142,27 @@ describe("real Supabase project", () => {
     expect((await widgets.loadWidgetData(overlayToken))?.goal?.raised).toBe(60);
   });
 
+  it("hands a session to the desktop app with a one-time PKCE-bound code", async () => {
+    const link = await import("@/lib/domain/app-link");
+    const verifier = "v".repeat(20) + tag + "v".repeat(30);
+    const code = await link.createAppLink(userId, link.challengeFor(verifier), "IT PC");
+
+    expect(await link.exchangeAppLink(code, "w".repeat(56))).toEqual({ ok: false, error: "mismatch" });
+    const r = await link.exchangeAppLink(code, verifier);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // the app turns the token into its own session
+    const app = anonClient();
+    const v = await app.auth.verifyOtp({ type: "magiclink", token_hash: r.tokenHash });
+    expect(v.error).toBeNull();
+    expect(v.data.user?.id).toBe(userId);
+    // and with it can read its own overlay token, which is all the alert engine needs
+    const priv = await app.from("streamer_private").select("overlay_token").single();
+    expect(priv.data?.overlay_token).toBe(overlayToken);
+    // codes work once
+    expect(await link.exchangeAppLink(code, verifier)).toEqual({ ok: false, error: "expired" });
+  });
+
   it("extends the subathon clock atomically", async () => {
     await admin
       .from("overlay_settings")

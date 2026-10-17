@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { siteUrl } from "@/lib/hosts";
+import { safeNext, siteUrl } from "@/lib/hosts";
 import { createClient } from "@/lib/supabase/server";
 
 // Magic links and OAuth both land here with ?code=... (PKCE).
@@ -12,5 +12,6 @@ export async function GET(request: NextRequest) {
   if (error || !data.user) return NextResponse.redirect(siteUrl("/login?error=exchange"));
 
   const { data: profile } = await supabase.from("profiles").select("id").eq("id", data.user.id).maybeSingle();
-  return NextResponse.redirect(siteUrl(profile ? "/dashboard" : "/onboarding"));
+  const next = safeNext(request.nextUrl.searchParams.get("next"));
+  return NextResponse.redirect(siteUrl(profile ? (next ?? "/dashboard") : "/onboarding"));
 }

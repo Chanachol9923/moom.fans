@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { enabledProviders } from "@/lib/auth-providers";
-import { siteUrl } from "@/lib/hosts";
+import { callbackUrl, safeNext } from "@/lib/hosts";
 import { createClient } from "@/lib/supabase/server";
 
 export type LoginState = { status: "idle" | "sent" | "error"; email?: string };
@@ -13,7 +13,7 @@ export async function sendMagicLink(_prev: LoginState, form: FormData): Promise<
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email: email.data,
-    options: { emailRedirectTo: siteUrl("/auth/callback"), shouldCreateUser: true },
+    options: { emailRedirectTo: callbackUrl(safeNext(String(form.get("next") ?? ""))), shouldCreateUser: true },
   });
   if (error) {
     console.warn("auth: magic link failed", error.message);
@@ -30,7 +30,7 @@ export async function signInWithProvider(form: FormData) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: provider as "discord" | "google",
-    options: { redirectTo: siteUrl("/auth/callback") },
+    options: { redirectTo: callbackUrl(safeNext(String(form.get("next") ?? ""))) },
   });
   if (error || !data.url) redirect("/login?error=oauth");
   redirect(data.url);

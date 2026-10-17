@@ -178,6 +178,16 @@ export type PollRow = {
   closed_at: string | null;
 };
 
+export type AppLinkRow = {
+  code_hash: string;
+  user_id: string;
+  challenge: string;
+  device_name: string;
+  created_at: string;
+  expires_at: string;
+  used_at: string | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -199,6 +209,7 @@ export type Database = {
       pets: Table<PetRow, "streamer_id" | "name" | "species", "id" | "created_at">;
       goals: Table<GoalRow, "streamer_id" | "title" | "target_amount", "id" | "created_at">;
       polls: Table<PollRow, "streamer_id" | "title" | "options", "id" | "created_at">;
+      app_links: Table<AppLinkRow, "code_hash" | "user_id" | "challenge", "created_at" | "expires_at">;
     };
     Views: { [_ in never]: never };
     Functions: {
