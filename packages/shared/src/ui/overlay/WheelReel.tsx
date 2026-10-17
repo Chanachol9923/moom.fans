@@ -24,7 +24,7 @@ export function WheelReel({
   onTick?: () => void;
 }) {
   const d = getDict(locale);
-  const [offset, setOffset] = useState(0);
+  const strip_ = useRef<HTMLDivElement>(null);
   const [done, setDone] = useState(false);
   const lastRow = useRef(-1);
   // Long strip: several laps, ending on the result in the middle window.
@@ -39,8 +39,9 @@ export function WheelReel({
       const t = Math.min(1, (now - start) / SPIN_MS);
       const eased = 1 - Math.pow(1 - t, 4);
       const y = target * eased;
-      // Snap to 4px steps so it moves like pixels, not butter.
-      setOffset(Math.round(y / 4) * 4);
+      // Snap to 4px steps so it moves like pixels, not butter. Written straight to the
+      // DOM: re-rendering the strip at 60 fps is wasted work in OBS.
+      if (strip_.current) strip_.current.style.transform = `translateY(${-(Math.round(y / 4) * 4) + ROW}px)`;
       const row = Math.floor(y / ROW);
       if (row !== lastRow.current) {
         lastRow.current = row;
@@ -57,7 +58,7 @@ export function WheelReel({
     <div className="px-frame px-frame-raised w-[min(80vw,520px)] bg-paper p-3 text-center">
       <div className="mb-2 font-display text-lg">{d.alert.wheel}</div>
       <div className="relative mx-auto overflow-hidden bg-ink" style={{ height: ROW * 3 }}>
-        <div style={{ transform: `translateY(${-offset + ROW}px)` }}>
+        <div ref={strip_} style={{ transform: `translateY(${ROW}px)` }}>
           {strip.map((label, i) => (
             <div
               key={i}

@@ -27,6 +27,12 @@ export class OverlayAudio {
     this.master.gain.value = v * v;
   }
 
+  /** Route output to a specific device (Chromium/WebView2 AudioContext.setSinkId). "" = default. */
+  async setSink(deviceId: string | null) {
+    const ctx = this.ctx as AudioContext & { setSinkId?: (id: string) => Promise<void> };
+    if (ctx.setSinkId) await ctx.setSinkId(deviceId ?? "").catch(() => {});
+  }
+
   stopAll() {
     for (const n of this.live) {
       try {

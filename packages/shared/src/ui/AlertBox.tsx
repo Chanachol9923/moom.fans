@@ -11,14 +11,17 @@ export function AlertBox({
   payload,
   accent = "#2f7a6a",
   progress,
+  durationMs,
   variant = "card",
   className = "w-[min(92vw,560px)]",
 }: {
   kind: AlertKind;
   payload: AlertPayload;
   accent?: string;
-  /** 0..1 remaining time, drawn as a stepped bar. */
+  /** 0..1 remaining time, drawn as a static stepped bar (landing page illustration). */
   progress?: number;
+  /** Animate the bar draining over this long. Pure CSS, so no re-renders while it runs. */
+  durationMs?: number;
   variant?: AlertStyle;
   className?: string;
 }) {
@@ -57,7 +60,12 @@ export function AlertBox({
     </div>
   );
   const message = payload.message && <p className="mt-2 text-[1.1em] leading-snug break-words">{payload.message}</p>;
-  const bar = progress !== undefined && <ProgressBar progress={progress} accent={accent} />;
+  const bar =
+    durationMs !== undefined ? (
+      <ProgressBar progress={1} accent={accent} durationMs={durationMs} />
+    ) : progress !== undefined ? (
+      <ProgressBar progress={progress} accent={accent} />
+    ) : null;
 
   if (variant === "banner") {
     return (
@@ -113,16 +121,27 @@ export function AlertBox({
   );
 }
 
-function ProgressBar({ progress, accent }: { progress: number; accent: string }) {
+function ProgressBar({ progress, accent, durationMs }: { progress: number; accent: string; durationMs?: number }) {
+  const segments = Array.from({ length: 20 }, (_, i) => i);
+  const track = "color-mix(in srgb, var(--ink) 15%, transparent)";
   return (
-    <div className="mt-3 flex gap-[3px]" aria-hidden>
-      {Array.from({ length: 20 }, (_, i) => (
-        <span
-          key={i}
-          className="h-2 flex-1"
-          style={{ background: i / 20 < progress ? accent : "color-mix(in srgb, var(--ink) 15%, transparent)" }}
-        />
-      ))}
+    <div className="relative mt-3" aria-hidden>
+      <div className="flex gap-[3px]">
+        {segments.map((i) => (
+          <span key={i} className="h-2 flex-1" style={{ background: i / 20 < progress && durationMs === undefined ? accent : track }} />
+        ))}
+      </div>
+      {durationMs !== undefined && (
+        // Same segments in the accent colour, clipped from the right in 20 steps.
+        <div
+          className="absolute inset-0 flex gap-[3px]"
+          style={{ animation: `px-drain ${durationMs}ms steps(20, end) forwards` }}
+        >
+          {segments.map((i) => (
+            <span key={i} className="h-2 flex-1" style={{ background: accent }} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

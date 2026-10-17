@@ -240,6 +240,11 @@
   100% { transform: none; opacity: 1; }
 }
 
+@keyframes px-drain {
+  from { clip-path: inset(0 0 0 0); }
+  to { clip-path: inset(0 100% 0 0); }
+}
+
 @keyframes px-marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
