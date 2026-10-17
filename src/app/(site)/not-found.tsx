@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
-import { buttonClass } from "@/components/ui";
+import { buttonClass } from "@moom/shared/ui/kit";
 import { getT } from "@/lib/i18n/server";
 import { siteUrl } from "@/lib/hosts";
 import { PRESETS } from "@moom/shared/pets/sprites";

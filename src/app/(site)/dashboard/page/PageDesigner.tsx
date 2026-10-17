@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
-import { Button, Check, Field, Input, Panel, Select, Textarea } from "@/components/ui";
+import { Button, Check, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { BACKGROUNDS, THEME_IDS, THEMES, type PageConfig } from "@/lib/page-config";
 import { ICON_IDS, iconSprite } from "@moom/shared/pets/icons";

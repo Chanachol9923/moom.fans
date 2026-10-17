@@ -1,6 +1,6 @@
 "use client";
 import { useTransition, type ReactNode } from "react";
-import { Button } from "./ui";
+import { Button } from "@moom/shared/ui/kit";
 
 /** Button that runs a server action and disables itself while it runs. */
 export function ActionButton({

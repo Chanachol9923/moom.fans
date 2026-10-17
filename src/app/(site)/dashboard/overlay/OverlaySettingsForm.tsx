@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
-import { Button, Check, Field, Input, Panel, Select, Textarea } from "@/components/ui";
+import { Button, Check, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import type { OverlaySettingsRow } from "@/lib/supabase/database.types";
 import { TTS_VOICES } from "@/lib/tts/types";

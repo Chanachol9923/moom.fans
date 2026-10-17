@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { CopyField } from "@/components/CopyField";
-import { Button, buttonClass } from "@/components/ui";
+import { CopyField } from "@moom/shared/ui/CopyField";
+import { Button, buttonClass } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { approveAppLink } from "./actions";
 

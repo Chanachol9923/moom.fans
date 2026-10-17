@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
-import { buttonClass } from "@/components/ui";
+import { buttonClass } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { creatorUrl } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";

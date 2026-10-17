@@ -1,6 +1,6 @@
 import { ActionButton } from "@/components/ActionButton";
-import { CopyField } from "@/components/CopyField";
-import { Panel } from "@/components/ui";
+import { CopyField } from "@moom/shared/ui/CopyField";
+import { Panel } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { controlUrl, getPrivate, overlayUrl } from "@/lib/domain/streamer";
 import { publicEnv } from "@/lib/env";

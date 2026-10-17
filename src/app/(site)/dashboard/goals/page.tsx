@@ -1,6 +1,6 @@
 import { ActionButton } from "@/components/ActionButton";
 import { GoalBar } from "@moom/shared/ui/GoalBar";
-import { Panel } from "@/components/ui";
+import { Panel } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { activeGoal } from "@/lib/domain/wall";
 import { formatBaht } from "@moom/shared/i18n";

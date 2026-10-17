@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
-import { Button, Field, Input } from "@/components/ui";
+import { Button, Field, Input } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { formatClock } from "@moom/shared/widgets";

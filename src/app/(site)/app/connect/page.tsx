@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Panel } from "@/components/ui";
+import { Panel } from "@moom/shared/ui/kit";
 import { CHALLENGE_RE } from "@/lib/domain/app-link";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getT } from "@/lib/i18n/server";

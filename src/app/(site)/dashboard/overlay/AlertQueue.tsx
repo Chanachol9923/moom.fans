@@ -1,5 +1,5 @@
 import { ActionButton } from "@/components/ActionButton";
-import { Panel, Tag } from "@/components/ui";
+import { Panel, Tag } from "@moom/shared/ui/kit";
 import type { AlertPayload } from "@moom/shared/alerts";
 import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";

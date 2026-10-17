@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Panel } from "@/components/ui";
+import { Panel } from "@moom/shared/ui/kit";
 import { isSupabaseConfigured } from "@/lib/env";
 import { rootDomain } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";

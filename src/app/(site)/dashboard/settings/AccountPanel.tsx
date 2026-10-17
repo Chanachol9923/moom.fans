@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Button, Field, Input, Panel, buttonClass } from "@/components/ui";
+import { Button, Field, Input, Panel, buttonClass } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { deleteAccount } from "../more-actions";

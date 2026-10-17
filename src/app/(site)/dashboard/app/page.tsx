@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Panel, buttonClass } from "@/components/ui";
+import { Panel, buttonClass } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Panel } from "@/components/ui";
+import { Panel } from "@moom/shared/ui/kit";
 import { enabledProviders } from "@/lib/auth-providers";
 import { isSupabaseConfigured } from "@/lib/env";
 import { rootDomain, safeNext } from "@/lib/hosts";

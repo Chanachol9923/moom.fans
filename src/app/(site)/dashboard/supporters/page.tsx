@@ -1,4 +1,4 @@
-import { Panel } from "@/components/ui";
+import { Panel } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { CopyField } from "@/components/CopyField";
-import { Panel, Stat, Tag } from "@/components/ui";
+import { CopyField } from "@moom/shared/ui/CopyField";
+import { Panel, Stat, Tag } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { getPrivate, moneyTotals, overlayUrl } from "@/lib/domain/streamer";
 import { creatorUrl } from "@/lib/hosts";

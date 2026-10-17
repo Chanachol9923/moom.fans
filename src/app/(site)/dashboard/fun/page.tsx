@@ -1,5 +1,5 @@
 import { ActionButton } from "@/components/ActionButton";
-import { Panel } from "@/components/ui";
+import { Panel } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { activePoll } from "@/lib/domain/wall";
 import { formatBaht } from "@moom/shared/i18n";

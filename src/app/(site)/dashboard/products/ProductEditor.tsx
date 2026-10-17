@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useActionState, useState, useTransition } from "react";
-import { Button, Field, Input, Panel, Tag, Textarea } from "@/components/ui";
+import { Button, Field, Input, Panel, Tag, Textarea } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import type { ProductRow } from "@/lib/supabase/database.types";

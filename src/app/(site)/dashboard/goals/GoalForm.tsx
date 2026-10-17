@@ -1,6 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import { Button, Check, Field, Input } from "@/components/ui";
+import { Button, Check, Field, Input } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { createGoal } from "../more-actions";
 

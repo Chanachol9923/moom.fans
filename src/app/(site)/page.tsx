@@ -3,7 +3,7 @@ import { AlertBox } from "@moom/shared/ui/AlertBox";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { buttonClass } from "@/components/ui";
+import { buttonClass } from "@moom/shared/ui/kit";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getT } from "@/lib/i18n/server";
 import { iconSprite } from "@moom/shared/pets/icons";

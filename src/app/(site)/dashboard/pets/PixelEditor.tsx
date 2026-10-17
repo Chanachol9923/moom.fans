@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/components/ui";
+import { Button } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { PRESET_SPECIES, PRESETS, SPRITE_SIZE, type PetSprite, type SpriteFrames } from "@moom/shared/pets/sprites";
 

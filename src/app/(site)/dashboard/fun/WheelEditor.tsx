@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Button, Check, Field, Input } from "@/components/ui";
+import { Button, Check, Field, Input } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import type { WheelConfig } from "@moom/shared/wheel";

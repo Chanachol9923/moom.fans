@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
-import { Button, Field, Input, Panel, Select, Textarea } from "@/components/ui";
+import { Button, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import type { ProfileRow } from "@/lib/supabase/database.types";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Button, Check, Input, Panel, Select, Tag } from "@/components/ui";
+import { Button, Check, Input, Panel, Select, Tag } from "@moom/shared/ui/kit";
 import type { VtsRule } from "@moom/shared/alerts";
 import { useT } from "@moom/shared/i18n/react";
 import { VtsClient, type VtsHotkey, type VtsItemFile } from "@moom/shared/vts";

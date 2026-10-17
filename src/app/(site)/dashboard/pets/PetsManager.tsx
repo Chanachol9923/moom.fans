@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { AnimatedSprite } from "@moom/shared/ui/AnimatedSprite";
-import { Button, Field, Input, Panel, Select } from "@/components/ui";
+import { Button, Field, Input, Panel, Select } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { MAX_PETS, PRESET_SPECIES, PRESETS, resolveSprite, type PetSprite } from "@moom/shared/pets/sprites";
 import type { PetRow } from "@/lib/supabase/database.types";

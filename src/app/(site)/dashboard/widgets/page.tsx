@@ -1,5 +1,5 @@
-import { CopyField } from "@/components/CopyField";
-import { Panel } from "@/components/ui";
+import { CopyField } from "@moom/shared/ui/CopyField";
+import { Panel } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { getPrivate } from "@/lib/domain/streamer";
 import { siteUrl } from "@/lib/hosts";

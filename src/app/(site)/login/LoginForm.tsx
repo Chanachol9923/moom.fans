@@ -1,6 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import { Button, Field, Input } from "@/components/ui";
+import { Button, Field, Input } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { sendMagicLink, signInWithProvider, type LoginState } from "./actions";

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
-import { buttonClass } from "@/components/ui";
+import { buttonClass } from "@moom/shared/ui/kit";
 import type { PayView } from "@/lib/domain/pay-view";
 import { fmt, formatBaht } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";

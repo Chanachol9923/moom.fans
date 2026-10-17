@@ -1,5 +1,5 @@
 import { ActionButton } from "@/components/ActionButton";
-import { Panel, Tag } from "@/components/ui";
+import { Panel, Tag } from "@moom/shared/ui/kit";
 import type { AlertPayload } from "@moom/shared/alerts";
 import { requireStreamer } from "@/lib/auth";
 import { getPrivate } from "@/lib/domain/streamer";

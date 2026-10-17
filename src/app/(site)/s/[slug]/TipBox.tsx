@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
-import { Button, Check, Field, Input, Textarea } from "@/components/ui";
+import { Button, Check, Field, Input, Textarea } from "@moom/shared/ui/kit";
 import { fmt, formatBaht } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { mediaSecondsFor, parseMediaUrl } from "@/lib/media";

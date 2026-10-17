@@ -1,6 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { Button, Field, Input, Select, Textarea } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { startPoll } from "../more-actions";
 

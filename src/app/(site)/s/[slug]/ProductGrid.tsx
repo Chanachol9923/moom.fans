@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
-import { Button, Field, Input } from "@/components/ui";
+import { Button, Field, Input } from "@moom/shared/ui/kit";
 import { fmt, formatBaht } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { PRESETS } from "@moom/shared/pets/sprites";
