@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { AlertPayload } from "@/lib/alerts/types";
+import type { AlertPayload } from "@moom/shared/alerts";
 import { streamerByOverlayToken } from "@/lib/domain/overlay";
 import { admin } from "@/lib/supabase/admin";
 import { alertSpeech, tts } from "@/lib/tts";

@@ -1,5 +1,5 @@
 import "server-only";
-import type { OverlayEvent } from "@/lib/alerts/types";
+import type { OverlayEvent } from "@moom/shared/alerts";
 import { admin } from "@/lib/supabase/admin";
 
 export const OVERLAY_EVENT = "moom";

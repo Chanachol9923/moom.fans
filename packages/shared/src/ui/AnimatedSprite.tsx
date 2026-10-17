@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import type { PetSprite } from "@/lib/pets/sprites";
+import type { PetSprite } from "@moom/shared/pets/sprites";
 import { PixelSprite } from "./PixelSprite";
 
 export function AnimatedSprite({ sprite, size = 64, sleeping = false }: { sprite: PetSprite; size?: number; sleeping?: boolean }) {

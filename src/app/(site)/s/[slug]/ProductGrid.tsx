@@ -1,11 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { PixelSprite } from "@/components/PixelSprite";
+import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { Button, Field, Input } from "@/components/ui";
-import { fmt, formatBaht } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
-import { PRESETS } from "@/lib/pets/sprites";
+import { fmt, formatBaht } from "@moom/shared/i18n";
+import { useT } from "@moom/shared/i18n/react";
+import { PRESETS } from "@moom/shared/pets/sprites";
 import type { Store, StoreProduct } from "./data";
 
 export function ProductGrid({ store, preview = false }: { store: Store; preview?: boolean }) {

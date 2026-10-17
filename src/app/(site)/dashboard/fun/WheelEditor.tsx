@@ -1,9 +1,9 @@
 "use client";
 import { useState, useTransition } from "react";
 import { Button, Check, Field, Input } from "@/components/ui";
-import { fmt } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
-import type { WheelConfig } from "@/lib/wheel";
+import { fmt } from "@moom/shared/i18n";
+import { useT } from "@moom/shared/i18n/react";
+import type { WheelConfig } from "@moom/shared/wheel";
 import { saveWheel } from "../more-actions";
 
 export function WheelEditor({ initial }: { initial: WheelConfig }) {

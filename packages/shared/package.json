@@ -1,0 +1,10 @@
+{
+  "name": "@moom/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Code shared by the Moom website and the desktop app: i18n, alert types, pixel sprites, overlay engine and UI.",
+  "sideEffects": [
+    "*.css"
+  ]
+}

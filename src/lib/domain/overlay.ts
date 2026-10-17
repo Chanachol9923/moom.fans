@@ -1,7 +1,7 @@
 import "server-only";
-import type { AlertPayload, OverlayAlert, OverlayConfig, OverlayPet, OverlayState, VtsRule } from "@/lib/alerts/types";
+import type { AlertPayload, OverlayAlert, OverlayConfig, OverlayPet, OverlayState, VtsRule } from "@moom/shared/alerts";
 import { publicEnv } from "@/lib/env";
-import { resolveSprite } from "@/lib/pets/sprites";
+import { resolveSprite } from "@moom/shared/pets/sprites";
 import { overlayTopic } from "@/lib/realtime";
 import { publicMediaUrl } from "@/lib/storage";
 import { admin } from "@/lib/supabase/admin";

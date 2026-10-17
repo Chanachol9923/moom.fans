@@ -1,5 +1,5 @@
 import "server-only";
-import { getDict, type Locale } from "@/lib/i18n";
+import { getDict, type Locale } from "@moom/shared/i18n";
 import { admin } from "@/lib/supabase/admin";
 
 // Public, read-only aggregates over verified payments: goal progress, supporter

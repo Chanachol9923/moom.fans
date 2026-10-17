@@ -2,9 +2,9 @@ import "server-only";
 import { cache } from "react";
 import { storeBasePath } from "@/lib/hosts";
 import { activeGoal, activePoll, wallData, type GoalView, type PollView, type SupporterView, type TopView } from "@/lib/domain/wall";
-import type { Locale } from "@/lib/i18n";
+import type { Locale } from "@moom/shared/i18n";
 import { parsePageConfig, type PageConfig } from "@/lib/page-config";
-import { resolveSprite, type PetSprite } from "@/lib/pets/sprites";
+import { resolveSprite, type PetSprite } from "@moom/shared/pets/sprites";
 import { publicMediaUrl } from "@/lib/storage";
 import { admin } from "@/lib/supabase/admin";
 

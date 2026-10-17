@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { loadWidgetData } from "@/lib/domain/widgets";
 import { isSupabaseConfigured } from "@/lib/env";
 import { sampleWidgetData } from "@/lib/sample-widgets";
-import { isWidgetKind } from "@/lib/widgets";
+import { isWidgetKind } from "@moom/shared/widgets";
 import { WidgetApp } from "./WidgetApp";
 
 // /widget/<overlay token>/<goal|recent|top|qr|poll|subathon>

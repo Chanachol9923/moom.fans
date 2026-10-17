@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { fontVars } from "../fonts";
 import "../globals.css";
-import { I18nProvider } from "@/lib/i18n/client";
+import { I18nProvider } from "@moom/shared/i18n/react";
 import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {

@@ -1,6 +1,6 @@
 import { Panel, Tag } from "@/components/ui";
 import { requireStreamer } from "@/lib/auth";
-import { formatBaht } from "@/lib/i18n";
+import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
 
 const PAGE = 100;

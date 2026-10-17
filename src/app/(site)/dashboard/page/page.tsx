@@ -2,7 +2,7 @@ import { requireStreamer } from "@/lib/auth";
 import { publicEnv } from "@/lib/env";
 import { getT } from "@/lib/i18n/server";
 import { parsePageConfig } from "@/lib/page-config";
-import { resolveSprite } from "@/lib/pets/sprites";
+import { resolveSprite } from "@moom/shared/pets/sprites";
 import { loadStore } from "../../s/[slug]/data";
 import { PageDesigner } from "./PageDesigner";
 

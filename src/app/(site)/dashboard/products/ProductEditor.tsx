@@ -2,8 +2,8 @@
 import { useRouter } from "next/navigation";
 import { useActionState, useState, useTransition } from "react";
 import { Button, Field, Input, Panel, Tag, Textarea } from "@/components/ui";
-import { fmt } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
+import { fmt } from "@moom/shared/i18n";
+import { useT } from "@moom/shared/i18n/react";
 import type { ProductRow } from "@/lib/supabase/database.types";
 import { uploadPublicMedia, uploadToSigned, type SupabasePublic } from "@/lib/upload-client";
 import {

@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { PixelSprite } from "@/components/PixelSprite";
+import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { buttonClass } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
 import { siteUrl } from "@/lib/hosts";
-import { PRESETS } from "@/lib/pets/sprites";
+import { PRESETS } from "@moom/shared/pets/sprites";
 
 export default async function NotFound() {
   const { d } = await getT();

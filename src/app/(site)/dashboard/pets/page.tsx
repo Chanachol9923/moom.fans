@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Panel } from "@/components/ui";
 import { requireStreamer } from "@/lib/auth";
-import { fmt } from "@/lib/i18n";
+import { fmt } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
-import { MAX_PETS, resolveSprite } from "@/lib/pets/sprites";
+import { MAX_PETS, resolveSprite } from "@moom/shared/pets/sprites";
 import { PetsManager } from "./PetsManager";
 
 export default async function PetsPage() {

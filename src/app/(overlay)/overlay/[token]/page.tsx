@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { OverlayApp } from "@/components/overlay/OverlayApp";
+import { OverlayApp } from "@moom/shared/ui/overlay/OverlayApp";
 import { loadOverlayState } from "@/lib/domain/overlay";
 import { isSupabaseConfigured } from "@/lib/env";
 import { DemoOverlay } from "./DemoOverlay";

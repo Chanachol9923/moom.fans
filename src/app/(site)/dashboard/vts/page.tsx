@@ -1,4 +1,4 @@
-import type { VtsRule } from "@/lib/alerts/types";
+import type { VtsRule } from "@moom/shared/alerts";
 import { requireStreamer } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { VtsManager } from "./VtsManager";

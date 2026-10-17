@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { Button, Field, Input } from "@/components/ui";
-import { useT } from "@/lib/i18n/client";
+import { useT } from "@moom/shared/i18n/react";
 import { createCorner, type OnboardingState } from "./actions";
 
 export function OnboardingForm({ rootDomain }: { rootDomain: string }) {

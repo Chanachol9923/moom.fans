@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { OverlayAlert, VtsRule } from "@/lib/alerts/types";
+import type { OverlayAlert, VtsRule } from "@moom/shared/alerts";
 import { mergeQueue, vtsActionsFor } from "./queue";
 
 const a = (id: string, t: string): OverlayAlert => ({

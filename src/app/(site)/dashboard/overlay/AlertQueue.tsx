@@ -1,7 +1,7 @@
 import { ActionButton } from "@/components/ActionButton";
 import { Panel, Tag } from "@/components/ui";
-import type { AlertPayload } from "@/lib/alerts/types";
-import { formatBaht } from "@/lib/i18n";
+import type { AlertPayload } from "@moom/shared/alerts";
+import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { AutoRefresh } from "../review/AutoRefresh";

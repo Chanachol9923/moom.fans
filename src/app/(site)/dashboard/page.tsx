@@ -4,7 +4,7 @@ import { Panel, Stat, Tag } from "@/components/ui";
 import { requireStreamer } from "@/lib/auth";
 import { getPrivate, moneyTotals, overlayUrl } from "@/lib/domain/streamer";
 import { creatorUrl } from "@/lib/hosts";
-import { fmt, formatBaht } from "@/lib/i18n";
+import { fmt, formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
 
 export default async function Overview() {

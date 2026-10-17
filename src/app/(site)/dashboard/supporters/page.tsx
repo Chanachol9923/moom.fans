@@ -1,6 +1,6 @@
 import { Panel } from "@/components/ui";
 import { requireStreamer } from "@/lib/auth";
-import { formatBaht } from "@/lib/i18n";
+import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
 
 type Row = { name: string; email: string | null; total: number; count: number; last: string };

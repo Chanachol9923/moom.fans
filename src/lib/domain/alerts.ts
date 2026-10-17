@@ -1,13 +1,13 @@
 import "server-only";
-import type { AlertKind, AlertPayload } from "@/lib/alerts/types";
+import type { AlertKind, AlertPayload } from "@moom/shared/alerts";
 import { buildFilter, cleanMessage, DEFAULT_BLOCKED_WORDS } from "@/lib/filter";
-import { getDict, type Locale } from "@/lib/i18n";
+import { getDict, type Locale } from "@moom/shared/i18n";
 import { parseMediaUrl } from "@/lib/media";
 import { parsePageConfig, type PageConfig } from "@/lib/page-config";
 import { notifyOverlay } from "@/lib/realtime";
 import { admin } from "@/lib/supabase/admin";
 import type { OverlaySettingsRow, TransactionRow } from "@/lib/supabase/database.types";
-import { parseWheel, spinFor } from "@/lib/wheel";
+import { parseWheel, spinFor } from "@moom/shared/wheel";
 
 type Ctx = {
   settings: OverlaySettingsRow;

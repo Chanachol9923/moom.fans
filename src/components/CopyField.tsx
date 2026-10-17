@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useT } from "@/lib/i18n/client";
+import { useT } from "@moom/shared/i18n/react";
 import { Button } from "./ui";
 
 export function CopyField({ value, secret = false }: { value: string; secret?: boolean }) {

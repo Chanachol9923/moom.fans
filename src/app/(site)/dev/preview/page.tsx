@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
-import { PRESETS } from "@/lib/pets/sprites";
+import { PRESETS } from "@moom/shared/pets/sprites";
 import { PageDesigner } from "../../dashboard/page/PageDesigner";
 import { PetsManager } from "../../dashboard/pets/PetsManager";
 import { sampleStore } from "@/lib/sample-store";

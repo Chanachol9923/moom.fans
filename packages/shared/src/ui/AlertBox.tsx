@@ -1,8 +1,8 @@
 import { Fragment, type ReactNode } from "react";
-import type { AlertKind, AlertPayload, AlertStyle } from "@/lib/alerts/types";
-import { fmtParts, formatBaht, getDict } from "@/lib/i18n";
-import { iconSprite, isIconId } from "@/lib/pets/icons";
-import { PRESETS } from "@/lib/pets/sprites";
+import type { AlertKind, AlertPayload, AlertStyle } from "@moom/shared/alerts";
+import { fmtParts, formatBaht, getDict } from "@moom/shared/i18n";
+import { iconSprite, isIconId } from "@moom/shared/pets/icons";
+import { PRESETS } from "@moom/shared/pets/sprites";
 import { PixelSprite } from "./PixelSprite";
 
 /** The on-stream alert. Pure presentational so the landing page and previews reuse it. */

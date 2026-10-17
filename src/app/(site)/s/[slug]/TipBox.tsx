@@ -1,12 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PixelSprite } from "@/components/PixelSprite";
+import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { Button, Check, Field, Input, Textarea } from "@/components/ui";
-import { fmt, formatBaht } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
+import { fmt, formatBaht } from "@moom/shared/i18n";
+import { useT } from "@moom/shared/i18n/react";
 import { mediaSecondsFor, parseMediaUrl } from "@/lib/media";
-import { iconSprite } from "@/lib/pets/icons";
+import { iconSprite } from "@moom/shared/pets/icons";
 import type { Store } from "./data";
 
 export function TipBox({ store, preview = false }: { store: Store; preview?: boolean }) {

@@ -1,5 +1,5 @@
-import type { Locale } from "@/lib/i18n";
-import type { WidgetData } from "@/lib/widgets";
+import type { Locale } from "@moom/shared/i18n";
+import type { WidgetData } from "@moom/shared/widgets";
 
 export function sampleWidgetData(locale: Locale): WidgetData {
   const th = locale === "th";

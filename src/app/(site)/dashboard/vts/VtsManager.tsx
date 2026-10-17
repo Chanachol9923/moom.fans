@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button, Check, Input, Panel, Select, Tag } from "@/components/ui";
-import type { VtsRule } from "@/lib/alerts/types";
-import { useT } from "@/lib/i18n/client";
-import { VtsClient, type VtsHotkey, type VtsItemFile } from "@/lib/vts/client";
+import type { VtsRule } from "@moom/shared/alerts";
+import { useT } from "@moom/shared/i18n/react";
+import { VtsClient, type VtsHotkey, type VtsItemFile } from "@moom/shared/vts";
 import { saveVtsRules } from "../actions";
 
 export function VtsManager({ enabled: initialEnabled, rules: initialRules }: { enabled: boolean; rules: VtsRule[] }) {

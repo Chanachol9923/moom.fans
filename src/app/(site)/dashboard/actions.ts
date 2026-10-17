@@ -3,11 +3,11 @@
 // touches rows belonging to that streamer, even when it uses the service-role client.
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { VtsRule } from "@/lib/alerts/types";
+import type { VtsRule } from "@moom/shared/alerts";
 import { streamerForAction } from "@/lib/auth";
 import { queueTestAlert } from "@/lib/domain/alerts";
 import { rejectTransaction, verifyTransaction } from "@/lib/domain/transactions";
-import { getDict, isLocale } from "@/lib/i18n";
+import { getDict, isLocale } from "@moom/shared/i18n";
 import { notifyOverlay } from "@/lib/realtime";
 import { isSlipOkConfigured } from "@/lib/slipok";
 import { BUCKETS } from "@/lib/storage";
@@ -17,7 +17,7 @@ import type { Json, OverlayPosition } from "@/lib/supabase/database.types";
 import { newToken } from "@/lib/tokens";
 import { detectPromptPayType, isValidNationalId, normalizePromptPayId } from "@/lib/promptpay";
 import { isTtsVoice } from "@/lib/tts/types";
-import { isPetSprite, isPresetSpecies, MAX_PETS } from "@/lib/pets/sprites";
+import { isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
 
 /** Storage keys we generate only ever contain these characters. */
 const SAFE_PATH = /^[\w\-./]+$/;

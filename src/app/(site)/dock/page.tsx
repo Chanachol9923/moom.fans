@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ActionButton } from "@/components/ActionButton";
-import type { AlertPayload } from "@/lib/alerts/types";
+import type { AlertPayload } from "@moom/shared/alerts";
 import { requireStreamer } from "@/lib/auth";
-import { formatBaht } from "@/lib/i18n";
+import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
 import { BUCKETS } from "@/lib/storage";
 import { signedDownloadUrl } from "@/lib/storage.server";

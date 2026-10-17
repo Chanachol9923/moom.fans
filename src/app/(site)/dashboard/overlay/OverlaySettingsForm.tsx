@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { Button, Check, Field, Input, Panel, Select, Textarea } from "@/components/ui";
-import { useT } from "@/lib/i18n/client";
+import { useT } from "@moom/shared/i18n/react";
 import type { OverlaySettingsRow } from "@/lib/supabase/database.types";
 import { TTS_VOICES } from "@/lib/tts/types";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";

@@ -4,7 +4,7 @@ import { requireStreamer } from "@/lib/auth";
 import { getPrivate } from "@/lib/domain/streamer";
 import { siteUrl } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";
-import { WIDGET_KINDS, WIDGET_SIZES } from "@/lib/widgets";
+import { WIDGET_KINDS, WIDGET_SIZES } from "@moom/shared/widgets";
 import { PreviewFrame } from "../overlay/PreviewFrame";
 
 export default async function WidgetsPage() {

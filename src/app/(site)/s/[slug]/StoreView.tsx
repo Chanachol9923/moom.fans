@@ -1,11 +1,11 @@
-import { AnimatedSprite } from "@/components/AnimatedSprite";
-import { GoalBar } from "@/components/GoalBar";
+import { AnimatedSprite } from "@moom/shared/ui/AnimatedSprite";
+import { GoalBar } from "@moom/shared/ui/GoalBar";
 import { LocaleSwitch } from "@/components/LocaleSwitch";
-import { PixelSprite } from "@/components/PixelSprite";
+import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { siteUrl } from "@/lib/hosts";
-import { formatBaht, type Dict, type Locale } from "@/lib/i18n";
+import { formatBaht, type Dict, type Locale } from "@moom/shared/i18n";
 import { backgroundStyle, themeVars, type SectionId } from "@/lib/page-config";
-import { PRESETS } from "@/lib/pets/sprites";
+import { PRESETS } from "@moom/shared/pets/sprites";
 import type { Store } from "./data";
 import { ProductGrid } from "./ProductGrid";
 import { TipBox } from "./TipBox";

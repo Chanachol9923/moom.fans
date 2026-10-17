@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { fmt, getDict, type Locale } from "@/lib/i18n";
+import { fmt, getDict, type Locale } from "@moom/shared/i18n";
 
 const ROW = 64;
 const SPIN_MS = 4200;

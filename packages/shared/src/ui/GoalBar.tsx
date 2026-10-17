@@ -1,4 +1,4 @@
-import { fmt, formatBaht, type Dict, type Locale } from "@/lib/i18n";
+import { fmt, formatBaht, type Dict, type Locale } from "@moom/shared/i18n";
 
 /** Stepped pixel progress bar for a tip goal. Shared by the storefront and the OBS widget. */
 export function GoalBar({

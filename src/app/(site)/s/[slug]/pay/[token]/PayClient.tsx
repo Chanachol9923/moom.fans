@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { PixelSprite } from "@/components/PixelSprite";
+import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { buttonClass } from "@/components/ui";
 import type { PayView } from "@/lib/domain/pay-view";
-import { fmt, formatBaht } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
-import { PRESETS } from "@/lib/pets/sprites";
+import { fmt, formatBaht } from "@moom/shared/i18n";
+import { useT } from "@moom/shared/i18n/react";
+import { PRESETS } from "@moom/shared/pets/sprites";
 
 export function PayClient({
   token,

@@ -12,7 +12,7 @@ import { BUCKETS } from "@/lib/storage";
 import { removeObjects } from "@/lib/storage.server";
 import { admin } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/database.types";
-import { WheelSchema } from "@/lib/wheel";
+import { WheelSchema } from "@moom/shared/wheel";
 
 const SAFE_PATH = /^[\w\-./]+$/;
 

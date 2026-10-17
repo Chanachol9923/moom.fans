@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parsePageConfig, SECTION_IDS } from "./page-config";
-import { ICON_ROWS_FOR_TEST, ICON_SIZE } from "./pets/icons";
-import { parseWheel, pickWeighted, spinFor } from "./wheel";
+import { ICON_ROWS_FOR_TEST, ICON_SIZE } from "@moom/shared/pets/icons";
+import { parseWheel, pickWeighted, spinFor } from "@moom/shared/wheel";
 
 describe("parsePageConfig", () => {
   it("fills defaults for empty / junk input", () => {

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
-import type { OverlayPet } from "@/lib/alerts/types";
-import { drawFrame, SPRITE_SIZE } from "@/lib/pets/sprites";
+import type { OverlayPet } from "@moom/shared/alerts";
+import { drawFrame, SPRITE_SIZE } from "@moom/shared/pets/sprites";
 
 const SCALE = 4;
 

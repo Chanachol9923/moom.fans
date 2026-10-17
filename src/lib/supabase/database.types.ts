@@ -41,9 +41,8 @@ export type StreamerPrivateRow = {
   updated_at: string;
 };
 
-export type OverlayPosition =
-  | "top-left" | "top-center" | "top-right" | "center"
-  | "bottom-left" | "bottom-center" | "bottom-right";
+import type { OverlayPosition } from "@moom/shared/alerts";
+export type { OverlayPosition };
 
 export type OverlaySettingsRow = {
   streamer_id: string;

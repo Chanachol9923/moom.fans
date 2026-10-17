@@ -1,9 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import type { Locale } from "@/lib/i18n";
+import type { Locale } from "@moom/shared/i18n";
 import { setLocale } from "@/lib/i18n/actions";
-import { useT } from "@/lib/i18n/client";
+import { useT } from "@moom/shared/i18n/react";
 
 export function LocaleSwitch() {
   const { locale } = useT();

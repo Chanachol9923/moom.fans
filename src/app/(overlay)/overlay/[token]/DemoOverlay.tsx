@@ -1,9 +1,9 @@
 "use client";
 import { useEffect } from "react";
-import { OverlayApp } from "@/components/overlay/OverlayApp";
-import type { AlertStyle, OverlayAlert, OverlayState } from "@/lib/alerts/types";
-import type { Locale } from "@/lib/i18n";
-import { PRESETS } from "@/lib/pets/sprites";
+import { OverlayApp } from "@moom/shared/ui/overlay/OverlayApp";
+import type { AlertStyle, OverlayAlert, OverlayState } from "@moom/shared/alerts";
+import type { Locale } from "@moom/shared/i18n";
+import { PRESETS } from "@moom/shared/pets/sprites";
 
 // /overlay/demo: no database, no token. Plays a sample alert every few seconds and
 // shows the preset pets, so the overlay can be tried in OBS before signing up.

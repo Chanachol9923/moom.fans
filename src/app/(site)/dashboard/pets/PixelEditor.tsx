@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui";
-import { useT } from "@/lib/i18n/client";
-import { PRESET_SPECIES, PRESETS, SPRITE_SIZE, type PetSprite, type SpriteFrames } from "@/lib/pets/sprites";
+import { useT } from "@moom/shared/i18n/react";
+import { PRESET_SPECIES, PRESETS, SPRITE_SIZE, type PetSprite, type SpriteFrames } from "@moom/shared/pets/sprites";
 
 // Palette slot keys a custom sprite may use (same letters as the presets).
 const SLOTS = ["k", "b", "d", "a", "w", "e", "y", "p"] as const;

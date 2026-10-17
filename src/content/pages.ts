@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n";
+import type { Locale } from "@moom/shared/i18n";
 
 // Long-form copy for /help, /terms, /privacy. Kept out of the UI dictionaries because
 // it is prose, but every page still has a Thai and an English version.

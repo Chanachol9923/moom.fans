@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import { Button, Field, Input } from "@/components/ui";
-import { fmt } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
-import { formatClock } from "@/lib/widgets";
+import { fmt } from "@moom/shared/i18n";
+import { useT } from "@moom/shared/i18n/react";
+import { formatClock } from "@moom/shared/widgets";
 import { subathonControl } from "../more-actions";
 
 export function SubathonPanel({ rate, endsAt, pausedLeft }: { rate: number; endsAt: string | null; pausedLeft: number | null }) {

@@ -1,9 +1,9 @@
 import { ActionButton } from "@/components/ActionButton";
 import { Panel, Tag } from "@/components/ui";
-import type { AlertPayload } from "@/lib/alerts/types";
+import type { AlertPayload } from "@moom/shared/alerts";
 import { requireStreamer } from "@/lib/auth";
 import { getPrivate } from "@/lib/domain/streamer";
-import { formatBaht } from "@/lib/i18n";
+import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
 import { BUCKETS } from "@/lib/storage";
 import { signedDownloadUrl } from "@/lib/storage.server";

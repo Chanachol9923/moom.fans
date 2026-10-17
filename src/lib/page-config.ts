@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ICON_IDS, type IconId } from "@/lib/pets/icons";
+import { ICON_IDS, type IconId } from "@moom/shared/pets/icons";
 
 // Storefront design, stored in profiles.page. Every field has a default and parsing
 // never throws, so an old or hand-edited value can't break a public page.

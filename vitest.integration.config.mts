@@ -6,6 +6,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
+      "@moom/shared": fileURLToPath(new URL("./packages/shared/src", import.meta.url)),
       "@": fileURLToPath(new URL("./src", import.meta.url)),
       "server-only": fileURLToPath(new URL("./tests/stubs/empty.ts", import.meta.url)),
     },

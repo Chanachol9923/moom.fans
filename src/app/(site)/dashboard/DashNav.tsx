@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useT } from "@/lib/i18n/client";
+import { useT } from "@moom/shared/i18n/react";
 
 export function DashNav({ pending }: { pending: number }) {
   const { d } = useT();

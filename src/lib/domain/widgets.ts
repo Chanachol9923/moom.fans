@@ -5,7 +5,7 @@ import { creatorUrl } from "@/lib/hosts";
 import { parsePageConfig } from "@/lib/page-config";
 import { overlayTopic } from "@/lib/realtime";
 import { admin } from "@/lib/supabase/admin";
-import type { WidgetData } from "@/lib/widgets";
+import type { WidgetData } from "@moom/shared/widgets";
 import { streamerByOverlayToken } from "./overlay";
 
 export async function loadWidgetData(token: string): Promise<WidgetData | null> {

@@ -2,10 +2,10 @@
 import { createClient } from "@supabase/supabase-js";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
-import { GoalBar } from "@/components/GoalBar";
-import { isOverlayEvent } from "@/lib/alerts/types";
-import { formatBaht, getDict } from "@/lib/i18n";
-import { formatClock, type WidgetData, type WidgetKind } from "@/lib/widgets";
+import { GoalBar } from "@moom/shared/ui/GoalBar";
+import { isOverlayEvent } from "@moom/shared/alerts";
+import { formatBaht, getDict } from "@moom/shared/i18n";
+import { formatClock, type WidgetData, type WidgetKind } from "@moom/shared/widgets";
 
 const POLL_MS = 15_000;
 

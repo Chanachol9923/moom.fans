@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { AlertBox } from "@/components/AlertBox";
-import { PixelSprite } from "@/components/PixelSprite";
+import { AlertBox } from "@moom/shared/ui/AlertBox";
+import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { buttonClass } from "@/components/ui";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getT } from "@/lib/i18n/server";
-import { iconSprite } from "@/lib/pets/icons";
-import { PRESETS } from "@/lib/pets/sprites";
+import { iconSprite } from "@moom/shared/pets/icons";
+import { PRESETS } from "@moom/shared/pets/sprites";
 import { getUser } from "@/lib/supabase/server";
 
 export default async function Landing() {

@@ -1,11 +1,11 @@
 "use client";
 import { useState, useTransition } from "react";
-import { PixelSprite } from "@/components/PixelSprite";
+import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { Button, Check, Field, Input, Panel, Select, Textarea } from "@/components/ui";
-import { useT } from "@/lib/i18n/client";
+import { useT } from "@moom/shared/i18n/react";
 import { BACKGROUNDS, THEME_IDS, THEMES, type PageConfig } from "@/lib/page-config";
-import { ICON_IDS, iconSprite } from "@/lib/pets/icons";
-import type { PetSprite } from "@/lib/pets/sprites";
+import { ICON_IDS, iconSprite } from "@moom/shared/pets/icons";
+import type { PetSprite } from "@moom/shared/pets/sprites";
 import { publicMediaUrl } from "@/lib/storage";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import type { Store } from "../../s/[slug]/data";

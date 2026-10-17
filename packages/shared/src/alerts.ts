@@ -1,6 +1,9 @@
-import type { Locale } from "@/lib/i18n";
-import type { OverlayPosition } from "@/lib/supabase/database.types";
-import type { PetSprite } from "@/lib/pets/sprites";
+import type { Locale } from "@moom/shared/i18n";
+import type { PetSprite } from "@moom/shared/pets/sprites";
+
+export type OverlayPosition =
+  | "top-left" | "top-center" | "top-right" | "center"
+  | "bottom-left" | "bottom-center" | "bottom-right";
 
 export type AlertKind = "tip" | "purchase" | "test";
 

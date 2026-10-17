@@ -1,6 +1,6 @@
 import "server-only";
-import type { AlertKind, AlertPayload } from "@/lib/alerts/types";
-import { fmt, formatBaht, getDict } from "@/lib/i18n";
+import type { AlertKind, AlertPayload } from "@moom/shared/alerts";
+import { fmt, formatBaht, getDict } from "@moom/shared/i18n";
 import { edgeTts } from "./edge";
 import type { TtsProvider } from "./types";
 

@@ -1,8 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
 import { Button, Field, Input, Panel, buttonClass } from "@/components/ui";
-import { fmt } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
+import { fmt } from "@moom/shared/i18n";
+import { useT } from "@moom/shared/i18n/react";
 import { deleteAccount } from "../more-actions";
 
 export function AccountPanel({ slug }: { slug: string }) {

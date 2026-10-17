@@ -1,6 +1,6 @@
 "use server";
 import { cookies } from "next/headers";
-import { isLocale, LOCALE_COOKIE } from "./index";
+import { isLocale, LOCALE_COOKIE } from "@moom/shared/i18n";
 
 export async function setLocale(locale: string) {
   if (!isLocale(locale)) return;

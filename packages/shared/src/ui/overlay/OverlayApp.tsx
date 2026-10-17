@@ -1,13 +1,13 @@
 "use client";
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertBox } from "@/components/AlertBox";
-import { isOverlayEvent, type OverlayAlert, type OverlayState } from "@/lib/alerts/types";
-import { getDict } from "@/lib/i18n";
-import { mergeQueue, POSITION_CLASS, vtsActionsFor } from "@/lib/overlay/queue";
-import { OverlayAudio } from "@/lib/overlay/sound";
-import { connectTwitchChat } from "@/lib/overlay/twitch";
-import { VtsClient } from "@/lib/vts/client";
+import { AlertBox } from "@moom/shared/ui/AlertBox";
+import { isOverlayEvent, type OverlayAlert, type OverlayState } from "@moom/shared/alerts";
+import { getDict } from "@moom/shared/i18n";
+import { mergeQueue, POSITION_CLASS, vtsActionsFor } from "@moom/shared/overlay/queue";
+import { OverlayAudio } from "@moom/shared/overlay/sound";
+import { connectTwitchChat } from "@moom/shared/overlay/twitch";
+import { VtsClient } from "@moom/shared/vts";
 import { PetsLayer } from "./PetsLayer";
 import { WheelReel } from "./WheelReel";
 

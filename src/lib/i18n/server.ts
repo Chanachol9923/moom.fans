@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
-import { getDict, isLocale, LOCALE_COOKIE, pickLocale, type Locale } from "./index";
+import { getDict, isLocale, LOCALE_COOKIE, pickLocale, type Locale } from "@moom/shared/i18n";
 
 export async function getLocale(): Promise<Locale> {
   const c = (await cookies()).get(LOCALE_COOKIE)?.value;

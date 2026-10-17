@@ -1,8 +1,8 @@
 "use client";
 import { useActionState } from "react";
 import { Button, Field, Input } from "@/components/ui";
-import { fmt } from "@/lib/i18n";
-import { useT } from "@/lib/i18n/client";
+import { fmt } from "@moom/shared/i18n";
+import { useT } from "@moom/shared/i18n/react";
 import { sendMagicLink, signInWithProvider, type LoginState } from "./actions";
 
 export function LoginForm({ discord, google, devHint }: { discord: boolean; google: boolean; devHint: boolean }) {

@@ -1,7 +1,7 @@
 import type { Store } from "@/app/(site)/s/[slug]/data";
-import type { Locale } from "@/lib/i18n";
+import type { Locale } from "@moom/shared/i18n";
 import { parsePageConfig } from "@/lib/page-config";
-import { PRESETS } from "@/lib/pets/sprites";
+import { PRESETS } from "@moom/shared/pets/sprites";
 
 /** Fake storefront for the dev gallery and design previews. No database needed. */
 export function sampleStore(locale: Locale, pageOverrides: Record<string, unknown> = {}): Store {

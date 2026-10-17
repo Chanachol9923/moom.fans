@@ -1,4 +1,4 @@
-import type { OverlayAlert, VtsRule } from "@/lib/alerts/types";
+import type { OverlayAlert, VtsRule } from "@moom/shared/alerts";
 
 /**
  * Merge a fresh server snapshot into the local FIFO. Keeps arrival order, drops

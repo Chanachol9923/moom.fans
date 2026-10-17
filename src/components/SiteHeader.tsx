@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { PRESETS } from "@/lib/pets/sprites";
+import { PRESETS } from "@moom/shared/pets/sprites";
 import { LocaleSwitch } from "./LocaleSwitch";
-import { PixelSprite } from "./PixelSprite";
+import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 
 export function Logo({ size = 32 }: { size?: number }) {
   return (

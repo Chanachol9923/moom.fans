@@ -1,4 +1,4 @@
-import type { PetSprite, SpriteFrames } from "@/lib/pets/sprites";
+import type { PetSprite, SpriteFrames } from "@moom/shared/pets/sprites";
 
 /**
  * Static SVG render of a sprite frame. Horizontal runs of one colour become one rect,
