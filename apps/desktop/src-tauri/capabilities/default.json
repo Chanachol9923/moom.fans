@@ -1,0 +1,14 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The app window: open links, sign-in deep links, the panic hotkey.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "deep-link:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-is-registered"
+  ]
+}

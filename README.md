@@ -38,6 +38,7 @@
 | **OBS Dock** (`/dock`) อนุมัติสลิป/คลิป + หยุดฉุกเฉินจากใน OBS | ✅ |
 | หน้าผู้สนับสนุน (รวมยอดตามชื่อ), ดาวน์โหลดข้อมูล + ลบบัญชี (PDPA) | ✅ |
 | หน้า วิธีใช้ / ข้อตกลง / ความเป็นส่วนตัว / 404 | ✅ ข้อตกลงกับนโยบายเป็น **ร่าง** ต้องให้นักกฎหมายตรวจ |
+| **แอป Moom บน Windows** (`apps/desktop`) เฟส 1: ล็อกอินผ่านเว็บ, รับ alert, หน้า OBS ในเครื่อง, TTS, ปุ่มลัดฉุกเฉิน, เลือกอุปกรณ์เสียง, ถามก่อนเล่น alert ที่ค้าง | ✅ ฝั่งหน้าจอทดสอบในเบราว์เซอร์แล้ว · ⚠️ ฝั่ง Rust ยังไม่ได้ compile (เครื่องยังไม่มี Rust) |
 | ระบบสมาชิกรายเดือน, การเก็บเงินของแพลตฟอร์ม, คิวเล่นกับคนดู (Mabar) | ⏸ ทีหลัง |
 
 ตรวจแล้ว: `npm test` (82 เทสต์ รวม schema + RLS บน Postgres จำลอง), `npm run lint`, `npm run build` ผ่านหมด
@@ -67,7 +68,11 @@
    - Edge-TTS เป็นช่องทางไม่เป็นทางการของ Microsoft ถ้าจะขายจริงควรเปลี่ยนเป็น Azure/Google TTS (สลับได้ที่ `src/lib/tts/index.ts`)
    - ไฟล์สินค้าจำกัด 50 MB (ขีดของ Supabase free) ถ้าจะใหญ่กว่านี้ย้ายไป R2 (แก้ที่ `src/lib/storage*.ts`)
    - ToS / Privacy Policy (PDPA) และนโยบายห้ามเนื้อหา 18+
-8. **ทีหลัง**: การเก็บเงินของแพลตฟอร์ม, ระบบสมาชิกรายเดือน, แอป Tauri (global hotkey, เสียงแยก device), YouTube chat สำหรับสัตว์เลี้ยง
+8. **แอปเดสก์ท็อป**: ติดตั้ง Rust (`winget install Rustlang.Rustup`) + Visual Studio Build Tools (เลือก "Desktop development with C++")
+   แล้วรัน `npm run tauri dev -w @moom/desktop` · ตัวติดตั้ง: `npm run tauri build -w @moom/desktop`
+   ได้ไฟล์ `.exe` แล้วใส่ลิงก์ใน env `NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL` ของ Vercel หน้า "แอป Moom" จะมีปุ่มดาวน์โหลด
+   ก่อนแจกคนอื่นควรเซ็นไฟล์ (code signing) ไม่งั้น Windows SmartScreen จะเตือน
+9. **ทีหลัง**: การเก็บเงินของแพลตฟอร์ม, ระบบสมาชิกรายเดือน, แอปเฟส 2 (แกล้งผ่าน OBS WebSocket, สัตว์เลี้ยงในแอป, แก้ตั้งค่าบัญชีในแอป), YouTube chat สำหรับสัตว์เลี้ยง
 
 ## ใช้ Supabase บน cloud (แทน Docker)
 
@@ -137,9 +142,31 @@ npm run dev
 
 คำสั่งอื่น: `npm test`, `npm run lint`, `npm run typecheck`, `npm run db:reset` (ล้างฐานข้อมูลแล้วรัน migration ใหม่)
 
+## แอปเดสก์ท็อป (`apps/desktop`)
+
+หน้าโดเนท, ตกแต่งหน้า, ตั้งค่าบัญชี อยู่บนเว็บ ส่วนตัวเล่น alert อยู่ในแอปบนเครื่องสตรีมเมอร์
+(เว็บยังมีโหมด Lite: ลิงก์ `/overlay/<token>` ใส่ OBS ตรงๆ ได้เหมือนเดิม)
+
+1. แอปสร้าง PKCE verifier แล้วเปิดเบราว์เซอร์ไป `/app/connect?state&challenge&device`
+2. สตรีมเมอร์กด "อนุญาต" บนเว็บ (ถ้ายังไม่ล็อกอินจะพาไปล็อกอินก่อนแล้วกลับมา) เว็บเด้งกลับแอปด้วย `moom://auth?code&state`
+   ถ้าเด้งไม่กลับ คัดลอกโค้ดจากหน้าเว็บไปวางในแอปได้
+3. แอปส่ง code + verifier ไป `POST /api/app/exchange` ได้ token_hash ใช้ครั้งเดียว → `verifyOtp` ได้ session ของตัวเอง
+   (โค้ดอายุ 5 นาที ใช้ได้ครั้งเดียว และใช้ไม่ได้ถ้าไม่มี verifier ที่อยู่แค่ในเครื่อง)
+4. แอปอ่าน `overlay_token` ผ่าน RLS แล้วรัน alert engine ตัวเดียวกับเว็บ (`@moom/shared/overlay/engine`) ในหน้าต่างแอป
+   เสียง, TTS, VTube Studio, ปุ่มลัด จึงอยู่ในแอป
+5. OBS ใส่ `http://127.0.0.1:4848/` หน้านี้แค่วาดตาม StageView ที่แอปส่งมาทาง WebSocket ในเครื่อง ไม่มี token ไม่มีความลับ
+6. ตั้งค่าบัญชี (สี, เสียง, สัตว์เลี้ยง, VTS) ซิงก์ผ่าน Realtime เหมือนเดิม แก้บนเว็บแล้วแอปเปลี่ยนตามทันที
+   ตั้งค่าเฉพาะเครื่อง (อุปกรณ์เสียง, ระดับเสียง, ปุ่มลัด) เก็บในแอปเท่านั้น
+
+ลองในเบราว์เซอร์โดยไม่ต้องมี Rust: `npm run dev` (เว็บ) + `npm run dev -w @moom/desktop` แล้วเปิด http://localhost:1420
+(โหมดทดสอบ: หน้า OBS คุยกับแอปผ่าน BroadcastChannel, ไม่มีปุ่มลัด/deep link ให้วางโค้ดแทน)
+
 ## โครงสร้าง
 
 ```
+packages/shared/src/     โค้ดที่เว็บกับแอปใช้ร่วมกัน: i18n, alert engine, stage, AlertBox, ชุด UI pixel, สัตว์เลี้ยง, CSS
+apps/desktop/            แอป Windows: Vite + React (index.html = หน้าต่างแอป, overlay.html = หน้า OBS)
+  src-tauri/             Tauri v2: เซิร์ฟเวอร์ 127.0.0.1:4848 (หน้า OBS + /ws), deep link moom://, ปุ่มลัด
 supabase/migrations/     schema + RLS + storage buckets (แหล่งความจริงของฐานข้อมูล)
 src/proxy.ts             แยก host: <slug>.โดเมน → /s/<slug>, refresh session ของ dashboard
 src/app/(site)/          หน้าเว็บทั้งหมด (layout มีฟอนต์ + i18n)
@@ -152,7 +179,7 @@ src/app/(overlay)/       root layout โปร่งใสสำหรับ OBS
 src/app/api/             public/[slug]/tx, tx/[token]/{qr,slip,download}, overlay/[token]/…, control/…
 src/lib/domain/          logic หลัก: transactions (สร้าง/สลิป/ยืนยัน), alerts, overlay state
 src/lib/                 promptpay (EMVCo QR), slipok, tts, realtime, storage, i18n, pets, vts, hosts
-src/components/          UI pixel (ui.tsx, AlertBox, PixelSprite) + overlay/
+src/components/          ส่วนของเว็บเท่านั้น (header, nav, ปุ่ม action)
 ```
 
 ### หลักที่ใช้
@@ -162,5 +189,5 @@ src/components/          UI pixel (ui.tsx, AlertBox, PixelSprite) + overlay/
 - **คนดูไม่ต้องมีบัญชี**: ทุกการจ่ายเงินมี `public_token` เป็นกุญแจของหน้าจ่ายเงิน/ดาวน์โหลด
 - **ยืนยันยอดครั้งเดียว**: `verifyTransaction` อัปเดตแบบมีเงื่อนไข คนที่มาก่อนเท่านั้นที่ได้สร้าง alert (กันกดซ้ำ/SlipOK ชนกับกดมือ) และ `slip_trans_ref` unique กันสลิปใบเดียวจ่ายสองรายการ
 - **Overlay**: ดึงคิวทุก 10 วินาที + Supabase Realtime broadcast เป็นตัวสะกิดให้ดึงเร็วขึ้น · alert ถูก "claim" ก่อนเล่น OBS หลายฉากจึงไม่เล่นซ้ำ · ลิงก์ overlay เป็นความลับ สร้างใหม่ได้
-- **i18n**: `src/lib/i18n/dict/th.ts` เป็นต้นแบบ, `en.ts` ต้องมีครบทุก key (TypeScript บังคับ)
-- **หน้าตา**: pixel ด้วย box-shadow (`.px-frame`, `.px-btn` ใน `globals.css`), ฟอนต์ Pixelify Sans + Chakra Petch + IBM Plex Sans Thai, ตัวเลขเงินใช้ `.font-num` ให้อ่านชัด
+- **i18n**: `packages/shared/src/i18n/dict/th.ts` เป็นต้นแบบ, `en.ts` ต้องมีครบทุก key (TypeScript บังคับ)
+- **หน้าตา**: pixel ด้วย box-shadow (`.px-frame`, `.px-btn` ใน `packages/shared/src/styles/moom.css`), ฟอนต์ Pixelify Sans + Chakra Petch + IBM Plex Sans Thai, ตัวเลขเงินใช้ `.font-num` ให้อ่านชัด

@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "../../../packages/shared/src/styles/moom.css";
+@source "../../../packages/shared/src";
+
+@import "@fontsource/pixelify-sans/400.css";
+@import "@fontsource/pixelify-sans/600.css";
+@import "@fontsource/chakra-petch/500.css";
+@import "@fontsource/chakra-petch/600.css";
+@import "@fontsource/ibm-plex-sans-thai/400.css";
+@import "@fontsource/ibm-plex-sans-thai/500.css";
+@import "@fontsource/ibm-plex-sans-thai/600.css";
+
+:root {
+  --font-pixel: "Pixelify Sans";
+  --font-thai-display: "Chakra Petch";
+  --font-thai-body: "IBM Plex Sans Thai";
+}
+
+/* Shows where the OBS page is transparent. */
+.px-checker {
+  background-color: #8c806f;
+  background-image:
+    linear-gradient(45deg, #7a6f60 25%, transparent 25%, transparent 75%, #7a6f60 75%),
+    linear-gradient(45deg, #7a6f60 25%, transparent 25%, transparent 75%, #7a6f60 75%);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
