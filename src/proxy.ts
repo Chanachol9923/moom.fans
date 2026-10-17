@@ -35,7 +35,7 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-/** Standard @supabase/ssr pattern: refresh the auth cookie before server components read it. */
+/** @supabase/ssr pattern: refresh the auth cookie before server components read it. */
 async function refreshSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -52,7 +52,9 @@ async function refreshSession(request: NextRequest) {
       },
     },
   });
-  await supabase.auth.getUser();
+  // getClaims() verifies the JWT locally (asymmetric signing key) and only calls the
+  // Auth server when the access token needs refreshing.
+  await supabase.auth.getClaims();
   return response;
 }
 

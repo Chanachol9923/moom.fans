@@ -204,6 +204,12 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: {
       subathon_add: { Args: { p_streamer: string; p_seconds: number }; Returns: undefined };
+      goal_raised: { Args: { p_goal: string }; Returns: number };
+      top_supporters: {
+        Args: { p_streamer: string; p_since: string | null; p_limit: number };
+        Returns: { name: string; total: number }[];
+      };
+      poll_totals: { Args: { p_poll: string }; Returns: { option: number; total: number }[] };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

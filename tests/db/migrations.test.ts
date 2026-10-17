@@ -43,6 +43,8 @@ const SUPABASE_STUBS = `
 
 const ALICE = "00000000-0000-0000-0000-00000000000a";
 const BOB = "00000000-0000-0000-0000-00000000000b";
+// Owns the aggregate test data so the RLS checks on ALICE/BOB keep their expectations.
+const CAROL = "00000000-0000-0000-0000-00000000000c";
 
 let db: PGlite;
 
@@ -175,14 +177,108 @@ describe("subathon_add", () => {
   });
 });
 
+describe("aggregate functions", () => {
+  let n = 0;
+  const tx = (o: { name?: string; amount: number; at: string; status?: string; kind?: string; anon?: boolean; wall?: boolean; poll?: string; option?: number }) => {
+    n += 1;
+    const purchase = o.kind === "purchase";
+    return db.exec(`
+      insert into public.transactions
+        (streamer_id, kind, supporter_name, amount, public_token, expires_at, status, verified_at,
+         is_anonymous, show_on_wall, product_title, supporter_email, poll_id, poll_option)
+      values ('${CAROL}', '${o.kind ?? "tip"}', '${o.name ?? "fan"}', ${o.amount}, 'agg-${n}', now(),
+              '${o.status ?? "verified"}', '${o.at}', ${o.anon ?? false}, ${o.wall ?? true},
+              ${purchase ? "'pack'" : "null"}, ${purchase ? "'b@x.test'" : "null"},
+              ${o.poll ? `'${o.poll}'` : "null"}, ${o.option ?? "null"})`);
+  };
+
+  beforeAll(async () => {
+    await db.exec(`
+      insert into auth.users (id, email) values ('${CAROL}', 'c@x.test');
+      insert into public.profiles (id, slug, display_name) values ('${CAROL}', 'carol', 'Carol');`);
+    await tx({ name: "Nok", amount: 20, at: "2026-10-02T00:00:00Z" });
+    await tx({ name: "nok ", amount: 30, at: "2026-10-03T00:00:00Z" });
+    await tx({ name: "Mew", amount: 40, at: "2026-10-03T00:00:00Z" });
+    await tx({ name: "secret", amount: 500, at: "2026-10-03T00:00:00Z", anon: true });
+    await tx({ name: "shy", amount: 900, at: "2026-10-03T00:00:00Z", wall: false });
+    await tx({ name: "-", amount: 5, at: "2026-10-03T00:00:00Z" });
+    await tx({ name: "old", amount: 999, at: "2026-09-01T00:00:00Z" });
+    await tx({ name: "buyer", amount: 30, at: "2026-10-02T00:00:00Z", kind: "purchase" });
+    await tx({ name: "unpaid", amount: 70, at: "2026-10-02T00:00:00Z", status: "pending_review" });
+  });
+
+  it("goal_raised adds verified tips inside the goal window to the starting amount", async () => {
+    await db.exec(`
+      insert into public.goals (id, streamer_id, title, target_amount, starting_amount, starts_at, is_active) values
+        ('00000000-0000-0000-0000-0000000000a1', '${CAROL}', 'tips only', 5000, 100, '2026-10-01', false),
+        ('00000000-0000-0000-0000-0000000000a2', '${CAROL}', 'with shop', 5000, 0, '2026-10-01', false),
+        ('00000000-0000-0000-0000-0000000000a3', '${CAROL}', 'ended', 5000, 0, '2026-10-01', false)`);
+    await db.exec(`update public.goals set include_purchases = true where id = '00000000-0000-0000-0000-0000000000a2'`);
+    await db.exec(`update public.goals set ends_at = '2026-10-02T12:00:00Z' where id = '00000000-0000-0000-0000-0000000000a3'`);
+    const r = await db.query<{ a: string; b: string; c: string }>(`
+      select public.goal_raised('00000000-0000-0000-0000-0000000000a1')::text as a,
+             public.goal_raised('00000000-0000-0000-0000-0000000000a2')::text as b,
+             public.goal_raised('00000000-0000-0000-0000-0000000000a3')::text as c`);
+    // tips after Oct 1: 20+30+40+500+900+5 = 1495 (anonymous and hidden still count as money raised)
+    expect(Number(r.rows[0].a)).toBe(1595);
+    expect(Number(r.rows[0].b)).toBe(1525);
+    expect(Number(r.rows[0].c)).toBe(20);
+  });
+
+  it("top_supporters ranks by name, skipping anonymous, hidden and blank names", async () => {
+    const all = await db.query<{ name: string; total: string }>(
+      `select name, total::text from public.top_supporters('${CAROL}', null, 10)`,
+    );
+    expect(all.rows.map((r) => [r.name, Number(r.total)])).toEqual([
+      ["old", 999],
+      ["Nok", 50],
+      ["Mew", 40],
+      ["buyer", 30],
+    ]);
+    const recent = await db.query<{ name: string }>(
+      `select name from public.top_supporters('${CAROL}', '2026-10-01', 2)`,
+    );
+    expect(recent.rows.map((r) => r.name)).toEqual(["Nok", "Mew"]);
+  });
+
+  it("poll_totals sums by amount or counts votes", async () => {
+    await db.exec(`
+      insert into public.polls (id, streamer_id, title, options, weight_by) values
+        ('00000000-0000-0000-0000-0000000000b1', '${CAROL}', 'game', '["a","b"]', 'amount')`);
+    await tx({ amount: 10, at: "2026-10-04T00:00:00Z", poll: "00000000-0000-0000-0000-0000000000b1", option: 0 });
+    await tx({ amount: 25, at: "2026-10-04T00:00:00Z", poll: "00000000-0000-0000-0000-0000000000b1", option: 1 });
+    await tx({ amount: 5, at: "2026-10-04T00:00:00Z", poll: "00000000-0000-0000-0000-0000000000b1", option: 1 });
+    await tx({ amount: 99, at: "2026-10-04T00:00:00Z", poll: "00000000-0000-0000-0000-0000000000b1", option: 1, status: "rejected" });
+    const byAmount = await db.query<{ option: number; total: string }>(
+      `select option, total::text from public.poll_totals('00000000-0000-0000-0000-0000000000b1') order by option`,
+    );
+    expect(byAmount.rows.map((r) => [r.option, Number(r.total)])).toEqual([[0, 10], [1, 30]]);
+    await db.exec(`update public.polls set weight_by = 'count' where id = '00000000-0000-0000-0000-0000000000b1'`);
+    const byCount = await db.query<{ option: number; total: string }>(
+      `select option, total::text from public.poll_totals('00000000-0000-0000-0000-0000000000b1') order by option`,
+    );
+    expect(byCount.rows.map((r) => [r.option, Number(r.total)])).toEqual([[0, 1], [1, 2]]);
+  });
+
+  it("is not callable by client roles", async () => {
+    for (const sql of [
+      `select public.goal_raised('00000000-0000-0000-0000-0000000000a1')`,
+      `select * from public.top_supporters('${CAROL}', null, 5)`,
+      `select * from public.poll_totals('00000000-0000-0000-0000-0000000000b1')`,
+    ]) {
+      await expect(as("anon", null, () => db.exec(sql))).rejects.toThrow(/permission denied/);
+    }
+  });
+});
+
 describe("row level security", () => {
   it("anon sees profiles and only published products", async () => {
     const r = await as("anon", null, () =>
       db.query<{ title: string }>("select title from public.products order by title"),
     );
     expect(r.rows.map((x) => x.title)).toEqual(["Voice pack"]);
-    const p = await as("anon", null, () => db.query("select slug from public.profiles"));
-    expect(p.rows).toHaveLength(2);
+    const p = await as("anon", null, () => db.query<{ slug: string }>("select slug from public.profiles"));
+    expect(p.rows.map((r) => r.slug)).toEqual(expect.arrayContaining(["alice", "bob"]));
   });
 
   it("anon cannot read private settings, transactions or alerts", async () => {
