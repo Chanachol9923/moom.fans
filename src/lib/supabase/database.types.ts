@@ -68,6 +68,8 @@ export type OverlaySettingsRow = {
   subathon_seconds_per_baht: number;
   subathon_ends_at: string | null;
   subathon_paused_left: number | null;
+  alert_tiers: Json;
+  custom_css: string;
   updated_at: string;
 };
 

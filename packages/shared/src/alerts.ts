@@ -48,6 +48,23 @@ export type OverlayPet = {
 
 export type AlertStyle = "card" | "compact" | "banner";
 
+export const ALERT_ANIMATIONS = ["pop", "slide", "bounce", "shake", "fade", "none"] as const;
+export type AlertAnimation = (typeof ALERT_ANIMATIONS)[number];
+
+/** One look for alerts from `minAmount` baht up. The highest tier a tip reaches wins. */
+export type AlertTier = {
+  minAmount: number;
+  /** Image, GIF or short video shown in the alert. */
+  mediaUrl: string | null;
+  mediaKind: "image" | "video" | null;
+  soundUrl: string | null;
+  /** Headline template with {name} {amount} {product} {unit} {qty}; "" = the default text. */
+  title: string;
+  accent: string | null;
+  animation: AlertAnimation;
+  style: AlertStyle | null;
+};
+
 export type OverlayConfig = {
   position: OverlayPosition;
   alertStyle: AlertStyle;
@@ -63,6 +80,10 @@ export type OverlayConfig = {
   accent: string;
   locale: Locale;
   blockedWords: string[];
+  /** Sorted by minAmount. Empty = one default look for everything. */
+  tiers: AlertTier[];
+  /** The streamer's own CSS for the OBS page. */
+  customCss: string;
 };
 
 export type OverlayState = {

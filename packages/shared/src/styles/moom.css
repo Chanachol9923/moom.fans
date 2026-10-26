@@ -240,6 +240,33 @@
   100% { transform: none; opacity: 1; }
 }
 
+/* Alert entrances, picked per tier. Stepped timing keeps them pixel-y. */
+@keyframes px-slide {
+  from { transform: translateX(110%); }
+  to { transform: none; }
+}
+@keyframes px-bounce {
+  0% { transform: translateY(-120%); }
+  55% { transform: translateY(6%); }
+  75% { transform: translateY(-3%); }
+  100% { transform: none; }
+}
+@keyframes px-shake {
+  0%, 100% { transform: none; }
+  20%, 60% { transform: translateX(-8px) rotate(-1deg); }
+  40%, 80% { transform: translateX(8px) rotate(1deg); }
+}
+@keyframes px-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.px-in-pop { animation: px-pop 180ms steps(3); }
+.px-in-slide { animation: px-slide 300ms steps(6); }
+.px-in-bounce { animation: px-bounce 500ms steps(8); }
+.px-in-shake { animation: px-pop 180ms steps(3), px-shake 400ms steps(8) 180ms; }
+.px-in-fade { animation: px-fade 400ms steps(5); }
+.px-in-none { animation: none; }
+
 @keyframes px-drain {
   from { clip-path: inset(0 0 0 0); }
   to { clip-path: inset(0 100% 0 0); }
@@ -262,4 +289,14 @@
   .px-blink, .px-bob {
     animation: none;
   }
+}
+
+/* Shows where the OBS page is transparent. */
+.px-checker {
+  background-color: #8c806f;
+  background-image:
+    linear-gradient(45deg, #7a6f60 25%, transparent 25%, transparent 75%, #7a6f60 75%),
+    linear-gradient(45deg, #7a6f60 25%, transparent 25%, transparent 75%, #7a6f60 75%);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
 }

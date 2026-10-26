@@ -1,6 +1,7 @@
 import "server-only";
 import type { AlertPayload, OverlayAlert, OverlayConfig, OverlayPet, OverlayState, VtsRule } from "@moom/shared/alerts";
 import { publicEnv } from "@/lib/env";
+import { parseStoredTiers, safeCss, toAlertTiers } from "@moom/shared/overlay/design";
 import { resolveSprite } from "@moom/shared/pets/sprites";
 import { overlayTopic } from "@/lib/realtime";
 import { publicMediaUrl } from "@/lib/storage";
@@ -73,6 +74,8 @@ export async function loadOverlayState(token: string): Promise<OverlayState | nu
     accent: profile.accent_color,
     locale: profile.locale,
     blockedWords: s.blocked_words,
+    tiers: toAlertTiers(parseStoredTiers(settings.alert_tiers, `${s.streamer_id}/`), publicMediaUrl),
+    customCss: safeCss(settings.custom_css ?? ""),
   };
 
   return {

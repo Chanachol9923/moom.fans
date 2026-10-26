@@ -29,6 +29,7 @@ export function DashNav({ pending }: { pending: number }) {
       items: [
         { href: "/dashboard/app", label: d.nav.app },
         { href: "/dashboard/overlay", label: d.nav.overlay },
+        { href: "/dashboard/alerts", label: d.nav.alerts },
         { href: "/dashboard/widgets", label: d.nav.widgets },
         { href: "/dashboard/fun", label: d.nav.fun },
         { href: "/dashboard/pets", label: d.nav.pets },

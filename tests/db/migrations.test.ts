@@ -302,6 +302,43 @@ describe("app_links", () => {
   });
 });
 
+describe("alert design", () => {
+  it("defaults to no tiers and no CSS", async () => {
+    const r = await db.query<{ alert_tiers: unknown; custom_css: string }>(
+      `select alert_tiers, custom_css from public.overlay_settings where streamer_id = '${ALICE}'`,
+    );
+    expect(r.rows[0]).toEqual({ alert_tiers: [], custom_css: "" });
+  });
+
+  it("limits tiers to an array of at most 8 and CSS to 20k chars", async () => {
+    const nine = JSON.stringify(Array.from({ length: 9 }, (_, i) => ({ min_amount: i })));
+    await expect(db.exec(`update public.overlay_settings set alert_tiers = '${nine}' where streamer_id = '${ALICE}'`)).rejects.toThrow();
+    await expect(db.exec(`update public.overlay_settings set alert_tiers = '{}' where streamer_id = '${ALICE}'`)).rejects.toThrow();
+    await expect(
+      db.exec(`update public.overlay_settings set custom_css = repeat('a', 20001) where streamer_id = '${ALICE}'`),
+    ).rejects.toThrow();
+  });
+
+  it("lets owners change only their own design", async () => {
+    await as("authenticated", ALICE, () =>
+      db.exec(`update public.overlay_settings set custom_css = '.moom-alert{color:red}', alert_tiers = '[{"min_amount":100}]'`),
+    );
+    const r = await db.query<{ streamer_id: string; custom_css: string }>(
+      `select streamer_id, custom_css from public.overlay_settings order by streamer_id`,
+    );
+    expect(r.rows.find((x) => x.streamer_id === ALICE)?.custom_css).toBe(".moom-alert{color:red}");
+    expect(r.rows.find((x) => x.streamer_id === BOB)?.custom_css).toBe("");
+    await db.exec(`update public.overlay_settings set custom_css = '', alert_tiers = '[]'`);
+  });
+
+  it("accepts short videos in public media", async () => {
+    const r = await db.query<{ ok: boolean }>(
+      `select 'video/webm' = any(allowed_mime_types) as ok from storage.buckets where id = 'public-media'`,
+    );
+    expect(r.rows[0].ok).toBe(true);
+  });
+});
+
 describe("row level security", () => {
   it("anon sees profiles and only published products", async () => {
     const r = await as("anon", null, () =>

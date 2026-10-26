@@ -77,6 +77,8 @@ export function DemoOverlay({ locale, style = "card" }: { locale: Locale; style?
       accent: "#2f7a6a",
       locale,
       blockedWords: [],
+      tiers: [],
+      customCss: "",
     },
     alerts: [],
     pets: [

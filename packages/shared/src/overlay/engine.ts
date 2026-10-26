@@ -2,6 +2,7 @@
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isOverlayEvent, type OverlayAlert, type OverlayConfig, type OverlayPet, type OverlayState } from "../alerts";
+import { tierFor } from "./design";
 import { mergeQueue, vtsActionsFor } from "./queue";
 import { OverlayAudio } from "./sound";
 import { connectTwitchChat } from "./twitch";
@@ -214,7 +215,8 @@ export function useOverlayEngine(opts: EngineOptions) {
       try {
         const a = audio.current;
         if (a) {
-          if (cfg.alertSoundUrl) await a.playUrl(cfg.alertSoundUrl, signal).catch(() => a.chirp());
+          const sound = tierFor(cfg.tiers, p.amount)?.tier.soundUrl ?? cfg.alertSoundUrl;
+          if (sound) await a.playUrl(sound, signal).catch(() => a.chirp());
           else await a.chirp();
         }
         for (const rule of opts.vts && cfg.vtsEnabled ? vtsActionsFor(cfg.vtsRules, p.amount) : []) {

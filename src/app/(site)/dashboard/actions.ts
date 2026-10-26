@@ -18,6 +18,7 @@ import { newToken } from "@/lib/tokens";
 import { detectPromptPayType, isValidNationalId, normalizePromptPayId } from "@/lib/promptpay";
 import { isTtsVoice } from "@/lib/tts/types";
 import { isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
+import { MAX_CSS, parseStoredTiers } from "@moom/shared/overlay/design";
 
 /** Storage keys we generate only ever contain these characters. */
 const SAFE_PATH = /^[\w\-./]+$/;
@@ -107,6 +108,28 @@ export async function sendTestAlert(kind: "tip" | "purchase" | "media" | "unit" 
     unitQty: k === "unit" ? 3 : undefined,
     spin: k === "wheel",
   });
+}
+
+/** Tiers by amount + custom CSS. Streamer-owned row, so the user client writes it under RLS. */
+export async function saveAlertDesign(tiers: unknown, css: string): Promise<SaveResult> {
+  const { supabase, profile } = await streamerForAction();
+  const clean = parseStoredTiers(tiers, `${profile.id}/`);
+  const { error } = await supabase
+    .from("overlay_settings")
+    .update({ alert_tiers: clean as unknown as Json, custom_css: String(css ?? "").slice(0, MAX_CSS) })
+    .eq("streamer_id", profile.id);
+  if (error) return { ok: false, error: error.message };
+  await notifyOverlay(await channelOf(profile.id), { type: "config" });
+  revalidatePath("/dashboard/alerts");
+  return { ok: true };
+}
+
+/** A test tip of a chosen amount, to see a tier on stream. */
+export async function sendTestAmount(amount: number) {
+  const { profile } = await streamerForAction();
+  const d = getDict(profile.locale);
+  const a = z.number().min(1).max(1_000_000).parse(amount);
+  await queueTestAlert(profile.id, { kind: "tip", name: d.alert.testName, amount: a, message: d.alert.testMessage });
 }
 
 export async function rotateOverlayToken() {

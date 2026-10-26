@@ -1,6 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { getDict } from "../../i18n";
+import { tierFor } from "../../overlay/design";
 import type { StageView } from "../../overlay/engine";
 import { POSITION_CLASS } from "../../overlay/queue";
 import { AlertBox } from "../AlertBox";
@@ -26,9 +27,13 @@ export function OverlayStage({
   const { config: cfg, pets, current, paused } = view;
   const d = getDict(cfg.locale);
   const showPets = cfg.petsEnabled && pets.length > 0;
+  const match = current ? tierFor(cfg.tiers, current.alert.payload.amount) : null;
+  const tier = match?.tier;
 
   return (
-    <div className="relative h-dvh w-dvw overflow-hidden text-[18px]">
+    <div className="moom-stage relative h-dvh w-dvw overflow-hidden text-[18px]">
+      {/* Already escaped by safeCss on the server. Only ever rendered on the OBS page. */}
+      {cfg.customCss ? <style>{cfg.customCss}</style> : null}
       {showPets && <PetsLayer pets={pets} speakRef={speakRef} />}
 
       <div
@@ -36,13 +41,16 @@ export function OverlayStage({
         style={showPets && cfg.position.startsWith("bottom") ? { paddingBottom: 120 } : undefined}
       >
         {current?.phase === "alert" && (
-          <div className="animate-[px-pop_180ms_steps(3)]" key={current.alert.id}>
+          <div className={`moom-alert-wrap px-in-${tier?.animation ?? "pop"}`} key={current.alert.id}>
             <AlertBox
               kind={current.alert.kind}
               payload={current.alert.payload}
-              accent={cfg.accent}
+              accent={tier?.accent ?? cfg.accent}
               durationMs={current.durationMs}
-              variant={cfg.alertStyle}
+              variant={tier?.style ?? cfg.alertStyle}
+              media={tier?.mediaUrl && tier.mediaKind ? { url: tier.mediaUrl, kind: tier.mediaKind } : null}
+              title={tier?.title}
+              tier={match?.index}
             />
           </div>
         )}
