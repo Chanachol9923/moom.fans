@@ -4,7 +4,8 @@ import { Button, Field, Input } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { createCorner, type OnboardingState } from "./actions";
 
-export function OnboardingForm({ rootDomain }: { rootDomain: string }) {
+/** The page address around the slug field: "<slug>.moom.fans" or "moom-fans.vercel.app/s/<slug>". */
+export function OnboardingForm({ before, after }: { before: string; after: string }) {
   const { d } = useT();
   const [state, action, pending] = useActionState<OnboardingState, FormData>(createCorner, {});
   const [slug, setSlug] = useState(state.values?.slug ?? "");
@@ -19,6 +20,7 @@ export function OnboardingForm({ rootDomain }: { rootDomain: string }) {
         error={e.slug === "taken" ? d.onboarding.slugTaken : e.slug ? d.onboarding.slugInvalid : undefined}
       >
         <div className="flex items-center gap-2">
+          {before && <span className="shrink-0 font-display text-ink-soft">{before}</span>}
           <Input
             id="slug"
             name="slug"
@@ -31,7 +33,7 @@ export function OnboardingForm({ rootDomain }: { rootDomain: string }) {
             autoComplete="off"
             spellCheck={false}
           />
-          <span className="shrink-0 font-display text-ink-soft">.{rootDomain}</span>
+          {after && <span className="shrink-0 font-display text-ink-soft">{after}</span>}
         </div>
       </Field>
       <Field label={d.onboarding.displayName} htmlFor="displayName" error={e.displayName && d.common.error}>

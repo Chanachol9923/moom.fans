@@ -88,9 +88,21 @@ export class OverlayAudio {
   }
 
   async playUrl(url: string, signal?: AbortSignal): Promise<void> {
-    const res = await fetch(url, { signal });
-    if (!res.ok || res.status === 204) return;
-    return this.playBytes(await res.arrayBuffer(), signal);
+    // A slow TTS server must not stall the queue. (No AbortSignal.any: older OBS builds lack it.)
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15_000);
+    const forward = () => ctrl.abort();
+    signal?.addEventListener("abort", forward);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal });
+      if (!res.ok || res.status === 204) return;
+      const bytes = await res.arrayBuffer();
+      clearTimeout(timer);
+      return await this.playBytes(bytes, signal);
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", forward);
+    }
   }
 
   async playBytes(bytes: ArrayBuffer, signal?: AbortSignal): Promise<void> {
@@ -102,7 +114,13 @@ export class OverlayAudio {
     src.connect(this.master);
     this.track(src);
     return new Promise((resolve) => {
-      src.onended = () => resolve();
+      // A suspended context (autoplay blocked) never fires `ended`. Never let sound
+      // hold up the queue longer than the clip itself would have taken.
+      const guard = setTimeout(resolve, buf.duration * 1000 + 1500);
+      src.onended = () => {
+        clearTimeout(guard);
+        resolve();
+      };
       signal?.addEventListener("abort", () => {
         try {
           src.stop();

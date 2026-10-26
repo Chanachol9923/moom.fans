@@ -36,14 +36,24 @@ export function PayClient({
     return () => clearInterval(id);
   }, []);
 
-  // Poll while the streamer still has to act.
+  // Keep the status fresh until it's settled: quickly while the streamer reviews, slowly
+  // while waiting for a slip (the streamer may approve without one), and right away when
+  // the supporter comes back from their bank app.
   useEffect(() => {
-    if (view.status !== "pending_review") return;
-    const id = setInterval(async () => {
-      const res = await fetch(`/api/tx/${token}`, { cache: "no-store" });
-      if (res.ok) setView(await res.json());
-    }, 4000);
-    return () => clearInterval(id);
+    if (view.status !== "pending_review" && view.status !== "awaiting_payment") return;
+    const refresh = async () => {
+      const res = await fetch(`/api/tx/${token}`, { cache: "no-store" }).catch(() => null);
+      if (res?.ok) setView(await res.json());
+    };
+    const id = setInterval(refresh, view.status === "pending_review" ? 4000 : 10_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [token, view.status]);
 
   const msLeft = new Date(view.expiresAt).getTime() - now;
@@ -54,7 +64,7 @@ export function PayClient({
     setError(null);
     setUploading(true);
     const form = new FormData();
-    form.append("slip", file);
+    form.append("slip", await fitSlip(file));
     const res = await fetch(`/api/tx/${token}/slip`, { method: "POST", body: form });
     const json = await res.json().catch(() => ({}));
     setUploading(false);
@@ -156,6 +166,27 @@ export function PayClient({
       </div>
     </main>
   );
+}
+
+const SLIP_MAX_BYTES = 4.5 * 1024 * 1024;
+const SLIP_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
+/** Camera photos can be too big or an odd format; re-encode those as a JPEG the server takes. */
+async function fitSlip(file: File): Promise<File> {
+  if (SLIP_TYPES.includes(file.type) && file.size <= SLIP_MAX_BYTES) return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d")?.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    bmp.close();
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.85));
+    return blob ? new File([blob], "slip.jpg", { type: "image/jpeg" }) : file;
+  } catch {
+    return file; // the server explains what's wrong
+  }
 }
 
 function StatusBlock({

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Panel } from "@moom/shared/ui/kit";
 import { isSupabaseConfigured } from "@/lib/env";
-import { rootDomain } from "@/lib/hosts";
+import { rootDomain, subdomainsEnabled } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";
 import { getUser } from "@/lib/supabase/server";
 import { OnboardingForm } from "./OnboardingForm";
@@ -21,7 +21,11 @@ export default async function OnboardingPage() {
       <main className="mx-auto w-full max-w-lg px-4 py-10">
         <Panel title={d.onboarding.title} raised>
           <p className="mb-5 text-ink-soft">{d.onboarding.subtitle}</p>
-          <OnboardingForm rootDomain={rootDomain()} />
+          {subdomainsEnabled() ? (
+            <OnboardingForm before="" after={`.${rootDomain()}`} />
+          ) : (
+            <OnboardingForm before={`${rootDomain()}/s/`} after="" />
+          )}
         </Panel>
       </main>
     </>
