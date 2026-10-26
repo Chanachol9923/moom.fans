@@ -1,11 +1,22 @@
 import "server-only";
 import type { AlertKind, AlertPayload } from "@moom/shared/alerts";
 import { fmt, formatBaht, getDict } from "@moom/shared/i18n";
+import { azureConfigured, azureTts } from "./azure";
 import { edgeTts } from "./edge";
 import type { TtsProvider } from "./types";
 
-// Swap the provider here (Azure / Google) without touching callers.
-export const tts: TtsProvider = edgeTts;
+/**
+ * Azure Speech when it's configured. Otherwise the unofficial Edge "Read aloud"
+ * endpoint, which Microsoft can (and does) start refusing at any time; the dashboard
+ * warns about that.
+ */
+export function ttsProvider(): TtsProvider {
+  return azureConfigured() ? azureTts : edgeTts;
+}
+
+export function ttsIsOfficial(): boolean {
+  return azureConfigured();
+}
 
 /** The sentence spoken for an alert. Names/messages were already filtered when queued. */
 export function alertSpeech(kind: AlertKind, p: AlertPayload, maxChars: number): string {

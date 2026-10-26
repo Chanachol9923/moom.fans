@@ -140,10 +140,22 @@ export function useOverlayEngine(opts: EngineOptions) {
 
   useEffect(() => {
     const id = setInterval(refresh, POLL_MS);
+    // Back online after a network drop: catch up now rather than at the next poll.
+    window.addEventListener("online", refresh);
     let channel: RealtimeChannel | null = null;
+    let sb: ReturnType<typeof createClient> | null = null;
     const rt = initial.realtime;
     if (rt) {
-      const sb = createClient(rt.url, rt.key, { auth: { persistSession: false } });
+      // Realtime only, no login. A storage key of its own per instance keeps supabase-js
+      // from warning about several clients sharing one (previews, StrictMode remounts).
+      sb = createClient(rt.url, rt.key, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+          storageKey: `moom-overlay-${Math.random().toString(36).slice(2)}`,
+        },
+      });
       channel = sb
         .channel(rt.channel, { config: { broadcast: { self: false } } })
         .on("broadcast", { event: BROADCAST_EVENT }, ({ payload }) => {
@@ -160,7 +172,10 @@ export function useOverlayEngine(opts: EngineOptions) {
     }
     return () => {
       clearInterval(id);
+      window.removeEventListener("online", refresh);
       channel?.unsubscribe();
+      // Close the socket too, or every remount leaves one open.
+      void sb?.realtime.disconnect();
     };
   }, [initial.realtime, refresh, stopCurrent, panic, resume]);
 

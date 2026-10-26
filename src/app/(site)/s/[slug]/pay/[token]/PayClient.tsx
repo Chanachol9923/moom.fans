@@ -65,16 +65,16 @@ export function PayClient({
     setUploading(true);
     const form = new FormData();
     form.append("slip", await fitSlip(file));
-    const res = await fetch(`/api/tx/${token}/slip`, { method: "POST", body: form });
-    const json = await res.json().catch(() => ({}));
+    const res = await fetch(`/api/tx/${token}/slip`, { method: "POST", body: form }).catch(() => null);
+    const json = res ? await res.json().catch(() => ({})) : { error: "network" };
     setUploading(false);
-    if (!res.ok) {
+    if (!res?.ok) {
       const key = json.error as keyof typeof d.pay.uploadErrors;
       setError(d.pay.uploadErrors[key] ?? d.common.error);
       return;
     }
-    const next = await fetch(`/api/tx/${token}`, { cache: "no-store" });
-    if (next.ok) setView(await next.json());
+    const next = await fetch(`/api/tx/${token}`, { cache: "no-store" }).catch(() => null);
+    if (next?.ok) setView(await next.json());
   }
 
   const amount = formatBaht(view.amount, locale);

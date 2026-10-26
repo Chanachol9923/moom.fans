@@ -1,5 +1,7 @@
 import "server-only";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { safeNext } from "@/lib/hosts";
 import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getUser } from "@/lib/supabase/server";
@@ -17,11 +19,26 @@ export const requireStreamer = cache(async function requireStreamer() {
   return { supabase, user, profile };
 });
 
-/** For server actions: same check, but throws instead of redirecting mid-action. */
+/**
+ * For server actions. A session can expire, or the account be deleted, while the
+ * dashboard is open; then the action sends the browser to sign in (and back to the
+ * same page afterwards) instead of failing with an error screen.
+ * Call it outside any try/catch: redirect() works by throwing.
+ */
 export async function streamerForAction() {
   const { supabase, user } = await getUser();
-  if (!user) throw new Error("not signed in");
+  if (!user) redirect(`/login?next=${encodeURIComponent(await currentPath())}`);
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-  if (!profile) throw new Error("not onboarded");
+  if (!profile) redirect("/onboarding");
   return { supabase, user, profile };
+}
+
+/** The dashboard page the action came from, if it's one we'd send people back to. */
+async function currentPath(): Promise<string> {
+  const ref = (await headers()).get("referer");
+  try {
+    return (ref && safeNext(new URL(ref).pathname)) || "/dashboard";
+  } catch {
+    return "/dashboard";
+  }
 }

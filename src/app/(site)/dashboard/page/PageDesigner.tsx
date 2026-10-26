@@ -242,8 +242,8 @@ export function PageDesigner({
             disabled={pending}
             onClick={() =>
               start(async () => {
-                const r = await savePageConfig(cfg);
-                setSaved(r.ok);
+                const r = await savePageConfig(cfg).catch(() => null);
+                setSaved(Boolean(r?.ok));
               })
             }
           >

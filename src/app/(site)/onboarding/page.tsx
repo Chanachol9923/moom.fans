@@ -13,6 +13,10 @@ export default async function OnboardingPage() {
   if (!user) redirect("/login");
   const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle();
   if (profile) redirect("/dashboard");
+  // Sessions are checked locally, so a deleted account still looks signed in. Before
+  // offering to create a page for it, ask the auth server whether the account exists.
+  const { error } = await supabase.auth.getUser();
+  if (error && (error.code === "user_not_found" || error.status === 403 || error.status === 404)) redirect("/auth/gone");
   const { d } = await getT();
 
   return (

@@ -90,6 +90,10 @@ export function safeNext(next: string | null | undefined): string | null {
   return NEXT_ALLOWED.test(next) ? next : null;
 }
 
+/**
+ * Always carries a query string, so the email template can append to it:
+ * {{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email
+ */
 export function callbackUrl(next: string | null): string {
-  return siteUrl(next ? `/auth/callback?next=${encodeURIComponent(next)}` : "/auth/callback");
+  return siteUrl(`/auth/callback?next=${encodeURIComponent(next ?? "/dashboard")}`);
 }

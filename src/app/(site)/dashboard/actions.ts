@@ -17,6 +17,7 @@ import type { Json, OverlayPosition } from "@/lib/supabase/database.types";
 import { newToken } from "@/lib/tokens";
 import { detectPromptPayType, isValidNationalId, normalizePromptPayId } from "@/lib/promptpay";
 import { isTtsVoice } from "@/lib/tts/types";
+import { ttsProvider } from "@/lib/tts";
 import { isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
 import { MAX_CSS, parseStoredTiers } from "@moom/shared/overlay/design";
 
@@ -118,10 +119,24 @@ export async function saveAlertDesign(tiers: unknown, css: string): Promise<Save
     .from("overlay_settings")
     .update({ alert_tiers: clean as unknown as Json, custom_css: String(css ?? "").slice(0, MAX_CSS) })
     .eq("streamer_id", profile.id);
-  if (error) return { ok: false, error: error.message };
+  // 42703 / PGRST204: the columns don't exist yet (migration not applied on this database).
+  if (error) return { ok: false, error: error.code === "42703" || error.code === "PGRST204" ? "not_ready" : error.message };
   await notifyOverlay(await channelOf(profile.id), { type: "config" });
   revalidatePath("/dashboard/alerts");
   return { ok: true };
+}
+
+/** Speaks one short line with the chosen voice, so the streamer finds out before going live. */
+export async function testTts(voice: string): Promise<{ ok: true; audio: string } | { ok: false; error: string }> {
+  const { profile } = await streamerForAction();
+  if (!isTtsVoice(voice)) return { ok: false, error: "voice" };
+  const d = getDict(profile.locale);
+  try {
+    const mp3 = await ttsProvider().synthesize({ text: d.overlay.ttsTestLine, voice });
+    return { ok: true, audio: `data:audio/mpeg;base64,${mp3.toString("base64")}` };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message.slice(0, 120) };
+  }
 }
 
 /** A test tip of a chosen amount, to see a tier on stream. */

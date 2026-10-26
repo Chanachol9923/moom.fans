@@ -58,7 +58,7 @@ export function AlertDesignEditor({
   const [tiers, setTiers] = useState(initialTiers);
   const [css, setCss] = useState(initialCss);
   const [urls, setUrls] = useState(initialUrls);
-  const [saved, setSaved] = useState<"idle" | "ok" | "error">("idle");
+  const [saved, setSaved] = useState<"idle" | "ok" | "error" | "not_ready">("idle");
   const [pending, start] = useTransition();
   const [testing, startTest] = useTransition();
 
@@ -77,8 +77,9 @@ export function AlertDesignEditor({
 
   const save = () =>
     start(async () => {
-      const r = await saveAlertDesign(tiers, css);
-      setSaved(r.ok ? "ok" : "error");
+      const r = await saveAlertDesign(tiers, css).catch(() => ({ ok: false, error: "network" }));
+      if (!r) return; // the action redirected (session expired)
+      setSaved(r.ok ? "ok" : r.error === "not_ready" ? "not_ready" : "error");
       // Keep the editor in the order the overlay uses.
       if (r.ok) setTiers((ts) => [...ts].sort((a, b) => a.min_amount - b.min_amount));
     });
@@ -111,7 +112,7 @@ export function AlertDesignEditor({
                 setSaved("idle");
                 setTiers((ts) => ts.filter((_, j) => j !== i));
               }}
-              onTest={() => startTest(() => sendTestAmount(Math.max(1, t.min_amount)))}
+              onTest={() => startTest(() => sendTestAmount(Math.max(1, t.min_amount)).catch(() => {}))}
               onUpload={async (file, folder) => {
                 if (file.size > MAX_UPLOAD) throw new Error("too big");
                 const path = await uploadPublicMedia(supabase, userId, file, folder);
@@ -160,6 +161,7 @@ export function AlertDesignEditor({
         </Button>
         {saved === "ok" && !pending && <span className="font-display text-leaf">✓ {d.design.savedLive}</span>}
         {saved === "error" && <span className="text-tomato">{d.common.error}</span>}
+        {saved === "not_ready" && <span className="text-tomato">{d.design.notReady}</span>}
       </div>
     </div>
   );

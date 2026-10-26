@@ -31,7 +31,7 @@ export function AccountPanel({ slug }: { slug: string }) {
             start(async () => {
               // On success the action redirects away; it only returns on failure.
               const r = await deleteAccount(confirm);
-              if (!r.ok) setError(true);
+              if (r && !r.ok) setError(true);
             })
           }
         >

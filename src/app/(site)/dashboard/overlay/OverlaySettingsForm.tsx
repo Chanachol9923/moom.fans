@@ -1,11 +1,11 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { Button, Check, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import type { OverlaySettingsRow } from "@/lib/supabase/database.types";
 import { TTS_VOICES } from "@/lib/tts/types";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
-import { saveOverlaySettings, type SaveResult } from "../actions";
+import { saveOverlaySettings, testTts, type SaveResult } from "../actions";
 
 const POSITIONS = ["top-left", "top-center", "top-right", "center", "bottom-left", "bottom-center", "bottom-right"] as const;
 
@@ -15,14 +15,18 @@ export function OverlaySettingsForm({
   userId,
   soundUrl,
   supabase,
+  ttsOfficial,
 }: {
   settings: OverlaySettingsRow;
   blockedWords: string[];
   userId: string;
   soundUrl: string | null;
   supabase: SupabasePublic;
+  /** False = running on the unofficial Edge endpoint, which can stop working any time. */
+  ttsOfficial: boolean;
 }) {
   const { d } = useT();
+  const [voice, setVoice] = useState(s.tts_voice);
   const [state, action, pending] = useActionState<SaveResult, FormData>(saveOverlaySettings, { ok: false });
   const [soundPath, setSoundPath] = useState(s.alert_sound_path ?? "");
   const [soundBusy, setSoundBusy] = useState(false);
@@ -106,7 +110,7 @@ export function OverlaySettingsForm({
         <Check name="tts_enabled" defaultChecked={s.tts_enabled} label={d.overlay.tts} />
         <div className="grid gap-x-5 sm:grid-cols-3">
           <Field label={d.overlay.ttsVoice} htmlFor="tts_voice">
-            <Select id="tts_voice" name="tts_voice" defaultValue={s.tts_voice}>
+            <Select id="tts_voice" name="tts_voice" value={voice} onChange={(e) => setVoice(e.target.value)}>
               {TTS_VOICES.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.label}
@@ -121,6 +125,7 @@ export function OverlaySettingsForm({
             <Input id="tts_max_chars" name="tts_max_chars" type="number" min={10} max={300} defaultValue={s.tts_max_chars} />
           </Field>
         </div>
+        <TtsTest voice={voice} official={ttsOfficial} />
         <Field label={d.overlay.words} hint={d.overlay.wordsHint} htmlFor="blocked_words">
           <Textarea id="blocked_words" name="blocked_words" rows={4} defaultValue={blockedWords.join("\n")} />
         </Field>
@@ -161,5 +166,41 @@ export function OverlaySettingsForm({
         {state.error && <span className="text-tomato">{d.common.error} ({state.error})</span>}
       </div>
     </form>
+  );
+}
+
+function TtsTest({ voice, official }: { voice: string; official: boolean }) {
+  const { d } = useT();
+  const [pending, start] = useTransition();
+  const [result, setResult] = useState<{ ok: boolean; error?: string } | null>(null);
+  return (
+    <div className="mb-4">
+      {!official && <p className="mb-2 bg-beak/30 p-2 text-sm">{d.overlay.ttsUnofficial}</p>}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          disabled={pending}
+          onClick={() =>
+            start(async () => {
+              const r = await testTts(voice).catch(() => ({ ok: false as const, error: "network" }));
+              if (!r) return; // the action redirected (session expired)
+              if (r.ok) {
+                setResult({ ok: true });
+                void new Audio(r.audio).play().catch(() => {});
+              } else setResult({ ok: false, error: r.error });
+            })
+          }
+        >
+          {pending ? d.common.loading : d.overlay.ttsTest}
+        </Button>
+        {result?.ok && <span className="font-display text-sm text-leaf">✓ {d.overlay.ttsTestOk}</span>}
+        {result && !result.ok && (
+          <span className="text-sm text-tomato">
+            {d.overlay.ttsTestFailed} <span className="font-mono text-xs opacity-70">({result.error})</span>
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

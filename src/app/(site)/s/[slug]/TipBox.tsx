@@ -52,9 +52,10 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
         pollOption: vote ?? undefined,
         website: form.get("website"),
       }),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok || !json.token) {
+    }).catch(() => null);
+    // No response at all: the connection dropped.
+    const json = res ? await res.json().catch(() => ({})) : { error: "network" };
+    if (!res?.ok || !json.token) {
       setBusy(false);
       const key = json.error as keyof typeof d.store.errors;
       return setError(d.store.errors[key] ?? d.common.error);

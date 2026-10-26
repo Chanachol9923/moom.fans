@@ -7,6 +7,7 @@ import { publicEnv } from "@/lib/env";
 import { siteUrl } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";
 import { publicMediaUrl } from "@/lib/storage";
+import { ttsIsOfficial } from "@/lib/tts";
 import { rotateOverlayToken, sendControl, sendTestAlert } from "../actions";
 import { OverlaySettingsForm } from "./OverlaySettingsForm";
 import { AlertQueue } from "./AlertQueue";
@@ -100,6 +101,7 @@ export default async function OverlayPage() {
         userId={user.id}
         soundUrl={publicMediaUrl(settings.alert_sound_path)}
         supabase={{ url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey() }}
+        ttsOfficial={ttsIsOfficial()}
       />
     </div>
   );

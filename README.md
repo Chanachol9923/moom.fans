@@ -18,7 +18,7 @@
 | SlipOK อัตโนมัติ + ตรวจยอด/ผู้รับ/สลิปเก่า/สลิปซ้ำ | ✅ โค้ดพร้อม · ⚠️ ยังไม่ได้ทดสอบกับ API จริง |
 | ร้านไฟล์: อัปโหลดไฟล์/ปก/เสียงตัวอย่าง, วางขาย, ลิงก์ดาวน์โหลด 15 นาที, โหลดซ้ำได้ | ✅ |
 | Overlay OBS: คิว FIFO, เสียงแจ้งเตือน, TTS, แถบเวลา, ตำแหน่ง, panic/skip/resume | ✅ |
-| TTS (Edge-TTS ฝั่ง server) | ✅ ทดสอบกับ Microsoft จริงแล้ว ได้ MP3 ภาษาไทย |
+| TTS: Azure Speech (ทางการ) ถ้าตั้ง key ไว้ ไม่งั้นใช้ Edge-TTS (ไม่เป็นทางการ) | ⚠️ Edge-TTS โดน Microsoft ปฏิเสธ (403) ตั้งแต่ 2026-10 ต้องตั้ง Azure ถึงจะมีเสียงอ่าน |
 | Media share (YouTube) + อนุมัติก่อนเล่น | ✅ |
 | VTube Studio: hotkey + ปาไอเทม ตามยอด | ✅ โค้ดพร้อม · ⚠️ ยังไม่ได้ทดสอบกับ VTS จริง |
 | สัตว์เลี้ยง pixel 4 แบบ + ตัววาดเอง 16×16 + พูดตามแชท Twitch | ✅ |
@@ -65,7 +65,11 @@
 7. **ก่อนเปิดให้คนอื่นใช้**
    - Rate limit ตอนนี้เป็นแบบในหน่วยความจำ ใช้ได้แค่ระดับกันกดรัว ควรเปลี่ยนเป็น Upstash/Redis
    - อีเมลส่งลิงก์ดาวน์โหลดให้คนซื้อยังไม่มี (ตอนนี้คนซื้อกลับมาโหลดจากลิงก์หน้าจ่ายเงิน) ต้องมีผู้ให้บริการอีเมล เช่น Resend
-   - Edge-TTS เป็นช่องทางไม่เป็นทางการของ Microsoft ถ้าจะขายจริงควรเปลี่ยนเป็น Azure/Google TTS (สลับได้ที่ `src/lib/tts/index.ts`)
+   - เสียงอ่าน (TTS): สร้าง Azure "Speech service" แบบ Free F0 (500,000 ตัวอักษร/เดือน, เสียงไทย Premwadee/Niwat ชุดเดียวกัน)
+     แล้วใส่ `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION` (เช่น `southeastasia`) ใน `.env.local` และ Vercel
+     ไม่ตั้ง = ใช้ Edge-TTS ซึ่งตอนนี้ Microsoft ปฏิเสธอยู่ (alert ยังขึ้น แค่ไม่มีเสียงอ่าน) ปุ่ม "ลองฟังเสียง" ในหน้า OBS overlay ใช้เช็กได้
+   - ลิงก์ล็อกอินทางอีเมลให้เปิดข้ามเครื่องได้: ใน Supabase → Authentication → Email Templates → Magic link
+     เปลี่ยนลิงก์เป็น `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email` (โค้ดรองรับแล้ว และยังพากลับหน้าเดิมได้)
    - ไฟล์สินค้าจำกัด 50 MB (ขีดของ Supabase free) ถ้าจะใหญ่กว่านี้ย้ายไป R2 (แก้ที่ `src/lib/storage*.ts`)
    - ToS / Privacy Policy (PDPA) และนโยบายห้ามเนื้อหา 18+
 8. **แอปเดสก์ท็อป**: ติดตั้ง Rust (`winget install Rustlang.Rustup`) + Visual Studio Build Tools (เลือก "Desktop development with C++")

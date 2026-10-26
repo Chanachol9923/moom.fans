@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { AlertPayload } from "@moom/shared/alerts";
 import { streamerByOverlayToken } from "@/lib/domain/overlay";
 import { admin } from "@/lib/supabase/admin";
-import { alertSpeech, tts } from "@/lib/tts";
+import { alertSpeech, ttsProvider } from "@/lib/tts";
 
 // Speech for one alert. Tied to an existing alert of this streamer, so the endpoint
 // can't be used as a free general-purpose TTS service.
@@ -26,11 +26,12 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/overlay/[token]
   const text = alertSpeech(alert.kind, payload, settings.tts_max_chars);
   if (!text) return new Response(null, { status: 204 });
   try {
-    const mp3 = await tts.synthesize({ text, voice: settings.tts_voice });
+    const mp3 = await ttsProvider().synthesize({ text, voice: settings.tts_voice });
     return new Response(new Uint8Array(mp3), {
       headers: { "Content-Type": "audio/mpeg", "Cache-Control": "private, max-age=600" },
     });
   } catch (e) {
+    // 204 = "nothing to say": the overlay carries on with the alert without speech.
     console.warn("tts failed", (e as Error).message);
     return new Response(null, { status: 204 });
   }

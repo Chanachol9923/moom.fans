@@ -24,8 +24,8 @@ export function NewProduct() {
   const [state, action, pending] = useActionState<SaveResult & { id?: string }, FormData>(
     async (prev, form) => {
       const r = await createProduct(prev, form);
-      if (r.ok) setOpen(false);
-      return r;
+      if (r?.ok) setOpen(false);
+      return r ?? prev;
     },
     { ok: false },
   );
