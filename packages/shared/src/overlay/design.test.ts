@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_TIERS, mediaKindOf, parseStoredTiers, safeCss, tierFor, toAlertTiers } from "./design";
+import { DEFAULT_LOOK, LOOK_PRESETS, MAX_TIERS, mediaKindOf, parseLook, parseStoredTiers, safeCss, tierFor, toAlertTiers } from "./design";
 
 const UID = "11111111-1111-1111-1111-111111111111";
 
@@ -12,7 +12,7 @@ describe("parseStoredTiers", () => {
       { min_amount: 100, animation: "explode", accent: "red", style: "huge" },
     ]);
     expect(t.map((x) => x.min_amount)).toEqual([0, 100, 500]);
-    expect(t[0]).toEqual({ min_amount: 0, media_path: null, sound_path: null, title: "", accent: null, animation: "pop", style: null });
+    expect(t[0]).toEqual({ min_amount: 0, media_path: null, sound_path: null, title: "", accent: null, animation: "pop", style: null, look: null });
     expect(t[1]).toMatchObject({ animation: "pop", accent: null, style: null });
     expect(t[2]).toMatchObject({ animation: "shake", accent: "#ffaa00", style: "banner", title: "big" });
   });
@@ -62,5 +62,18 @@ describe("media and CSS", () => {
     const css = safeCss('.a{color:red}</style><script>alert(1)</script>.b{content:"<3"}');
     expect(css).not.toContain("<");
     expect(css).toContain("\\3c /style>");
+  });
+});
+
+describe("parseLook", () => {
+  it("keeps valid looks and clamps or replaces bad values", () => {
+    expect(parseLook(LOOK_PRESETS.hype)).toEqual(LOOK_PRESETS.hype);
+    const l = parseLook({ layout: "diagonal", scale: 9, width: 10, colors: { bg: "red", bgAlpha: 150, name: "#ABCDEF" } });
+    expect(l).toMatchObject({ layout: DEFAULT_LOOK.layout, scale: 2.5, width: 240 });
+    expect(l?.colors).toMatchObject({ bg: DEFAULT_LOOK.colors.bg, bgAlpha: 100, name: "#abcdef" });
+  });
+  it("is null when there is no look", () => {
+    expect(parseLook(null)).toBeNull();
+    expect(parseLook("card")).toBeNull();
   });
 });

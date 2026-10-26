@@ -13,7 +13,8 @@ export default async function AlertsPage() {
   const { d } = await getT();
   const [priv, { data: settings }] = await Promise.all([
     getPrivate(profile.id),
-    supabase.from("overlay_settings").select("alert_tiers, custom_css, alert_style").eq("streamer_id", profile.id).single(),
+    // "*" so the page still opens if the alert-design migration hasn't run yet.
+    supabase.from("overlay_settings").select("*").eq("streamer_id", profile.id).single(),
   ]);
   if (!settings) throw new Error("overlay settings missing");
   const tiers = parseStoredTiers(settings.alert_tiers, `${profile.id}/`);
@@ -38,7 +39,7 @@ export default async function AlertsPage() {
       </Panel>
       <AlertDesignEditor
         initialTiers={tiers}
-        initialCss={settings.custom_css}
+        initialCss={settings.custom_css ?? ""}
         urls={urls}
         defaultStyle={settings.alert_style}
         accent={profile.accent_color}

@@ -1,14 +1,15 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { ALERT_ANIMATIONS, type AlertAnimation, type AlertPayload, type AlertStyle } from "@moom/shared/alerts";
 import type { Locale } from "@moom/shared/i18n";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
-import { MAX_CSS, MAX_TIERS, MAX_TITLE, mediaKindOf, type StoredTier } from "@moom/shared/overlay/design";
+import { DEFAULT_LOOK, MAX_CSS, MAX_TIERS, MAX_TITLE, mediaKindOf, type StoredTier } from "@moom/shared/overlay/design";
 import { ALERT_CSS_CLASSES, AlertBox } from "@moom/shared/ui/AlertBox";
 import { Button, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/kit";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import { saveAlertDesign, sendTestAmount } from "../actions";
+import { LookEditor } from "./LookEditor";
 
 const MEDIA_TYPES = "image/png,image/jpeg,image/webp,image/gif,video/webm,video/mp4";
 const SOUND_TYPES = "audio/mpeg,audio/ogg,audio/wav,audio/webm";
@@ -31,6 +32,7 @@ const blankTier = (min: number): StoredTier => ({
   accent: null,
   animation: "pop",
   style: null,
+  look: null,
 });
 
 export function AlertDesignEditor({
@@ -260,20 +262,6 @@ function TierCard({
               ))}
             </Select>
           </Field>
-          <Field label={d.design.style} htmlFor={`${id}-style`}>
-            <Select
-              id={`${id}-style`}
-              value={t.style ?? ""}
-              onChange={(e) => onChange({ style: (e.target.value || null) as AlertStyle | null })}
-            >
-              <option value="">{d.design.styleDefault}</option>
-              {(["card", "compact", "banner"] as const).map((v) => (
-                <option key={v} value={v}>
-                  {d.overlay.alertStyles[v]}
-                </option>
-              ))}
-            </Select>
-          </Field>
           <Field label={d.design.accent} htmlFor={`${id}-accent`}>
             <div className="flex items-center gap-2">
               <input
@@ -293,6 +281,50 @@ function TierCard({
             </div>
           </Field>
         </div>
+
+        <div className="mb-3">
+          <div className="px-label">{d.design.lookMode}</div>
+          <div className="flex flex-wrap gap-1" role="radiogroup">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!t.look}
+              onClick={() => onChange({ look: null })}
+              className={`px-btn px-btn-sm ${!t.look ? "px-btn-primary" : "px-btn-ghost"}`}
+            >
+              {d.design.lookPreset}
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={Boolean(t.look)}
+              onClick={() => onChange({ look: t.look ?? { ...DEFAULT_LOOK, colors: { ...DEFAULT_LOOK.colors, name: t.accent ?? accent } } })}
+              className={`px-btn px-btn-sm ${t.look ? "px-btn-primary" : "px-btn-ghost"}`}
+            >
+              {d.design.lookCustom}
+            </button>
+          </div>
+        </div>
+        {t.look ? (
+          <div className="mb-3 border-l-[3px] border-paper-3 pl-3">
+            <LookEditor look={t.look} onChange={(look) => onChange({ look })} />
+          </div>
+        ) : (
+          <Field label={d.design.style} htmlFor={`${id}-style`}>
+            <Select
+              id={`${id}-style`}
+              value={t.style ?? ""}
+              onChange={(e) => onChange({ style: (e.target.value || null) as AlertStyle | null })}
+            >
+              <option value="">{d.design.styleDefault}</option>
+              {(["card", "compact", "banner"] as const).map((v) => (
+                <option key={v} value={v}>
+                  {d.overlay.alertStyles[v]}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
 
         <Field label={d.design.titleLabel} hint={d.design.titleHint} htmlFor={`${id}-title`}>
           <Input
@@ -355,23 +387,45 @@ function TierCard({
         {uploadError && <p className="text-sm text-tomato">{d.design.uploadFailed}</p>}
       </div>
 
-      <div>
+      <div className="self-start lg:sticky lg:top-4">
         <div className="px-label">{d.design.preview}</div>
-        <div className="px-checker grid min-h-48 place-items-center overflow-hidden p-4">
-          <div className={`px-in-${t.animation}`} key={`${t.animation}-${t.style}-${t.media_path}`}>
+        <FitPreview naturalWidth={(t.look ? t.look.width : (t.style ?? defaultStyle) === "banner" ? 1100 : 560) + 48}>
+          <div className={`px-in-${t.animation}`} key={`${t.animation}-${t.style}-${t.media_path}-${t.look?.layout}`}>
             <AlertBox
               kind="tip"
               payload={sample}
               accent={t.accent ?? accent}
               variant={t.style ?? defaultStyle}
               progress={0.6}
-              className="w-[min(100%,380px)] text-[14px]"
+              className={t.look ? "" : "w-[560px]"}
               media={mediaUrl && kind ? { url: mediaUrl, kind } : null}
               title={t.title}
               tier={index}
+              look={t.look}
             />
           </div>
-        </div>
+        </FitPreview>
+      </div>
+    </div>
+  );
+}
+
+/** Shows the alert at its real 1080p size, zoomed out to fit the column. */
+function FitPreview({ naturalWidth, children }: { naturalWidth: number; children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(420);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const zoom = Math.min(1, width / naturalWidth);
+  return (
+    <div ref={box} className="px-checker grid min-h-48 place-items-center overflow-hidden py-4">
+      <div className="text-[18px]" style={{ zoom }}>
+        {children}
       </div>
     </div>
   );

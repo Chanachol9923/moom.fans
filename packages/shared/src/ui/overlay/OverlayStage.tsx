@@ -51,6 +51,7 @@ export function OverlayStage({
               media={tier?.mediaUrl && tier.mediaKind ? { url: tier.mediaUrl, kind: tier.mediaKind } : null}
               title={tier?.title}
               tier={match?.index}
+              look={tier?.look}
             />
           </div>
         )}

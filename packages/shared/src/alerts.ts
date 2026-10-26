@@ -51,6 +51,37 @@ export type AlertStyle = "card" | "compact" | "banner";
 export const ALERT_ANIMATIONS = ["pop", "slide", "bounce", "shake", "fade", "none"] as const;
 export type AlertAnimation = (typeof ALERT_ANIMATIONS)[number];
 
+/** A no-code alert look built in the dashboard. Replaces the preset card styles when set. */
+export type AlertLook = {
+  /** Where the picture goes: beside the text, above it, behind it, or no picture. */
+  layout: "side" | "top" | "background" | "text";
+  align: "left" | "center" | "right";
+  font: "pixel" | "display" | "body";
+  /** Text size multiplier, 0.6..2.5. */
+  scale: number;
+  /** Card width in px at 1080p. */
+  width: number;
+  /** Picture height in px at 1080p. */
+  imageSize: number;
+  frame: "pixel" | "rounded" | "none";
+  /** Corner radius for the rounded frame. */
+  radius: number;
+  shadow: "none" | "soft" | "hard";
+  /** Dark outline around text, for reading straight over the game. */
+  outline: boolean;
+  showBar: boolean;
+  colors: {
+    bg: string;
+    /** Background opacity 0..100. */
+    bgAlpha: number;
+    border: string;
+    text: string;
+    name: string;
+    amount: string;
+    message: string;
+  };
+};
+
 /** One look for alerts from `minAmount` baht up. The highest tier a tip reaches wins. */
 export type AlertTier = {
   minAmount: number;
@@ -63,6 +94,8 @@ export type AlertTier = {
   accent: string | null;
   animation: AlertAnimation;
   style: AlertStyle | null;
+  /** Set = designed in the no-code editor; `style` is ignored. */
+  look: AlertLook | null;
 };
 
 export type OverlayConfig = {

@@ -1,4 +1,4 @@
-import { ALERT_ANIMATIONS, type AlertAnimation, type AlertStyle, type AlertTier } from "../alerts";
+import { ALERT_ANIMATIONS, type AlertAnimation, type AlertLook, type AlertStyle, type AlertTier } from "../alerts";
 
 // Alert design: tiers by amount and the streamer's own CSS. Shared by the server
 // (parsing what's stored), the dashboard editor, the engine (which sound) and the stage.
@@ -18,7 +18,108 @@ export type StoredTier = {
   accent: string | null;
   animation: AlertAnimation;
   style: AlertStyle | null;
+  look: AlertLook | null;
 };
+
+// ---- no-code look ------------------------------------------------------------------
+
+export const DEFAULT_LOOK: AlertLook = {
+  layout: "side",
+  align: "left",
+  font: "display",
+  scale: 1,
+  width: 560,
+  imageSize: 64,
+  frame: "pixel",
+  radius: 12,
+  shadow: "hard",
+  outline: false,
+  showBar: true,
+  colors: {
+    bg: "#f2ead7",
+    bgAlpha: 100,
+    border: "#241e19",
+    text: "#241e19",
+    name: "#2f7a6a",
+    amount: "#241e19",
+    message: "#5d5247",
+  },
+};
+
+/** Starting points in the editor. */
+export const LOOK_PRESETS: Record<"classic" | "floating" | "hype" | "glass", AlertLook> = {
+  classic: DEFAULT_LOOK,
+  // Just text over the game, like a subtitle.
+  floating: {
+    ...DEFAULT_LOOK,
+    layout: "top",
+    align: "center",
+    font: "pixel",
+    scale: 1.3,
+    imageSize: 160,
+    frame: "none",
+    shadow: "none",
+    outline: true,
+    showBar: false,
+    colors: { bg: "#000000", bgAlpha: 0, border: "#000000", text: "#ffffff", name: "#ffd166", amount: "#7ee8c4", message: "#ffffff" },
+  },
+  // Big centred card for the top tier.
+  hype: {
+    ...DEFAULT_LOOK,
+    layout: "top",
+    align: "center",
+    font: "pixel",
+    scale: 1.7,
+    width: 820,
+    imageSize: 280,
+    colors: { bg: "#241e19", bgAlpha: 92, border: "#e0a13a", text: "#f2ead7", name: "#e0a13a", amount: "#ffffff", message: "#d6c8a8" },
+  },
+  glass: {
+    ...DEFAULT_LOOK,
+    font: "body",
+    frame: "rounded",
+    radius: 18,
+    shadow: "soft",
+    colors: { bg: "#ffffff", bgAlpha: 72, border: "#ffffff", text: "#241e19", name: "#7b4a74", amount: "#241e19", message: "#4f5b70" },
+  },
+};
+
+const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
+  allowed.includes(v as T) ? (v as T) : fallback;
+const num = (v: unknown, min: number, max: number, fallback: number) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+};
+const hex = (v: unknown, fallback: string) => (typeof v === "string" && HEX.test(v) ? v.toLowerCase() : fallback);
+
+export function parseLook(v: unknown): AlertLook | null {
+  if (!v || typeof v !== "object") return null;
+  const l = v as Record<string, unknown>;
+  const c = (l.colors && typeof l.colors === "object" ? l.colors : {}) as Record<string, unknown>;
+  const D = DEFAULT_LOOK;
+  return {
+    layout: pick(l.layout, ["side", "top", "background", "text"] as const, D.layout),
+    align: pick(l.align, ["left", "center", "right"] as const, D.align),
+    font: pick(l.font, ["pixel", "display", "body"] as const, D.font),
+    scale: Math.round(num(l.scale, 0.6, 2.5, D.scale) * 100) / 100,
+    width: Math.round(num(l.width, 240, 1600, D.width)),
+    imageSize: Math.round(num(l.imageSize, 24, 600, D.imageSize)),
+    frame: pick(l.frame, ["pixel", "rounded", "none"] as const, D.frame),
+    radius: Math.round(num(l.radius, 0, 60, D.radius)),
+    shadow: pick(l.shadow, ["none", "soft", "hard"] as const, D.shadow),
+    outline: l.outline === true,
+    showBar: l.showBar !== false,
+    colors: {
+      bg: hex(c.bg, D.colors.bg),
+      bgAlpha: Math.round(num(c.bgAlpha, 0, 100, D.colors.bgAlpha)),
+      border: hex(c.border, D.colors.border),
+      text: hex(c.text, D.colors.text),
+      name: hex(c.name, D.colors.name),
+      amount: hex(c.amount, D.colors.amount),
+      message: hex(c.message, D.colors.message),
+    },
+  };
+}
 
 const VIDEO_EXT = /\.(webm|mp4)$/i;
 
@@ -51,6 +152,7 @@ export function parseStoredTiers(v: unknown, ownerPrefix?: string): StoredTier[]
       accent: typeof t.accent === "string" && HEX.test(t.accent) ? t.accent.toLowerCase() : null,
       animation: ALERT_ANIMATIONS.includes(t.animation as AlertAnimation) ? (t.animation as AlertAnimation) : "pop",
       style: STYLES.includes(t.style as AlertStyle) ? (t.style as AlertStyle) : null,
+      look: parseLook(t.look),
     });
   }
   return out.sort((a, b) => a.min_amount - b.min_amount);
@@ -66,6 +168,7 @@ export function toAlertTiers(stored: StoredTier[], urlOf: (path: string | null) 
     accent: t.accent,
     animation: t.animation,
     style: t.style,
+    look: t.look,
   }));
 }
 

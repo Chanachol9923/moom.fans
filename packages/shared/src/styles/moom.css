@@ -240,6 +240,20 @@
   100% { transform: none; opacity: 1; }
 }
 
+/* No-code alert looks. :where() keeps these at the lowest specificity so a streamer's
+   own CSS (which comes later on the OBS page) always wins. */
+:where(.moom-alert--custom) { color: var(--look-text); }
+:where(.moom-alert--custom) .moom-alert__title { font-family: inherit; }
+:where(.moom-alert--custom) .moom-alert__name { color: var(--look-name); }
+:where(.moom-alert--custom) .moom-alert__amount { color: var(--look-amount); }
+:where(.moom-alert--custom) .moom-alert__message,
+:where(.moom-alert--custom) .moom-alert__sub { color: var(--look-message); }
+:where(.moom-alert--outline) {
+  text-shadow:
+    -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+    0 -2px 0 #000, 0 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000;
+}
+
 /* Alert entrances, picked per tier. Stepped timing keeps them pixel-y. */
 @keyframes px-slide {
   from { transform: translateX(110%); }

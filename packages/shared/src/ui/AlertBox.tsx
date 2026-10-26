@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import type { AlertKind, AlertPayload, AlertStyle } from "@moom/shared/alerts";
+import type { AlertKind, AlertLook, AlertPayload, AlertStyle } from "@moom/shared/alerts";
 import { fmtParts, formatBaht, getDict } from "@moom/shared/i18n";
 import { iconSprite, isIconId } from "@moom/shared/pets/icons";
 import { PRESETS } from "@moom/shared/pets/sprites";
@@ -25,6 +25,7 @@ export function AlertBox({
   media,
   title: titleTemplate,
   tier,
+  look,
 }: {
   kind: AlertKind;
   payload: AlertPayload;
@@ -40,6 +41,8 @@ export function AlertBox({
   title?: string;
   /** Tier number, exposed as data-tier for custom CSS. */
   tier?: number;
+  /** No-code design from the dashboard. Overrides `variant`. */
+  look?: AlertLook | null;
 }) {
   const d = getDict(payload.locale);
   const amount = formatBaht(payload.amount, payload.locale);
@@ -104,6 +107,26 @@ export function AlertBox({
     "data-style": variant,
     style: { ["--accent" as string]: accent },
   };
+
+  if (look) {
+    return (
+      <CustomAlert
+        look={look}
+        rootProps={rootProps}
+        className={className}
+        media={media}
+        text={
+          <>
+            {title}
+            {sub}
+            {vote}
+            {message}
+          </>
+        }
+        bar={look.showBar ? bar : null}
+      />
+    );
+  }
 
   if (variant === "banner") {
     return (
@@ -176,6 +199,102 @@ export function AlertBox({
           {sub}
           {vote}
           {message}
+        </div>
+      </div>
+      {bar}
+    </div>
+  );
+}
+
+const FONTS: Record<AlertLook["font"], string> = {
+  pixel: "var(--font-pixel), var(--font-thai-display), monospace",
+  display: "var(--font-thai-display), var(--font-pixel), sans-serif",
+  body: "var(--font-thai-body), system-ui, sans-serif",
+};
+
+function rgba(hex: string, alpha: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha / 100})`;
+}
+
+/** The alert as designed in the dashboard's no-code editor. */
+function CustomAlert({
+  look: l,
+  rootProps,
+  className,
+  media,
+  text,
+  bar,
+}: {
+  look: AlertLook;
+  rootProps: { style: Record<string, string> } & Record<string, unknown>;
+  className: string;
+  media?: AlertMedia | null;
+  text: ReactNode;
+  bar: ReactNode;
+}) {
+  const pixel = l.frame === "pixel";
+  const shadow =
+    l.shadow === "none" || pixel
+      ? undefined
+      : l.shadow === "soft"
+        ? "0 10px 30px rgba(0,0,0,0.35)"
+        : "6px 6px 0 rgba(0,0,0,0.35)";
+  const style: Record<string, string | number | undefined> = {
+    ...rootProps.style,
+    // The pixel frame draws its border in --ink.
+    ["--ink"]: l.colors.border,
+    ["--look-text"]: l.colors.text,
+    ["--look-name"]: l.colors.name,
+    ["--look-amount"]: l.colors.amount,
+    ["--look-message"]: l.colors.message,
+    background: rgba(l.colors.bg, l.colors.bgAlpha),
+    border: l.frame === "rounded" ? `3px solid ${l.colors.border}` : undefined,
+    borderRadius: l.frame === "rounded" ? l.radius : undefined,
+    boxShadow: pixel ? undefined : shadow,
+    width: `min(96vw, ${l.width}px)`,
+    fontFamily: FONTS[l.font],
+    fontSize: `${l.scale}em`,
+    textAlign: l.align,
+  };
+  const frameClass = pixel ? `px-frame ${l.shadow === "hard" ? "px-frame-raised" : ""}` : "";
+  const cls = `moom-alert moom-alert--custom moom-alert--${l.layout} ${l.outline ? "moom-alert--outline" : ""} ${frameClass} ${className}`;
+  const justify = l.align === "center" ? "center" : l.align === "right" ? "flex-end" : "flex-start";
+  const visual = <Visual media={media} size={l.imageSize} />;
+
+  if (l.layout === "background") {
+    return (
+      <div {...rootProps} className={`${cls} relative overflow-hidden`} style={{ ...style, minHeight: l.imageSize }}>
+        {media && (
+          <div className="absolute inset-0 grid place-items-center opacity-90">
+            {media.kind === "video" ? (
+              <video className="moom-alert__image size-full object-cover" src={media.url} autoPlay muted loop playsInline />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- shared with the desktop app
+              <img className="moom-alert__image size-full object-cover" src={media.url} alt="" />
+            )}
+          </div>
+        )}
+        <div className="moom-alert__text relative p-4">
+          {text}
+          {bar}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div {...rootProps} className={`${cls} p-4`} style={style}>
+      <div
+        className="flex gap-3"
+        style={{
+          flexDirection: l.layout === "top" ? "column" : l.align === "right" ? "row-reverse" : "row",
+          alignItems: l.layout === "top" ? (justify === "flex-start" ? "flex-start" : justify === "center" ? "center" : "flex-end") : "flex-start",
+        }}
+      >
+        {l.layout !== "text" && <div className="shrink-0">{visual}</div>}
+        <div className="moom-alert__text min-w-0 flex-1" style={{ width: l.layout === "top" ? "100%" : undefined }}>
+          {text}
         </div>
       </div>
       {bar}
