@@ -331,6 +331,27 @@ describe("alert design", () => {
     await db.exec(`update public.overlay_settings set custom_css = '', alert_tiers = '[]'`);
   });
 
+  it("limits supporter GIFs to 20 and checks picked ids", async () => {
+    const many = JSON.stringify(Array.from({ length: 21 }, (_, i) => ({ id: `gif${i}aaaa`, path: "x", label: "" })));
+    await expect(db.exec(`update public.overlay_settings set alert_gifs = '${many}' where streamer_id = '${ALICE}'`)).rejects.toThrow();
+    await expect(db.exec(`update public.overlay_settings set gif_min_amount = -1 where streamer_id = '${ALICE}'`)).rejects.toThrow();
+    const r = await db.query<{ alert_gifs: unknown; gif_min_amount: string }>(
+      `select alert_gifs, gif_min_amount from public.overlay_settings where streamer_id = '${ALICE}'`,
+    );
+    expect(r.rows[0]).toEqual({ alert_gifs: [], gif_min_amount: "0.00" });
+    const col = await db.query<{ ok: boolean }>(
+      `select count(*) = 1 as ok from information_schema.columns where table_name = 'transactions' and column_name = 'alert_gif'`,
+    );
+    expect(col.rows[0].ok).toBe(true);
+  });
+
+  it("accepts brand fonts in public media", async () => {
+    const r = await db.query<{ ok: boolean }>(
+      `select 'font/woff2' = any(allowed_mime_types) and 'video/webm' = any(allowed_mime_types) as ok from storage.buckets where id = 'public-media'`,
+    );
+    expect(r.rows[0].ok).toBe(true);
+  });
+
   it("accepts short videos in public media", async () => {
     const r = await db.query<{ ok: boolean }>(
       `select 'video/webm' = any(allowed_mime_types) as ok from storage.buckets where id = 'public-media'`,

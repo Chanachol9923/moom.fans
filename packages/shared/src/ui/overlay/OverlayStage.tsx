@@ -1,6 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { getDict } from "../../i18n";
+import { brandFontCss, googleFontsHref } from "../../fonts";
 import { tierFor } from "../../overlay/design";
 import type { StageView } from "../../overlay/engine";
 import { POSITION_CLASS } from "../../overlay/queue";
@@ -29,10 +30,14 @@ export function OverlayStage({
   const showPets = cfg.petsEnabled && pets.length > 0;
   const match = current ? tierFor(cfg.tiers, current.alert.payload.amount) : null;
   const tier = match?.tier;
+  const fontsHref = googleFontsHref((cfg.tiers ?? []).flatMap((t) => (t.look ? [t.look.font, t.look.messageFont] : [])));
+  const brandCss = brandFontCss(cfg.brandFontUrl);
 
   return (
     <div className="moom-stage relative h-dvh w-dvw overflow-hidden text-[18px]">
       {/* Already escaped by safeCss on the server. Only ever rendered on the OBS page. */}
+      {fontsHref && <link rel="stylesheet" href={fontsHref} precedence="default" />}
+      {brandCss && <style>{brandCss}</style>}
       {cfg.customCss ? <style>{cfg.customCss}</style> : null}
       {showPets && <PetsLayer pets={pets} speakRef={speakRef} />}
 
@@ -48,7 +53,11 @@ export function OverlayStage({
               accent={tier?.accent ?? cfg.accent}
               durationMs={current.durationMs}
               variant={tier?.style ?? cfg.alertStyle}
-              media={tier?.mediaUrl && tier.mediaKind ? { url: tier.mediaUrl, kind: tier.mediaKind } : null}
+              media={
+                // The supporter's pick wins over the tier's picture.
+                current.alert.payload.gif ??
+                (tier?.mediaUrl && tier.mediaKind ? { url: tier.mediaUrl, kind: tier.mediaKind } : null)
+              }
               title={tier?.title}
               tier={match?.index}
               look={tier?.look}

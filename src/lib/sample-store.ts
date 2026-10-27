@@ -69,5 +69,8 @@ export function sampleStore(locale: Locale, pageOverrides: Record<string, unknow
       { name: "pixelduck", total: 300 },
     ],
     pet: PRESETS.cat,
+    gifs: [],
+    gifMin: 0,
+    brandFontUrl: null,
   };
 }

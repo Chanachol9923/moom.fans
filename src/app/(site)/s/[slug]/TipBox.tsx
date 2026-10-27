@@ -22,6 +22,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
   const [mediaUrl, setMediaUrl] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [vote, setVote] = useState<number | null>(null);
+  const [gifId, setGifId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -30,6 +31,9 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
     store.media && mediaUrl && typeof total === "number"
       ? mediaSecondsFor(total, store.media.bahtPerSecond, store.media.maxSeconds)
       : null;
+
+  // Picking a GIF may need a bigger tip; below that the choice is kept but not sent.
+  const gifAllowed = typeof total === "number" && total >= store.gifMin;
 
   async function submit(form: FormData) {
     if (preview) return;
@@ -50,6 +54,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
         anonymous,
         showOnWall: form.get("showOnWall") === "on",
         pollOption: vote ?? undefined,
+        gifId: gifAllowed && gifId ? gifId : undefined,
         website: form.get("website"),
       }),
     }).catch(() => null);
@@ -177,6 +182,10 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
         </fieldset>
       )}
 
+      {store.gifs.length > 0 && (
+        <GifPicker gifs={store.gifs} value={gifId} onChange={setGifId} min={store.gifMin} allowed={gifAllowed} />
+      )}
+
       {store.media && (
         <Field
           label={`${d.store.media} (${d.common.optional})`}
@@ -210,5 +219,63 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
           : `${cfg.buttonLabel || d.store.send} · ${typeof total === "number" ? formatBaht(total, locale) : "—"}`}
       </Button>
     </form>
+  );
+}
+
+function GifPicker({
+  gifs,
+  value,
+  onChange,
+  min,
+  allowed,
+}: {
+  gifs: Store["gifs"];
+  value: string | null;
+  onChange: (id: string | null) => void;
+  min: number;
+  allowed: boolean;
+}) {
+  const { d, locale } = useT();
+  return (
+    <fieldset className="mb-3">
+      <legend className="px-label">{d.store.gifPick}</legend>
+      <p className="mb-1.5 text-xs text-ink-faint">
+        {min > 0 ? fmt(d.store.gifMin, { amount: formatBaht(min, locale) }) : d.store.gifHint}
+      </p>
+      <div className={`grid grid-cols-4 gap-1.5 sm:grid-cols-5 ${allowed ? "" : "opacity-50"}`} role="radiogroup">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={value === null}
+          onClick={() => onChange(null)}
+          className={`grid aspect-square place-items-center bg-paper-2 p-1 text-center text-xs ${value === null ? "outline-[3px] outline-accent" : "outline-[3px] outline-transparent hover:outline-paper-3"}`}
+        >
+          {d.store.gifNone}
+        </button>
+        {gifs.map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            role="radio"
+            aria-checked={value === g.id}
+            aria-label={g.label || d.store.gifPick}
+            title={g.label || undefined}
+            disabled={!allowed}
+            onClick={() => onChange(g.id)}
+            className={`relative aspect-square overflow-hidden bg-paper-2 ${value === g.id ? "outline-[3px] outline-accent" : "outline-[3px] outline-transparent hover:outline-paper-3"}`}
+          >
+            {g.kind === "video" ? (
+              <video src={g.url} className="size-full object-contain" autoPlay muted loop playsInline preload="metadata" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- streamer uploads, any size or animation
+              <img src={g.url} alt="" loading="lazy" className="size-full object-contain" />
+            )}
+            {g.label && (
+              <span className="absolute inset-x-0 bottom-0 truncate bg-ink/70 px-1 text-[10px] text-paper">{g.label}</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </fieldset>
   );
 }

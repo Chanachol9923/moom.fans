@@ -19,7 +19,7 @@ import { detectPromptPayType, isValidNationalId, normalizePromptPayId } from "@/
 import { isTtsVoice } from "@/lib/tts/types";
 import { ttsProvider } from "@/lib/tts";
 import { isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
-import { MAX_CSS, parseStoredTiers } from "@moom/shared/overlay/design";
+import { MAX_CSS, parseGifs, parseStoredTiers } from "@moom/shared/overlay/design";
 
 /** Storage keys we generate only ever contain these characters. */
 const SAFE_PATH = /^[\w\-./]+$/;
@@ -137,6 +137,36 @@ export async function testTts(voice: string): Promise<{ ok: true; audio: string 
   } catch (e) {
     return { ok: false, error: (e as Error).message.slice(0, 120) };
   }
+}
+
+/** The GIFs supporters can pick from, and the smallest tip that may pick one. */
+export async function saveAlertGifs(gifs: unknown, minAmount: number): Promise<SaveResult> {
+  const { supabase, profile } = await streamerForAction();
+  const clean = parseGifs(gifs, `${profile.id}/`);
+  const min = Math.max(0, Math.min(1_000_000, Number(minAmount) || 0));
+  const { data: before } = await supabase.from("overlay_settings").select("alert_gifs").eq("streamer_id", profile.id).single();
+  const { error } = await supabase
+    .from("overlay_settings")
+    .update({ alert_gifs: clean as unknown as Json, gif_min_amount: min })
+    .eq("streamer_id", profile.id);
+  if (error) return { ok: false, error: error.code === "42703" || error.code === "PGRST204" ? "not_ready" : error.message };
+  // Files taken out of the list are only ever used by it, so remove them from storage.
+  const kept = new Set(clean.map((g) => g.path));
+  const dropped = parseGifs(before?.alert_gifs, `${profile.id}/`)
+    .map((g) => g.path)
+    .filter((p) => !kept.has(p) && p.startsWith(`${profile.id}/gifs/`));
+  await removeObjects(BUCKETS.publicMedia, dropped).catch(() => {});
+  revalidatePath("/dashboard/alerts");
+  revalidatePath(`/s/${profile.slug}`);
+  return { ok: true };
+}
+
+/** Shows one of the GIFs on stream, as a supporter picking it would. */
+export async function sendTestGif(gifId: string) {
+  const { profile } = await streamerForAction();
+  const d = getDict(profile.locale);
+  const id = z.string().regex(/^[a-z0-9]{6,16}$/).parse(gifId);
+  await queueTestAlert(profile.id, { kind: "tip", name: d.alert.testName, amount: 100, message: d.alert.testMessage, gifId: id });
 }
 
 /** A test tip of a chosen amount, to see a tier on stream. */

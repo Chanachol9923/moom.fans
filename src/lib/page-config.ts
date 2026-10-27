@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ICON_IDS, type IconId } from "@moom/shared/pets/icons";
+import { cleanFontChoice, fontFamilyName } from "@moom/shared/fonts";
 
 // Storefront design, stored in profiles.page. Every field has a default and parsing
 // never throws, so an old or hand-edited value can't break a public page.
@@ -57,6 +58,15 @@ export const PageConfigSchema = z.object({
     .catch({ enabled: false, name: "ข้าวโพด", price: 20, icon: "corn", presets: [1, 3, 5, 10] }),
   /** A pet shown next to the avatar. */
   petId: z.uuid().nullable().catch(null),
+  /** Page fonts (FontChoice strings); "default" = the theme's. */
+  fonts: z
+    .object({
+      heading: z.unknown().transform((v) => cleanFontChoice(v, "default")),
+      body: z.unknown().transform((v) => cleanFontChoice(v, "default")),
+    })
+    .catch({ heading: "default", body: "default" }),
+  /** The streamer's own font file in public media, used wherever "brand" is picked. */
+  brandFontPath: z.string().max(300).regex(/^[\w\-./]+$/).nullable().catch(null),
 });
 
 export type PageConfig = z.infer<typeof PageConfigSchema>;
@@ -83,6 +93,8 @@ export const DEFAULT_PAGE_CONFIG: PageConfig = parsePageConfig({});
 /** CSS custom properties that re-skin everything inside the storefront wrapper. */
 export function themeVars(cfg: PageConfig, accent: string): Record<string, string> {
   const t = THEMES[cfg.theme];
+  const heading = fontFamilyName(cfg.fonts.heading);
+  const body = fontFamilyName(cfg.fonts.body);
   return {
     "--paper": t.paper,
     "--paper-2": t.paper2,
@@ -93,6 +105,20 @@ export function themeVars(cfg: PageConfig, accent: string): Record<string, strin
     "--field": t.field,
     "--accent": accent,
     color: t.ink,
+    // The composite stacks (--font-display, --font-sans) are resolved once at :root, so
+    // they're overridden here as well as the faces they're built from. Text inherits an
+    // already-resolved family, hence the explicit fontFamily for the body face.
+    // Thai falls through to Moom's Thai faces when the picked font has none.
+    ...(heading
+      ? { "--font-pixel": heading, "--font-display": `${heading}, var(--font-thai-display), sans-serif` }
+      : {}),
+    ...(body
+      ? {
+          "--font-thai-body": body,
+          "--font-sans": `${body}, system-ui, sans-serif`,
+          fontFamily: `${body}, var(--font-thai-display), system-ui, sans-serif`,
+        }
+      : {}),
   };
 }
 

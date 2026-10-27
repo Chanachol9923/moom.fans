@@ -1,4 +1,5 @@
 import { ALERT_ANIMATIONS, type AlertAnimation, type AlertLook, type AlertStyle, type AlertTier } from "../alerts";
+import { cleanFontChoice } from "../fonts";
 
 // Alert design: tiers by amount and the streamer's own CSS. Shared by the server
 // (parsing what's stored), the dashboard editor, the engine (which sound) and the stage.
@@ -6,6 +7,10 @@ import { ALERT_ANIMATIONS, type AlertAnimation, type AlertLook, type AlertStyle,
 export const MAX_TIERS = 8;
 export const MAX_CSS = 20_000;
 export const MAX_TITLE = 120;
+export const MAX_GIFS = 20;
+/** Kept small: the tip page shows all of them, often on a phone. */
+export const MAX_GIF_BYTES = 5 * 1024 * 1024;
+const GIF_ID = /^[a-z0-9]{6,16}$/;
 const STYLES: AlertStyle[] = ["card", "compact", "banner"];
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -27,6 +32,8 @@ export const DEFAULT_LOOK: AlertLook = {
   layout: "side",
   align: "left",
   font: "display",
+  messageFont: "body",
+  weight: 600,
   scale: 1,
   width: 560,
   imageSize: 64,
@@ -76,7 +83,9 @@ export const LOOK_PRESETS: Record<"classic" | "floating" | "hype" | "glass", Ale
   },
   glass: {
     ...DEFAULT_LOOK,
-    font: "body",
+    font: "g:Prompt",
+    messageFont: "g:Prompt",
+    weight: 700,
     frame: "rounded",
     radius: 18,
     shadow: "soft",
@@ -100,7 +109,9 @@ export function parseLook(v: unknown): AlertLook | null {
   return {
     layout: pick(l.layout, ["side", "top", "background", "text"] as const, D.layout),
     align: pick(l.align, ["left", "center", "right"] as const, D.align),
-    font: pick(l.font, ["pixel", "display", "body"] as const, D.font),
+    font: cleanFontChoice(l.font, D.font),
+    messageFont: cleanFontChoice(l.messageFont, D.messageFont),
+    weight: Math.round(num(l.weight, 300, 900, D.weight) / 100) * 100,
     scale: Math.round(num(l.scale, 0.6, 2.5, D.scale) * 100) / 100,
     width: Math.round(num(l.width, 240, 1600, D.width)),
     imageSize: Math.round(num(l.imageSize, 24, 600, D.imageSize)),
@@ -119,6 +130,33 @@ export function parseLook(v: unknown): AlertLook | null {
       message: hex(c.message, D.colors.message),
     },
   };
+}
+
+// ---- GIFs the supporter can pick ----------------------------------------------------
+
+export type StoredGif = { id: string; path: string; label: string };
+
+export function newGifId(): string {
+  return Math.random().toString(36).slice(2, 10).padEnd(8, "0");
+}
+
+/** Cleans the stored list: valid ids (unique), own-folder paths, short labels, at most 20. */
+export function parseGifs(v: unknown, ownerPrefix?: string): StoredGif[] {
+  if (!Array.isArray(v)) return [];
+  const seen = new Set<string>();
+  const out: StoredGif[] = [];
+  for (const raw of v) {
+    if (out.length >= MAX_GIFS) break;
+    if (!raw || typeof raw !== "object") continue;
+    const g = raw as Record<string, unknown>;
+    const id = typeof g.id === "string" ? g.id : "";
+    const path = typeof g.path === "string" ? g.path : "";
+    if (!GIF_ID.test(id) || seen.has(id)) continue;
+    if (!/^[\w\-./]{1,300}$/.test(path) || path.includes("..") || (ownerPrefix && !path.startsWith(ownerPrefix))) continue;
+    seen.add(id);
+    out.push({ id, path, label: typeof g.label === "string" ? g.label.trim().slice(0, 40) : "" });
+  }
+  return out;
 }
 
 const VIDEO_EXT = /\.(webm|mp4)$/i;

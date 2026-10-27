@@ -4,9 +4,11 @@ import { overlayUrl, getPrivate } from "@/lib/domain/streamer";
 import { publicEnv } from "@/lib/env";
 import { getT } from "@/lib/i18n/server";
 import { publicMediaUrl } from "@/lib/storage";
-import { parseStoredTiers } from "@moom/shared/overlay/design";
+import { parseGifs, parseStoredTiers } from "@moom/shared/overlay/design";
+import { parsePageConfig } from "@/lib/page-config";
 import { PreviewFrame } from "../overlay/PreviewFrame";
 import { AlertDesignEditor } from "./AlertDesignEditor";
+import { GifManager } from "./GifManager";
 
 export default async function AlertsPage() {
   const { supabase, profile, user } = await requireStreamer();
@@ -18,6 +20,9 @@ export default async function AlertsPage() {
   ]);
   if (!settings) throw new Error("overlay settings missing");
   const tiers = parseStoredTiers(settings.alert_tiers, `${profile.id}/`);
+  const gifs = parseGifs(settings.alert_gifs, `${profile.id}/`);
+  const brandPath = parsePageConfig(profile.page).brandFontPath;
+  const brandFontUrl = brandPath?.startsWith(`${profile.id}/`) ? publicMediaUrl(brandPath) : null;
   // URLs for the files already chosen, so the editor can show them.
   const urls: Record<string, string> = {};
   for (const t of tiers) {
@@ -25,6 +30,10 @@ export default async function AlertsPage() {
       const u = p && publicMediaUrl(p);
       if (p && u) urls[p] = u;
     }
+  }
+  for (const g of gifs) {
+    const u = publicMediaUrl(g.path);
+    if (u) urls[g.path] = u;
   }
 
   return (
@@ -44,6 +53,14 @@ export default async function AlertsPage() {
         defaultStyle={settings.alert_style}
         accent={profile.accent_color}
         locale={profile.locale}
+        userId={user.id}
+        supabase={{ url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey() }}
+        brandFontUrl={brandFontUrl}
+      />
+      <GifManager
+        initialGifs={gifs}
+        initialMin={Number(settings.gif_min_amount ?? 0)}
+        urls={urls}
         userId={user.id}
         supabase={{ url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey() }}
       />

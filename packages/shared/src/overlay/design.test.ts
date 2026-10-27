@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_LOOK, LOOK_PRESETS, MAX_TIERS, mediaKindOf, parseLook, parseStoredTiers, safeCss, tierFor, toAlertTiers } from "./design";
+import {
+  DEFAULT_LOOK,
+  LOOK_PRESETS,
+  MAX_GIFS,
+  MAX_TIERS,
+  mediaKindOf,
+  newGifId,
+  parseGifs,
+  parseLook,
+  parseStoredTiers,
+  safeCss,
+  tierFor,
+  toAlertTiers,
+} from "./design";
 
 const UID = "11111111-1111-1111-1111-111111111111";
 
@@ -75,5 +88,31 @@ describe("parseLook", () => {
   it("is null when there is no look", () => {
     expect(parseLook(null)).toBeNull();
     expect(parseLook("card")).toBeNull();
+  });
+});
+
+describe("parseGifs", () => {
+  it("keeps valid, unique, own-folder GIFs, at most 20", () => {
+    const own = (i: number) => ({ id: `gif${String(i).padStart(5, "0")}`, path: `${UID}/gifs/${i}.gif`, label: ` cat ${i} ` });
+    const list = parseGifs(
+      [own(1), own(1), { id: "x", path: `${UID}/gifs/a.gif` }, { id: "gif999999", path: "other/gifs/a.gif" }, own(2)],
+      `${UID}/`,
+    );
+    expect(list).toEqual([
+      { id: "gif00001", path: `${UID}/gifs/1.gif`, label: "cat 1" },
+      { id: "gif00002", path: `${UID}/gifs/2.gif`, label: "cat 2" },
+    ]);
+    expect(parseGifs(Array.from({ length: 30 }, (_, i) => own(i)), `${UID}/`)).toHaveLength(MAX_GIFS);
+  });
+  it("makes ids the database accepts", () => {
+    for (let i = 0; i < 50; i++) expect(newGifId()).toMatch(/^[a-z0-9]{6,16}$/);
+  });
+});
+
+describe("look fonts", () => {
+  it("defaults and cleans headline/message fonts and weight", () => {
+    const l = parseLook({ font: "g:Kanit", messageFont: "g:Nope", weight: 777 });
+    expect(l).toMatchObject({ font: "g:Kanit", messageFont: DEFAULT_LOOK.messageFont, weight: 800 });
+    expect(parseLook({})?.weight).toBe(600);
   });
 });

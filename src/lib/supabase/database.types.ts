@@ -70,6 +70,8 @@ export type OverlaySettingsRow = {
   subathon_paused_left: number | null;
   alert_tiers: Json;
   custom_css: string;
+  alert_gifs: Json;
+  gif_min_amount: number;
   updated_at: string;
 };
 
@@ -117,6 +119,7 @@ export type TransactionRow = {
   unit_qty: number | null;
   poll_id: string | null;
   poll_option: number | null;
+  alert_gif: string | null;
   expires_at: string;
   created_at: string;
   submitted_at: string | null;

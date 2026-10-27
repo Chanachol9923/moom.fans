@@ -4,9 +4,19 @@ import type { AlertLook } from "@moom/shared/alerts";
 import { useT } from "@moom/shared/i18n/react";
 import { LOOK_PRESETS } from "@moom/shared/overlay/design";
 import { Button, Check, cx } from "@moom/shared/ui/kit";
+import { FontPicker } from "../FontPicker";
 
 /** No-code controls for one tier's look. Every change shows in the preview next to it. */
-export function LookEditor({ look, onChange }: { look: AlertLook; onChange: (l: AlertLook) => void }) {
+export function LookEditor({
+  look,
+  onChange,
+  brandFont,
+}: {
+  look: AlertLook;
+  onChange: (l: AlertLook) => void;
+  /** A brand font has been uploaded in Page design. */
+  brandFont: boolean;
+}) {
   const { d } = useT();
   const L = d.design.look;
   const set = (patch: Partial<AlertLook>) => onChange({ ...look, ...patch });
@@ -27,11 +37,38 @@ export function LookEditor({ look, onChange }: { look: AlertLook; onChange: (l: 
 
       <Choice label={L.layout} value={look.layout} options={L.layouts} onChange={(layout) => set({ layout })} />
       <Choice label={L.align} value={look.align} options={L.aligns} onChange={(align) => set({ align })} />
-      <Choice label={L.font} value={look.font} options={L.fonts} onChange={(font) => set({ font })} />
+      <div className="grid gap-x-4 sm:grid-cols-2">
+        <div className="mb-2">
+          <label className="px-label" htmlFor={`font-title-${look.layout}`}>
+            {L.titleFont}
+          </label>
+          <FontPicker
+            id={`font-title-${look.layout}`}
+            value={look.font}
+            onChange={(font) => set({ font })}
+            builtins={["pixel", "display", "body"]}
+            brand={brandFont}
+          />
+        </div>
+        <div className="mb-2">
+          <label className="px-label" htmlFor={`font-msg-${look.layout}`}>
+            {L.messageFont}
+          </label>
+          <FontPicker
+            id={`font-msg-${look.layout}`}
+            value={look.messageFont}
+            onChange={(messageFont) => set({ messageFont })}
+            builtins={["pixel", "display", "body"]}
+            brand={brandFont}
+          />
+        </div>
+      </div>
+      {!brandFont && <p className="-mt-1 text-xs text-ink-faint">{L.brandHint}</p>}
       <Choice label={L.frame} value={look.frame} options={L.frames} onChange={(frame) => set({ frame })} />
       <Choice label={L.shadow} value={look.shadow} options={L.shadows} onChange={(shadow) => set({ shadow })} />
 
       <div className="grid gap-x-4 sm:grid-cols-2">
+        <Slider label={L.weight} value={look.weight} min={300} max={900} step={100} show={String(look.weight)} onChange={(weight) => set({ weight })} />
         <Slider label={L.scale} value={look.scale} min={0.6} max={2.5} step={0.05} show={`${Math.round(look.scale * 100)}%`} onChange={(scale) => set({ scale })} />
         <Slider label={L.width} value={look.width} min={240} max={1600} step={10} show={`${look.width}px`} onChange={(width) => set({ width })} />
         {look.layout !== "text" && (

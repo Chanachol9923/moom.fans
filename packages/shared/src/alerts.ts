@@ -22,7 +22,12 @@ export type AlertPayload = {
   wheel?: { items: string[]; result: number } | null;
   /** Poll option the supporter voted for. */
   vote?: string | null;
+  /** GIF the supporter picked from the streamer's list; replaces the tier's picture. */
+  gif?: AlertVisual | null;
 };
+
+/** A picture, GIF or short video shown in an alert. */
+export type AlertVisual = { url: string; kind: "image" | "video" };
 
 export type OverlayAlert = {
   id: string;
@@ -56,7 +61,12 @@ export type AlertLook = {
   /** Where the picture goes: beside the text, above it, behind it, or no picture. */
   layout: "side" | "top" | "background" | "text";
   align: "left" | "center" | "right";
-  font: "pixel" | "display" | "body";
+  /** Headline font, a FontChoice: "pixel" | "display" | "body" | "g:<Google family>" | "brand". */
+  font: string;
+  /** Message font, same choices. */
+  messageFont: string;
+  /** Headline weight, 300..900. */
+  weight: number;
   /** Text size multiplier, 0.6..2.5. */
   scale: number;
   /** Card width in px at 1080p. */
@@ -117,6 +127,8 @@ export type OverlayConfig = {
   tiers: AlertTier[];
   /** The streamer's own CSS for the OBS page. */
   customCss: string;
+  /** Uploaded brand font (font choice "brand"). */
+  brandFontUrl?: string | null;
 };
 
 export type OverlayState = {

@@ -5,6 +5,7 @@ import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { siteUrl } from "@/lib/hosts";
 import { formatBaht, type Dict, type Locale } from "@moom/shared/i18n";
 import { backgroundStyle, themeVars, type SectionId } from "@/lib/page-config";
+import { brandFontCss, googleFontsHref } from "@moom/shared/fonts";
 import { PRESETS } from "@moom/shared/pets/sprites";
 import type { Store } from "./data";
 import { ProductGrid } from "./ProductGrid";
@@ -51,11 +52,16 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
   const tip = <TipBox store={store} preview={preview} />;
   const right = cfg.sections.map((s) => sections[s.id]).filter(Boolean);
 
+  const fontsHref = googleFontsHref([cfg.fonts.heading, cfg.fonts.body]);
+  const brandCss = brandFontCss(store.brandFontUrl);
+
   return (
     <div
       style={{ ...themeVars(cfg, store.accent), ...backgroundStyle(cfg, store.backgroundUrl) }}
       className={`${preview ? "" : "min-h-dvh"} pb-16`}
     >
+      {fontsHref && <link rel="stylesheet" href={fontsHref} precedence="default" />}
+      {brandCss && <style>{brandCss}</style>}
       <div
         className="h-36 w-full sm:h-48"
         style={

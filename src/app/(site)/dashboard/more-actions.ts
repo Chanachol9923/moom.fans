@@ -30,6 +30,9 @@ export async function savePageConfig(raw: unknown): Promise<{ ok: boolean }> {
   if (cfg.backgroundImagePath && !(cfg.backgroundImagePath.startsWith(`${profile.id}/`) && SAFE_PATH.test(cfg.backgroundImagePath))) {
     cfg.backgroundImagePath = null;
   }
+  if (cfg.brandFontPath && !(cfg.brandFontPath.startsWith(`${profile.id}/fonts/`) && SAFE_PATH.test(cfg.brandFontPath))) {
+    cfg.brandFontPath = null;
+  }
   if (cfg.petId) {
     const { data: pet } = await supabase.from("pets").select("id").eq("id", cfg.petId).maybeSingle();
     if (!pet) cfg.petId = null;

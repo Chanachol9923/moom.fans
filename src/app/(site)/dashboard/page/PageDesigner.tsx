@@ -11,6 +11,7 @@ import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import type { Store } from "../../s/[slug]/data";
 import { StoreView } from "../../s/[slug]/StoreView";
 import { savePageConfig } from "../more-actions";
+import { FontPicker } from "../FontPicker";
 
 export function PageDesigner({
   store,
@@ -30,10 +31,17 @@ export function PageDesigner({
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
   const [bgBusy, setBgBusy] = useState(false);
+  const [fontBusy, setFontBusy] = useState(false);
+  const [fontError, setFontError] = useState<string | null>(null);
 
   const set = <K extends keyof PageConfig>(k: K, v: PageConfig[K]) => {
     setSaved(false);
     setCfg((c) => ({ ...c, [k]: v }));
+  };
+  // Functional update: two quick changes in a row must not overwrite each other.
+  const setFonts = (patch: Partial<PageConfig["fonts"]>) => {
+    setSaved(false);
+    setCfg((c) => ({ ...c, fonts: { ...c.fonts, ...patch } }));
   };
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
@@ -48,6 +56,27 @@ export function PageDesigner({
     page: cfg,
     backgroundUrl: publicMediaUrl(cfg.backgroundImagePath),
     pet: pets.find((p) => p.id === cfg.petId)?.sprite ?? null,
+    brandFontUrl: publicMediaUrl(cfg.brandFontPath),
+  };
+
+  const uploadFont = async (f: File) => {
+    setFontError(null);
+    if (f.size > 2 * 1024 * 1024) return setFontError(d.fonts.brandTooBig);
+    // Browsers often leave font files untyped; storage only takes known types.
+    const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+    const type = { woff2: "font/woff2", woff: "font/woff", ttf: "font/ttf", otf: "font/otf" }[ext];
+    if (!type) return setFontError(d.design.uploadFailed);
+    setFontBusy(true);
+    try {
+      const path = await uploadPublicMedia(supabase, userId, new File([f], f.name, { type }), "fonts");
+      set("brandFontPath", path);
+      // Picking it right away is what people expect after uploading.
+      setCfg((c) => (c.fonts.heading === "default" ? { ...c, fonts: { ...c.fonts, heading: "brand" } } : c));
+    } catch {
+      setFontError(d.design.uploadFailed);
+    } finally {
+      setFontBusy(false);
+    }
   };
 
   return (
@@ -132,6 +161,67 @@ export function PageDesigner({
               </Select>
             </Field>
           )}
+        </Panel>
+
+        <Panel title={d.page.fonts}>
+          <div className="grid gap-x-4 sm:grid-cols-2">
+            <Field label={d.page.fontHeading} htmlFor="font-heading">
+              <FontPicker
+                id="font-heading"
+                value={cfg.fonts.heading}
+                onChange={(heading) => setFonts({ heading })}
+                builtins={["default"]}
+                brand={Boolean(cfg.brandFontPath)}
+              />
+            </Field>
+            <Field label={d.page.fontBody} htmlFor="font-body">
+              <FontPicker
+                id="font-body"
+                value={cfg.fonts.body}
+                onChange={(body) => setFonts({ body })}
+                builtins={["default"]}
+                brand={Boolean(cfg.brandFontPath)}
+              />
+            </Field>
+          </div>
+          <Field label={d.fonts.brandTitle} hint={d.fonts.brandHint} error={fontError}>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="px-btn px-btn-sm cursor-pointer">
+                {fontBusy ? "…" : d.fonts.brandUpload}
+                <input
+                  type="file"
+                  accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void uploadFont(f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              {cfg.brandFontPath && (
+                <>
+                  <span className="truncate text-sm text-ink-soft">{cfg.brandFontPath.split("/").pop()?.replace(/^[a-z0-9]+-/, "")}</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      set("brandFontPath", null);
+                      setCfg((c) => ({
+                        ...c,
+                        fonts: {
+                          heading: c.fonts.heading === "brand" ? "default" : c.fonts.heading,
+                          body: c.fonts.body === "brand" ? "default" : c.fonts.body,
+                        },
+                      }));
+                    }}
+                  >
+                    {d.fonts.brandRemove}
+                  </Button>
+                </>
+              )}
+            </div>
+          </Field>
         </Panel>
 
         <Panel title={d.page.texts}>

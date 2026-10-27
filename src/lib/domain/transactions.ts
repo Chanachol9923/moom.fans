@@ -4,6 +4,7 @@ import { alertForTransaction } from "@/lib/domain/alerts";
 import { canonicalMediaUrl, mediaSecondsFor, parseMediaUrl } from "@/lib/media";
 import { parsePageConfig } from "@/lib/page-config";
 import { readSlip, slipProblems } from "@/lib/slipok";
+import { parseGifs } from "@moom/shared/overlay/design";
 import { BUCKETS } from "@/lib/storage";
 import { putObject } from "@/lib/storage.server";
 import { admin } from "@/lib/supabase/admin";
@@ -29,6 +30,8 @@ export const CreateTxInput = z.discriminatedUnion("kind", [
     unitQty: z.number().int().min(1).max(999).optional(),
     /** Vote in the active poll. */
     pollOption: z.number().int().min(0).max(9).optional(),
+    /** GIF picked from the streamer's list to show with the alert. */
+    gifId: z.string().regex(/^[a-z0-9]{6,16}$/).optional(),
   }),
   z.object({
     kind: z.literal("purchase"),
@@ -53,6 +56,7 @@ export class TxError extends Error {
       | "name_required"
       | "unit_disabled"
       | "poll_closed"
+      | "gif_unavailable"
       | "product_unavailable"
       | "bad_state"
       | "too_late"
@@ -110,6 +114,18 @@ export async function createTransaction(slug: string, input: CreateTxInput) {
       poll_option = input.pollOption;
     }
     if (amount < Number(profile.min_tip)) throw new TxError("amount_too_low");
+    let alert_gif: string | null = null;
+    if (input.gifId) {
+      const { data: g } = await db
+        .from("overlay_settings")
+        .select("alert_gifs, gif_min_amount")
+        .eq("streamer_id", profile.id)
+        .single();
+      const listed = parseGifs(g?.alert_gifs).some((x) => x.id === input.gifId);
+      // Removed since the page loaded, or the tip is below the streamer's minimum for picking.
+      if (!g || !listed || amount < Number(g.gif_min_amount)) throw new TxError("gif_unavailable");
+      alert_gif = input.gifId;
+    }
     let media_url: string | null = null;
     let media_seconds: number | null = null;
     if (input.mediaUrl) {
@@ -127,7 +143,7 @@ export async function createTransaction(slug: string, input: CreateTxInput) {
     }
     const { data, error } = await db
       .from("transactions")
-      .insert({ ...base, kind: "tip", amount, media_url, media_seconds, unit_qty, poll_id, poll_option })
+      .insert({ ...base, kind: "tip", amount, media_url, media_seconds, unit_qty, poll_id, poll_option, alert_gif })
       .select("public_token")
       .single();
     if (error) throw error;

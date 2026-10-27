@@ -3,6 +3,7 @@ import type { AlertKind, AlertLook, AlertPayload, AlertStyle } from "@moom/share
 import { fmtParts, formatBaht, getDict } from "@moom/shared/i18n";
 import { iconSprite, isIconId } from "@moom/shared/pets/icons";
 import { PRESETS } from "@moom/shared/pets/sprites";
+import { fontStack } from "../fonts";
 import { PixelSprite } from "./PixelSprite";
 
 /** Image, GIF or video that replaces the pigeon. */
@@ -206,12 +207,6 @@ export function AlertBox({
   );
 }
 
-const FONTS: Record<AlertLook["font"], string> = {
-  pixel: "var(--font-pixel), var(--font-thai-display), monospace",
-  display: "var(--font-thai-display), var(--font-pixel), sans-serif",
-  body: "var(--font-thai-body), system-ui, sans-serif",
-};
-
 function rgba(hex: string, alpha: number) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha / 100})`;
@@ -253,7 +248,9 @@ function CustomAlert({
     borderRadius: l.frame === "rounded" ? l.radius : undefined,
     boxShadow: pixel ? undefined : shadow,
     width: `min(96vw, ${l.width}px)`,
-    fontFamily: FONTS[l.font],
+    fontFamily: fontStack(l.messageFont),
+    ["--look-title-font"]: fontStack(l.font),
+    ["--look-weight"]: String(l.weight),
     fontSize: `${l.scale}em`,
     textAlign: l.align,
   };

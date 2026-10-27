@@ -5,6 +5,7 @@ import { activeGoal, activePoll, wallData, type GoalView, type PollView, type Su
 import type { Locale } from "@moom/shared/i18n";
 import { parsePageConfig, type PageConfig } from "@/lib/page-config";
 import { resolveSprite, type PetSprite } from "@moom/shared/pets/sprites";
+import { mediaKindOf, parseGifs } from "@moom/shared/overlay/design";
 import { publicMediaUrl } from "@/lib/storage";
 import { admin } from "@/lib/supabase/admin";
 
@@ -18,6 +19,9 @@ export type StoreProduct = {
 };
 
 export type StoreLink = { label: string; url: string };
+
+/** A GIF the supporter can pick to show with their alert. */
+export type StoreGif = { id: string; url: string; kind: "image" | "video"; label: string };
 
 export type Store = {
   slug: string;
@@ -40,6 +44,10 @@ export type Store = {
   recent: SupporterView[];
   top: TopView[];
   pet: PetSprite | null;
+  gifs: StoreGif[];
+  /** Smallest tip that may pick a GIF. */
+  gifMin: number;
+  brandFontUrl: string | null;
 };
 
 /** Everything the public storefront needs, and nothing private. */
@@ -51,7 +59,7 @@ export const loadStore = cache(async (slug: string, locale: Locale): Promise<Sto
   const [{ data: s }, { data: products }, goal, poll, wall, pet] = await Promise.all([
     db
       .from("overlay_settings")
-      .select("media_enabled, media_baht_per_second, media_max_seconds")
+      .select("*")
       .eq("streamer_id", p.id)
       .maybeSingle(),
     db
@@ -103,5 +111,12 @@ export const loadStore = cache(async (slug: string, locale: Locale): Promise<Sto
     recent: wall.recent,
     top: wall.top,
     pet: pet.data ? resolveSprite(pet.data.species, pet.data.palette, pet.data.sprite) : null,
+    gifs: parseGifs(s?.alert_gifs, `${p.id}/`).flatMap((g): StoreGif[] => {
+      const url = publicMediaUrl(g.path);
+      const kind = mediaKindOf(g.path);
+      return url && kind ? [{ id: g.id, url, kind, label: g.label }] : [];
+    }),
+    gifMin: Number(s?.gif_min_amount ?? 0),
+    brandFontUrl: page.brandFontPath?.startsWith(`${p.id}/`) ? publicMediaUrl(page.brandFontPath) : null,
   };
 });

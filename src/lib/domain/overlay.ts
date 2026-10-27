@@ -4,6 +4,7 @@ import { publicEnv } from "@/lib/env";
 import { parseStoredTiers, safeCss, toAlertTiers } from "@moom/shared/overlay/design";
 import { resolveSprite } from "@moom/shared/pets/sprites";
 import { overlayTopic } from "@/lib/realtime";
+import { parsePageConfig } from "@/lib/page-config";
 import { publicMediaUrl } from "@/lib/storage";
 import { admin } from "@/lib/supabase/admin";
 
@@ -41,12 +42,17 @@ function asRules(v: unknown): VtsRule[] {
   );
 }
 
+function brandFontUrl(page: unknown, streamerId: string): string | null {
+  const path = parsePageConfig(page).brandFontPath;
+  return path?.startsWith(`${streamerId}/`) ? publicMediaUrl(path) : null;
+}
+
 export async function loadOverlayState(token: string): Promise<OverlayState | null> {
   const s = await streamerByOverlayToken(token);
   if (!s) return null;
   const db = admin();
   const [{ data: profile }, { data: settings }, { data: alerts }, { data: pets }] = await Promise.all([
-    db.from("profiles").select("slug, display_name, accent_color, locale").eq("id", s.streamer_id).single(),
+    db.from("profiles").select("slug, display_name, accent_color, locale, page").eq("id", s.streamer_id).single(),
     db.from("overlay_settings").select("*").eq("streamer_id", s.streamer_id).single(),
     db
       .from("alerts")
@@ -76,6 +82,7 @@ export async function loadOverlayState(token: string): Promise<OverlayState | nu
     blockedWords: s.blocked_words,
     tiers: toAlertTiers(parseStoredTiers(settings.alert_tiers, `${s.streamer_id}/`), publicMediaUrl),
     customCss: safeCss(settings.custom_css ?? ""),
+    brandFontUrl: brandFontUrl(profile.page, s.streamer_id),
   };
 
   return {

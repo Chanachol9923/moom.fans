@@ -8,6 +8,8 @@ import { notifyOverlay } from "@/lib/realtime";
 import { admin } from "@/lib/supabase/admin";
 import type { OverlaySettingsRow, TransactionRow } from "@/lib/supabase/database.types";
 import { parseWheel, spinFor } from "@moom/shared/wheel";
+import { mediaKindOf, parseGifs } from "@moom/shared/overlay/design";
+import { publicMediaUrl } from "@/lib/storage";
 
 type Ctx = {
   settings: OverlaySettingsRow;
@@ -38,7 +40,16 @@ type PayloadSource = Pick<
   TransactionRow,
   "supporter_name" | "amount" | "message" | "product_title" | "media_url" | "media_seconds"
 > &
-  Partial<Pick<TransactionRow, "is_anonymous" | "unit_qty">> & { voteLabel?: string | null; spin?: boolean };
+  Partial<Pick<TransactionRow, "is_anonymous" | "unit_qty" | "alert_gif">> & { voteLabel?: string | null; spin?: boolean };
+
+/** The picked GIF as a URL, snapshotted into the alert. Gone from the list = no GIF. */
+function pickedGif(id: string | null | undefined, ctx: Ctx): AlertPayload["gif"] {
+  if (!id) return null;
+  const g = parseGifs(ctx.settings.alert_gifs, `${ctx.settings.streamer_id}/`).find((x) => x.id === id);
+  const url = g && publicMediaUrl(g.path);
+  const kind = g ? mediaKindOf(g.path) : null;
+  return url && kind ? { url, kind } : null;
+}
 
 export function buildPayload(tx: PayloadSource, ctx: Ctx): AlertPayload {
   const filter = buildFilter([...DEFAULT_BLOCKED_WORDS, ...ctx.blockedWords]);
@@ -60,6 +71,7 @@ export function buildPayload(tx: PayloadSource, ctx: Ctx): AlertPayload {
     unit: tx.unit_qty && unit.enabled ? { name: unit.name, qty: tx.unit_qty, icon: unit.icon } : null,
     wheel: tx.spin === false ? null : spinFor(parseWheel(ctx.settings.wheel), amount),
     vote: tx.voteLabel ? filter.mask(tx.voteLabel) : null,
+    gif: pickedGif(tx.alert_gif, ctx),
   };
 }
 
@@ -122,6 +134,7 @@ export async function queueTestAlert(
     mediaUrl?: string;
     unitQty?: number;
     spin?: boolean;
+    gifId?: string;
   },
 ) {
   const ctx = await loadAlertContext(streamerId);
@@ -138,6 +151,7 @@ export async function queueTestAlert(
       media_seconds: media ? Math.min(15, ctx.settings.media_max_seconds) : null,
       unit_qty: sample.unitQty ?? null,
       spin: sample.spin ?? false,
+      alert_gif: sample.gifId ?? null,
     },
     {
       ...ctx,

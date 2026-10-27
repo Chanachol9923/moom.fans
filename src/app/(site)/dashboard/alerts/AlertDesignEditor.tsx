@@ -10,6 +10,7 @@ import { Button, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/k
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import { saveAlertDesign, sendTestAmount } from "../actions";
 import { LookEditor } from "./LookEditor";
+import { brandFontCss } from "@moom/shared/fonts";
 
 const MEDIA_TYPES = "image/png,image/jpeg,image/webp,image/gif,video/webm,video/mp4";
 const SOUND_TYPES = "audio/mpeg,audio/ogg,audio/wav,audio/webm";
@@ -44,6 +45,7 @@ export function AlertDesignEditor({
   locale,
   userId,
   supabase,
+  brandFontUrl,
 }: {
   initialTiers: StoredTier[];
   initialCss: string;
@@ -53,6 +55,7 @@ export function AlertDesignEditor({
   locale: Locale;
   userId: string;
   supabase: SupabasePublic;
+  brandFontUrl: string | null;
 }) {
   const { d } = useT();
   const [tiers, setTiers] = useState(initialTiers);
@@ -86,6 +89,7 @@ export function AlertDesignEditor({
 
   return (
     <div className="grid gap-5">
+      {brandFontUrl && <style>{brandFontCss(brandFontUrl)}</style>}
       <Panel
         title={d.design.tiers}
         aside={
@@ -106,6 +110,7 @@ export function AlertDesignEditor({
               defaultStyle={defaultStyle}
               accent={accent}
               locale={locale}
+              brandFontUrl={brandFontUrl}
               testing={testing}
               onChange={(patch) => update(i, patch)}
               onRemove={() => {
@@ -174,6 +179,7 @@ function TierCard({
   defaultStyle,
   accent,
   locale,
+  brandFontUrl,
   testing,
   onChange,
   onRemove,
@@ -186,6 +192,7 @@ function TierCard({
   defaultStyle: AlertStyle;
   accent: string;
   locale: Locale;
+  brandFontUrl: string | null;
   testing: boolean;
   onChange: (patch: Partial<StoredTier>) => void;
   onRemove: () => void;
@@ -309,7 +316,7 @@ function TierCard({
         </div>
         {t.look ? (
           <div className="mb-3 border-l-[3px] border-paper-3 pl-3">
-            <LookEditor look={t.look} onChange={(look) => onChange({ look })} />
+            <LookEditor look={t.look} onChange={(look) => onChange({ look })} brandFont={Boolean(brandFontUrl)} />
           </div>
         ) : (
           <Field label={d.design.style} htmlFor={`${id}-style`}>

@@ -243,7 +243,7 @@
 /* No-code alert looks. :where() keeps these at the lowest specificity so a streamer's
    own CSS (which comes later on the OBS page) always wins. */
 :where(.moom-alert--custom) { color: var(--look-text); }
-:where(.moom-alert--custom) .moom-alert__title { font-family: inherit; }
+:where(.moom-alert--custom) .moom-alert__title { font-family: var(--look-title-font, inherit); font-weight: var(--look-weight, 600); }
 :where(.moom-alert--custom) .moom-alert__name { color: var(--look-name); }
 :where(.moom-alert--custom) .moom-alert__amount { color: var(--look-amount); }
 :where(.moom-alert--custom) .moom-alert__message,
