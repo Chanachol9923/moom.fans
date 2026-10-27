@@ -1,6 +1,14 @@
 "use client";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
-import { ALERT_ANIMATIONS, type AlertAnimation, type AlertPayload, type AlertStyle } from "@moom/shared/alerts";
+import {
+  ALERT_ANIMATIONS,
+  ALERT_EXITS,
+  EXIT_MS,
+  type AlertAnimation,
+  type AlertExit,
+  type AlertPayload,
+  type AlertStyle,
+} from "@moom/shared/alerts";
 import type { Locale } from "@moom/shared/i18n";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
@@ -32,6 +40,7 @@ const blankTier = (min: number): StoredTier => ({
   title: "",
   accent: null,
   animation: "pop",
+  exit: "fade",
   style: null,
   look: null,
 });
@@ -206,6 +215,8 @@ function TierCard({
   const soundUrl = t.sound_path ? urls[t.sound_path] : undefined;
   const kind = mediaKindOf(t.media_path);
   const id = `tier-${index}`;
+  const [replays, setReplays] = useState(0);
+  const leaving = useEntranceThenExit(`${t.animation}-${t.exit}-${replays}`, t.exit !== "none");
 
   const upload = async (file: File | undefined, what: "media" | "sound") => {
     if (!file) return;
@@ -267,6 +278,15 @@ function TierCard({
               {ALERT_ANIMATIONS.map((a) => (
                 <option key={a} value={a}>
                   {d.design.animations[a]}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label={d.design.exit} htmlFor={`${id}-exit`}>
+            <Select id={`${id}-exit`} value={t.exit} onChange={(e) => onChange({ exit: e.target.value as AlertExit })}>
+              {ALERT_EXITS.map((a) => (
+                <option key={a} value={a}>
+                  {d.design.exits[a]}
                 </option>
               ))}
             </Select>
@@ -397,9 +417,17 @@ function TierCard({
       </div>
 
       <div className="self-start lg:sticky lg:top-4">
-        <div className="px-label">{d.design.preview}</div>
+        <div className="flex items-end justify-between">
+          <div className="px-label">{d.design.preview}</div>
+          <Button size="sm" variant="ghost" onClick={() => setReplays((n) => n + 1)}>
+            {d.design.replay}
+          </Button>
+        </div>
         <FitPreview naturalWidth={(t.look ? t.look.width : (t.style ?? defaultStyle) === "banner" ? 1100 : 560) + 48}>
-          <div className={`px-in-${t.animation}`} key={`${t.animation}-${t.style}-${t.media_path}-${t.look?.layout}`}>
+          <div
+            className={`px-in-${t.animation}${leaving ? ` px-out-${t.exit}` : ""}`}
+            key={`${t.animation}-${t.exit}-${replays}-${t.style}-${t.media_path}-${t.look?.layout}`}
+          >
             <AlertBox
               kind="tip"
               payload={sample}
@@ -417,6 +445,25 @@ function TierCard({
       </div>
     </div>
   );
+}
+
+/**
+ * Plays the entrance, holds, then the exit, and brings the card back so the preview is
+ * never left empty. Restarts whenever `key` changes (a new pick, or Play again).
+ */
+function useEntranceThenExit(key: string, hasExit: boolean): boolean {
+  // Remember which run the flag belongs to, so a new key starts from "entering".
+  const [leavingFor, setLeavingFor] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hasExit) return;
+    const out = setTimeout(() => setLeavingFor(key), 1400);
+    const back = setTimeout(() => setLeavingFor(null), 1400 + EXIT_MS + 600);
+    return () => {
+      clearTimeout(out);
+      clearTimeout(back);
+    };
+  }, [key, hasExit]);
+  return hasExit && leavingFor === key;
 }
 
 /** Shows the alert at its real 1080p size, zoomed out to fit the column. */

@@ -259,6 +259,26 @@
   from { transform: translateX(110%); }
   to { transform: none; }
 }
+@keyframes px-slide-left {
+  from { transform: translateX(-110%); }
+  to { transform: none; }
+}
+@keyframes px-rise {
+  from { transform: translateY(110%); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes px-zoom {
+  from { transform: scale(2.2); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes px-flip {
+  from { transform: perspective(800px) rotateX(90deg); }
+  to { transform: perspective(800px); }
+}
+@keyframes px-spin {
+  from { transform: rotate(-360deg) scale(0); }
+  to { transform: none; }
+}
 @keyframes px-bounce {
   0% { transform: translateY(-120%); }
   55% { transform: translateY(6%); }
@@ -279,7 +299,39 @@
 .px-in-bounce { animation: px-bounce 500ms steps(8); }
 .px-in-shake { animation: px-pop 180ms steps(3), px-shake 400ms steps(8) 180ms; }
 .px-in-fade { animation: px-fade 400ms steps(5); }
+.px-in-slide-left { animation: px-slide-left 300ms steps(6); }
+.px-in-rise { animation: px-rise 300ms steps(6); }
+.px-in-zoom { animation: px-zoom 300ms steps(5); }
+.px-in-flip { animation: px-flip 360ms steps(6); }
+.px-in-spin { animation: px-spin 450ms steps(9); }
 .px-in-none { animation: none; }
+
+/* Alert exits. Each lasts EXIT_MS (alerts.ts) and holds its last frame. Later than the
+   entrances so a leaving card switches animation. */
+@keyframes px-out-fade { to { opacity: 0; } }
+@keyframes px-out-shrink { to { transform: scale(0); opacity: 0; } }
+@keyframes px-out-slide { to { transform: translateX(110vw); } }
+@keyframes px-out-slide-left { to { transform: translateX(-110vw); } }
+@keyframes px-out-sink { to { transform: translateY(110vh); } }
+@keyframes px-out-lift { to { transform: translateY(-110vh); } }
+@keyframes px-out-zoom { to { transform: scale(2.2); opacity: 0; } }
+@keyframes px-out-flip { to { transform: perspective(800px) rotateX(-90deg); } }
+@keyframes px-out-spin { to { transform: rotate(360deg) scale(0); } }
+@keyframes px-out-blink {
+  0%, 40%, 80% { opacity: 1; }
+  20%, 60%, 100% { opacity: 0; }
+}
+.px-out-fade { animation: px-out-fade 500ms steps(5) forwards; }
+.px-out-shrink { animation: px-out-shrink 500ms steps(6) forwards; }
+.px-out-slide { animation: px-out-slide 500ms steps(8) forwards; }
+.px-out-slide-left { animation: px-out-slide-left 500ms steps(8) forwards; }
+.px-out-sink { animation: px-out-sink 500ms steps(8) forwards; }
+.px-out-lift { animation: px-out-lift 500ms steps(8) forwards; }
+.px-out-zoom { animation: px-out-zoom 500ms steps(6) forwards; }
+.px-out-flip { animation: px-out-flip 500ms steps(6) forwards; }
+.px-out-spin { animation: px-out-spin 500ms steps(10) forwards; }
+.px-out-blink { animation: px-out-blink 500ms steps(1, end) forwards; }
+.px-out-none { animation: none; opacity: 0; }
 
 @keyframes px-drain {
   from { clip-path: inset(0 0 0 0); }

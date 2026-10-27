@@ -1,4 +1,4 @@
-import { ALERT_ANIMATIONS, type AlertAnimation, type AlertLook, type AlertStyle, type AlertTier } from "../alerts";
+import { ALERT_ANIMATIONS, ALERT_EXITS, type AlertAnimation, type AlertExit, type AlertLook, type AlertStyle, type AlertTier } from "../alerts";
 import { cleanFontChoice } from "../fonts";
 
 // Alert design: tiers by amount and the streamer's own CSS. Shared by the server
@@ -22,6 +22,7 @@ export type StoredTier = {
   title: string;
   accent: string | null;
   animation: AlertAnimation;
+  exit: AlertExit;
   style: AlertStyle | null;
   look: AlertLook | null;
 };
@@ -189,6 +190,7 @@ export function parseStoredTiers(v: unknown, ownerPrefix?: string): StoredTier[]
       title: typeof t.title === "string" ? t.title.slice(0, MAX_TITLE) : "",
       accent: typeof t.accent === "string" && HEX.test(t.accent) ? t.accent.toLowerCase() : null,
       animation: ALERT_ANIMATIONS.includes(t.animation as AlertAnimation) ? (t.animation as AlertAnimation) : "pop",
+      exit: ALERT_EXITS.includes(t.exit as AlertExit) ? (t.exit as AlertExit) : "fade",
       style: STYLES.includes(t.style as AlertStyle) ? (t.style as AlertStyle) : null,
       look: parseLook(t.look),
     });
@@ -205,6 +207,7 @@ export function toAlertTiers(stored: StoredTier[], urlOf: (path: string | null) 
     title: t.title,
     accent: t.accent,
     animation: t.animation,
+    exit: t.exit,
     style: t.style,
     look: t.look,
   }));

@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { ALERT_ANIMATIONS, ALERT_EXITS } from "../alerts";
+import { en } from "../i18n/dict/en";
+import { th } from "../i18n/dict/th";
 import {
   DEFAULT_LOOK,
   LOOK_PRESETS,
@@ -19,15 +23,15 @@ const UID = "11111111-1111-1111-1111-111111111111";
 describe("parseStoredTiers", () => {
   it("cleans, defaults and sorts tiers", () => {
     const t = parseStoredTiers([
-      { min_amount: 500, title: "big", animation: "shake", accent: "#FFAA00", style: "banner" },
+      { min_amount: 500, title: "big", animation: "shake", exit: "spin", accent: "#FFAA00", style: "banner" },
       { min_amount: 0 },
       { min_amount: "x" },
-      { min_amount: 100, animation: "explode", accent: "red", style: "huge" },
+      { min_amount: 100, animation: "explode", exit: "melt", accent: "red", style: "huge" },
     ]);
     expect(t.map((x) => x.min_amount)).toEqual([0, 100, 500]);
-    expect(t[0]).toEqual({ min_amount: 0, media_path: null, sound_path: null, title: "", accent: null, animation: "pop", style: null, look: null });
-    expect(t[1]).toMatchObject({ animation: "pop", accent: null, style: null });
-    expect(t[2]).toMatchObject({ animation: "shake", accent: "#ffaa00", style: "banner", title: "big" });
+    expect(t[0]).toEqual({ min_amount: 0, media_path: null, sound_path: null, title: "", accent: null, animation: "pop", exit: "fade", style: null, look: null });
+    expect(t[1]).toMatchObject({ animation: "pop", exit: "fade", accent: null, style: null });
+    expect(t[2]).toMatchObject({ animation: "shake", exit: "spin", accent: "#ffaa00", style: "banner", title: "big" });
   });
 
   it("only keeps file paths inside the owner's folder", () => {
@@ -114,5 +118,23 @@ describe("look fonts", () => {
     const l = parseLook({ font: "g:Kanit", messageFont: "g:Nope", weight: 777 });
     expect(l).toMatchObject({ font: "g:Kanit", messageFont: DEFAULT_LOOK.messageFont, weight: 800 });
     expect(parseLook({})?.weight).toBe(600);
+  });
+});
+
+describe("alert animations", () => {
+  const css = readFileSync(new URL("../styles/moom.css", import.meta.url), "utf8");
+  it("has a CSS class for every entrance and exit", () => {
+    for (const a of ALERT_ANIMATIONS) expect(css).toContain(`.px-in-${a} {`);
+    for (const a of ALERT_EXITS) expect(css).toContain(`.px-out-${a} {`);
+  });
+  it("offers ten of each, plus none", () => {
+    expect(ALERT_ANIMATIONS.filter((a) => a !== "none")).toHaveLength(10);
+    expect(ALERT_EXITS.filter((a) => a !== "none")).toHaveLength(10);
+  });
+  it("names every one in both languages", () => {
+    for (const dict of [th, en]) {
+      for (const a of ALERT_ANIMATIONS) expect(dict.design.animations[a]).toBeTruthy();
+      for (const a of ALERT_EXITS) expect(dict.design.exits[a]).toBeTruthy();
+    }
   });
 });

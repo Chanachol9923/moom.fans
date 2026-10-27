@@ -1,7 +1,7 @@
 "use client";
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isOverlayEvent, type OverlayAlert, type OverlayConfig, type OverlayPet, type OverlayState } from "../alerts";
+import { EXIT_MS, isOverlayEvent, type OverlayAlert, type OverlayConfig, type OverlayPet, type OverlayState } from "../alerts";
 import { tierFor } from "./design";
 import { mergeQueue, vtsActionsFor } from "./queue";
 import { OverlayAudio } from "./sound";
@@ -58,6 +58,8 @@ export type StageView = {
     startedAt: number;
     /** How long the alert card stays, for its countdown bar. */
     durationMs: number;
+    /** The card is playing its exit animation. */
+    leaving?: boolean;
   } | null;
   paused: boolean;
 };
@@ -243,6 +245,10 @@ export function useOverlayEngine(opts: EngineOptions) {
         if (p.tts && cfg.ttsEnabled && a && tts && !signal.aborted) await a.playUrl(tts, signal).catch(() => {});
         const rest = minMs - (performance.now() - started);
         if (rest > 0) await sleep(rest, signal);
+        if ((tierFor(cfg.tiers, p.amount)?.tier.exit ?? "fade") !== "none" && !signal.aborted) {
+          setCurrent((c) => c && { ...c, leaving: true });
+          await sleep(EXIT_MS, signal);
+        }
 
         if (p.wheel && p.wheel.items.length > 1 && !signal.aborted) {
           setCurrent({ alert, phase: "wheel", startedAt: Date.now(), durationMs: 7500 });

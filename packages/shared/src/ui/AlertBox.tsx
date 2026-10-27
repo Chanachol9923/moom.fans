@@ -323,6 +323,7 @@ export const ALERT_CSS_CLASSES = [
   '.moom-alert[data-tier="0"]',
   '.moom-alert[data-kind="purchase"]',
   ".moom-stage",
+  ".moom-alert-wrap / --leaving",
 ] as const;
 
 function ProgressBar({ progress, accent, durationMs }: { progress: number; accent: string; durationMs?: number }) {

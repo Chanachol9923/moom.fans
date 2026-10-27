@@ -46,7 +46,10 @@ export function OverlayStage({
         style={showPets && cfg.position.startsWith("bottom") ? { paddingBottom: 120 } : undefined}
       >
         {current?.phase === "alert" && (
-          <div className={`moom-alert-wrap px-in-${tier?.animation ?? "pop"}`} key={current.alert.id}>
+          <div
+            className={`moom-alert-wrap px-in-${tier?.animation ?? "pop"}${current.leaving ? ` moom-alert-wrap--leaving px-out-${tier?.exit ?? "fade"}` : ""}`}
+            key={current.alert.id}
+          >
             <AlertBox
               kind={current.alert.kind}
               payload={current.alert.payload}

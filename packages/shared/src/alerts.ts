@@ -53,8 +53,18 @@ export type OverlayPet = {
 
 export type AlertStyle = "card" | "compact" | "banner";
 
-export const ALERT_ANIMATIONS = ["pop", "slide", "bounce", "shake", "fade", "none"] as const;
+export const ALERT_ANIMATIONS = [
+  "pop", "slide", "slide-left", "rise", "bounce", "zoom", "fade", "flip", "spin", "shake", "none",
+] as const;
 export type AlertAnimation = (typeof ALERT_ANIMATIONS)[number];
+
+/** How the alert leaves. Kept apart from the entrance so each can be picked freely. */
+export const ALERT_EXITS = [
+  "fade", "shrink", "slide", "slide-left", "sink", "lift", "zoom", "flip", "spin", "blink", "none",
+] as const;
+export type AlertExit = (typeof ALERT_EXITS)[number];
+/** Length of every exit animation in moom.css (.px-out-*). The engine waits this long. */
+export const EXIT_MS = 500;
 
 /** A no-code alert look built in the dashboard. Replaces the preset card styles when set. */
 export type AlertLook = {
@@ -103,6 +113,7 @@ export type AlertTier = {
   title: string;
   accent: string | null;
   animation: AlertAnimation;
+  exit: AlertExit;
   style: AlertStyle | null;
   /** Set = designed in the no-code editor; `style` is ignored. */
   look: AlertLook | null;
