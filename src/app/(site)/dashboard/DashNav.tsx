@@ -73,7 +73,7 @@ function NavLink({ it, active }: { it: Item; active: boolean }) {
       href={it.href}
       aria-current={active ? "page" : undefined}
       className={cx(
-        "flex items-center justify-between gap-2 px-3 py-1.5 font-display text-sm",
+        "flex items-center justify-between gap-2 px-3 py-1.5 font-display text-sm font-semibold",
         active ? "bg-ink text-paper" : "hover:bg-paper-2",
       )}
     >
@@ -121,7 +121,7 @@ function MobileNav({ groups, pending, path }: { groups: Group[]; pending: number
             key={t.href}
             href={t.href}
             aria-current={t.active ? "page" : undefined}
-            className={cx("relative flex flex-col items-center gap-0.5 py-2 font-display text-[11px]", t.active ? "bg-ink text-paper" : "text-ink")}
+            className={cx("relative flex flex-col items-center gap-0.5 py-2 font-display text-xs font-semibold", t.active ? "bg-ink text-paper" : "text-ink")}
           >
             <PixelIcon name={t.icon} />
             <span className="max-w-full truncate px-1">{t.label}</span>
@@ -134,7 +134,7 @@ function MobileNav({ groups, pending, path }: { groups: Group[]; pending: number
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className={cx("flex flex-col items-center gap-0.5 py-2 font-display text-[11px]", open && "bg-ink text-paper")}
+          className={cx("flex flex-col items-center gap-0.5 py-2 font-display text-xs font-semibold", open && "bg-ink text-paper")}
         >
           <PixelIcon name="menu" />
           <span>{d.nav.menu}</span>

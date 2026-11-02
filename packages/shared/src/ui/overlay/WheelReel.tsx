@@ -56,13 +56,13 @@ export function WheelReel({
 
   return (
     <div className="px-frame px-frame-raised w-[min(80vw,520px)] bg-paper p-3 text-center">
-      <div className="mb-2 font-display text-lg">{d.alert.wheel}</div>
+      <div className="mb-2 font-title text-lg">{d.alert.wheel}</div>
       <div className="relative mx-auto overflow-hidden bg-ink" style={{ height: ROW * 3 }}>
         <div ref={strip_} style={{ transform: `translateY(${ROW}px)` }}>
           {strip.map((label, i) => (
             <div
               key={i}
-              className="flex items-center justify-center px-3 font-display text-xl text-paper"
+              className="flex items-center justify-center px-3 font-title text-xl text-paper"
               style={{ height: ROW }}
             >
               <span className="truncate">{label}</span>
@@ -73,7 +73,7 @@ export function WheelReel({
         <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-ink to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-ink to-transparent" />
       </div>
-      <div className={`mt-2 h-8 font-display text-xl ${done ? "px-blink" : "opacity-0"}`} style={{ color: accent }}>
+      <div className={`mt-2 h-8 font-title text-xl ${done ? "px-blink" : "opacity-0"}`} style={{ color: accent }}>
         {fmt(d.alert.wheelResult, { result: items[result] ?? "" })}
       </div>
     </div>

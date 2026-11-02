@@ -45,7 +45,7 @@ function TitleBar({ locale, onLocale }: { locale: Locale; onLocale: (l: Locale) 
     <header className="flex items-center justify-between border-b-[3px] border-ink bg-paper-2 px-4 py-2">
       <div className="flex items-center gap-2">
         <PixelSprite sprite={PRESETS.bird} size={28} />
-        <span className="font-display text-xl">moom</span>
+        <span className="font-title text-xl">moom</span>
       </div>
       <div className="flex items-center gap-1 font-display text-sm" role="group" aria-label="Language">
         {(["th", "en"] as const).map((l) => (

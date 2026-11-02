@@ -7,7 +7,7 @@ export function Logo({ size = 32 }: { size?: number }) {
   return (
     <span className="inline-flex items-center gap-2">
       <PixelSprite sprite={PRESETS.bird} size={size} />
-      <span className="font-display text-2xl leading-none">Moom</span>
+      <span className="font-title text-2xl leading-none">Moom</span>
     </span>
   );
 }

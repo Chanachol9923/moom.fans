@@ -76,7 +76,7 @@ export function AlertBox({
   const headline = fmtParts<ReactNode>(template, vars);
 
   const title = (
-    <div className="moom-alert__title font-display text-[1.35em] leading-tight break-words">
+    <div className="moom-alert__title font-title text-[1.35em] leading-tight break-words">
       {headline.map((part, i) => (
         <Fragment key={i}>{part}</Fragment>
       ))}
@@ -88,7 +88,7 @@ export function AlertBox({
     <div className="moom-alert__sub font-num mt-0.5 text-ink-soft">{amount}</div>
   );
   const vote = payload.vote && (
-    <div className="moom-alert__vote mt-1 inline-block bg-ink px-1.5 py-0.5 font-display text-[0.8em] text-paper">
+    <div className="moom-alert__vote mt-1 inline-block bg-ink px-1.5 py-0.5 font-title text-[0.8em] text-paper">
       {fmtParts(d.alert.voted, { option: payload.vote }).join("")}
     </div>
   );

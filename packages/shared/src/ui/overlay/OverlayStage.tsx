@@ -94,7 +94,7 @@ export function OverlayStage({
               allow="autoplay; encrypted-media"
               src={`https://www.youtube-nocookie.com/embed/${current.alert.payload.media.id}?autoplay=1&controls=0&disablekb=1&modestbranding=1&rel=0&start=${current.alert.payload.media.start}&end=${current.alert.payload.media.start + current.alert.payload.media.seconds}`}
             />
-            <div className="px-2 py-1 font-display text-sm text-paper">
+            <div className="px-2 py-1 font-title text-sm text-paper">
               {current.alert.payload.name} · {current.alert.payload.media.seconds}s
             </div>
           </div>
@@ -102,7 +102,7 @@ export function OverlayStage({
       )}
 
       {paused && (
-        <div className="absolute top-3 left-3 bg-tomato px-2 py-1 font-display text-sm text-paper">■ {d.alert.paused}</div>
+        <div className="absolute top-3 left-3 bg-tomato px-2 py-1 font-title text-sm text-paper">■ {d.alert.paused}</div>
       )}
       {notice}
     </div>

@@ -12,8 +12,9 @@
   --paper-2: #e6dbc2;
   --paper-3: #d6c8a8;
   --ink: #241e19;
-  --ink-soft: #5d5247;
-  --ink-faint: #8c806f;
+  --ink-soft: #554a3f;
+  /* Darker than it looks like it needs to be: hints must stay readable on paper. */
+  --ink-faint: #6f6354;
   --pigeon: #7d8ba1;
   --pigeon-dark: #4f5b70;
   --teal: #2f7a6a;
@@ -45,9 +46,14 @@
   --color-leaf: var(--leaf);
   --color-sky: var(--sky);
   --color-accent: var(--accent);
-  --font-display: var(--font-pixel), var(--font-thai-display), ui-monospace, monospace;
+  /* Pixel face: the logo, page titles and things shown on stream. */
+  --font-title: var(--font-pixel), var(--font-thai-display), ui-monospace, monospace;
+  /* Everything people read and press: menus, labels, buttons, panel headings. */
+  --font-display: var(--font-thai-body), system-ui, sans-serif;
   --font-sans: var(--font-thai-body), system-ui, sans-serif;
   --font-mono: var(--font-pixel), ui-monospace, monospace;
+  /* The smallest text is hints and timestamps; 12px Thai is too small to read comfortably. */
+  --text-xs: 0.8125rem;
 }
 
 @layer base {
@@ -70,13 +76,23 @@
     outline: var(--px) dashed var(--ink);
     outline-offset: 3px;
   }
-  h1, h2, h3, .font-display {
-    font-family: var(--font-display);
+  h1 {
+    font-family: var(--font-title);
     letter-spacing: 0.01em;
+  }
+  h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
   }
 }
 
 @layer components {
+  /* UI emphasis (menus, labels, small headings) used to come from the pixel face;
+     now it's weight. In components so a font-normal/font-bold utility still wins. */
+  .font-display {
+    font-weight: 600;
+  }
+
   /* Notched pixel frame. */
   .px-frame {
     position: relative;
@@ -104,8 +120,9 @@
     gap: 0.5rem;
     padding: 0.55rem 1rem 0.5rem;
     font-family: var(--font-display);
+    font-weight: 600;
     font-size: 0.95rem;
-    line-height: 1.1;
+    line-height: 1.2;
     color: var(--ink);
     background: var(--paper);
     cursor: pointer;
@@ -150,8 +167,8 @@
     background: transparent;
   }
   .px-btn-sm {
-    padding: 0.3rem 0.6rem 0.25rem;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.875rem;
   }
 
   .px-input {
@@ -186,16 +203,18 @@
   .px-label {
     display: block;
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-weight: 600;
+    font-size: 0.9rem;
     color: var(--ink-soft);
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.2rem;
   }
 
   .px-tag {
     display: inline-block;
-    padding: 0.1rem 0.45rem 0.05rem;
+    padding: 0.1rem 0.45rem;
     font-family: var(--font-display);
-    font-size: 0.72rem;
+    font-weight: 600;
+    font-size: 0.8rem;
     background: var(--paper-2);
     box-shadow:
       0 -2px 0 0 var(--ink),

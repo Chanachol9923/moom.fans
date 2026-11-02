@@ -267,7 +267,7 @@ function Running({ token, initial, name, email }: Boot) {
             aria-selected={tab === id}
             onClick={() => setTab(id)}
             className={cx(
-              "-mb-[3px] border-[3px] border-b-0 px-3 py-1.5 font-display text-sm",
+              "-mb-[3px] border-[3px] border-b-0 px-3 py-1.5 font-display text-sm font-semibold",
               tab === id ? "border-ink bg-paper-2" : "border-transparent text-ink-soft hover:text-ink",
             )}
           >

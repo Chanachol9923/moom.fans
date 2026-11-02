@@ -6,11 +6,11 @@ import { cleanFontChoice, fontFamilyName } from "@moom/shared/fonts";
 // never throws, so an old or hand-edited value can't break a public page.
 
 export const THEMES = {
-  pigeon: { paper: "#f2ead7", paper2: "#e6dbc2", paper3: "#d6c8a8", ink: "#241e19", inkSoft: "#5d5247", inkFaint: "#8c806f", field: "#fffaf0" },
-  night: { paper: "#1f2230", paper2: "#2a2e3f", paper3: "#3a3f55", ink: "#f1ead8", inkSoft: "#c9c0ad", inkFaint: "#8e889a", field: "#14161f" },
-  sakura: { paper: "#fbeef0", paper2: "#f4dbe0", paper3: "#e7c0c8", ink: "#3a2329", inkSoft: "#6e4b54", inkFaint: "#a07f87", field: "#fffafb" },
-  matcha: { paper: "#eef2df", paper2: "#dfe6c7", paper3: "#c8d3a6", ink: "#22301c", inkSoft: "#4c5c40", inkFaint: "#7d8a6e", field: "#fbfdf4" },
-  arcade: { paper: "#fff7d6", paper2: "#ffe9a3", paper3: "#f4d06f", ink: "#1b1a3a", inkSoft: "#46436e", inkFaint: "#7d7aa6", field: "#fffdf3" },
+  pigeon: { paper: "#f2ead7", paper2: "#e6dbc2", paper3: "#d6c8a8", ink: "#241e19", inkSoft: "#554a3f", inkFaint: "#6f6354", field: "#fffaf0" },
+  night: { paper: "#1f2230", paper2: "#2a2e3f", paper3: "#3a3f55", ink: "#f1ead8", inkSoft: "#d2cab8", inkFaint: "#a8a2b4", field: "#14161f" },
+  sakura: { paper: "#fbeef0", paper2: "#f4dbe0", paper3: "#e7c0c8", ink: "#3a2329", inkSoft: "#62424b", inkFaint: "#7e5e67", field: "#fffafb" },
+  matcha: { paper: "#eef2df", paper2: "#dfe6c7", paper3: "#c8d3a6", ink: "#22301c", inkSoft: "#435238", inkFaint: "#5c6950", field: "#fbfdf4" },
+  arcade: { paper: "#fff7d6", paper2: "#ffe9a3", paper3: "#f4d06f", ink: "#1b1a3a", inkSoft: "#3f3c66", inkFaint: "#5c5986", field: "#fffdf3" },
 } as const;
 
 export type ThemeId = keyof typeof THEMES;
@@ -105,12 +105,16 @@ export function themeVars(cfg: PageConfig, accent: string): Record<string, strin
     "--field": t.field,
     "--accent": accent,
     color: t.ink,
-    // The composite stacks (--font-display, --font-sans) are resolved once at :root, so
+    // The composite stacks (--font-title, --font-display, --font-sans) are resolved once at :root, so
     // they're overridden here as well as the faces they're built from. Text inherits an
     // already-resolved family, hence the explicit fontFamily for the body face.
     // Thai falls through to Moom's Thai faces when the picked font has none.
     ...(heading
-      ? { "--font-pixel": heading, "--font-display": `${heading}, var(--font-thai-display), sans-serif` }
+      ? {
+          "--font-pixel": heading,
+          "--font-title": `${heading}, var(--font-thai-display), sans-serif`,
+          "--font-display": `${heading}, var(--font-thai-display), sans-serif`,
+        }
       : {}),
     ...(body
       ? {

@@ -25,7 +25,7 @@ export function GoalBar({
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-display text-lg leading-tight">{title}</span>
+        <span className="font-title text-lg leading-tight">{title}</span>
         <span className="font-num text-lg" style={{ color: accent }}>
           {pct}%
         </span>

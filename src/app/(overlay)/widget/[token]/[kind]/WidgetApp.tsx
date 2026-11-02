@@ -61,13 +61,13 @@ function Ticker({ data }: { data: WidgetData }) {
   const row = items.map((r, i) => (
     <span key={i} className="mx-6 inline-flex items-center gap-2">
       <span className="size-3" style={{ background: data.accent }} />
-      <b className="font-display">{r.name}</b>
+      <b className="font-title">{r.name}</b>
       {data.showAmounts && <span className="font-num">{formatBaht(r.amount, data.locale)}</span>}
     </span>
   ));
   return (
     <div className="px-frame flex items-center overflow-hidden bg-paper py-2 whitespace-nowrap">
-      <span className="shrink-0 bg-ink px-2 py-0.5 font-display text-sm text-paper">{d.store.recent}</span>
+      <span className="shrink-0 bg-ink px-2 py-0.5 font-title text-sm text-paper">{d.store.recent}</span>
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="inline-block animate-[px-marquee_30s_linear_infinite]">
           {row}
@@ -82,14 +82,14 @@ function Top({ data }: { data: WidgetData }) {
   const d = getDict(data.locale);
   return (
     <div className="px-frame px-frame-raised bg-paper p-3">
-      <div className="mb-2 font-display">{data.topPeriod === "30d" ? d.store.top30 : d.store.topAll}</div>
+      <div className="mb-2 font-title">{data.topPeriod === "30d" ? d.store.top30 : d.store.topAll}</div>
       <ol className="grid gap-1.5">
         {data.top.map((t, i) => (
           <li key={t.name} className="flex items-center gap-2">
             <span className="font-num grid size-7 place-items-center text-sm" style={{ background: i === 0 ? "var(--beak)" : "var(--paper-2)" }}>
               {i + 1}
             </span>
-            <span className="min-w-0 flex-1 truncate font-display">{t.name}</span>
+            <span className="min-w-0 flex-1 truncate font-title">{t.name}</span>
             {data.showAmounts && <span className="font-num text-ink-soft">{formatBaht(t.total, data.locale)}</span>}
           </li>
         ))}
@@ -106,7 +106,7 @@ function Qr({ data }: { data: WidgetData }) {
   return (
     <div className="px-frame px-frame-raised inline-block bg-paper p-3 text-center">
       <div className="size-56 bg-white p-1 [&_svg]:size-full" dangerouslySetInnerHTML={{ __html: svg }} />
-      <div className="mt-2 font-display text-sm">{data.pageUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}</div>
+      <div className="mt-2 font-title text-sm">{data.pageUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")}</div>
     </div>
   );
 }
@@ -117,12 +117,12 @@ function Poll({ data }: { data: WidgetData }) {
   const sum = p.totals.reduce((a, b) => a + b, 0) || 1;
   return (
     <div className="px-frame px-frame-raised bg-paper p-3">
-      <div className="mb-2 font-display text-lg">{p.title}</div>
+      <div className="mb-2 font-title text-lg">{p.title}</div>
       <ul className="grid gap-2">
         {p.options.map((o, i) => (
           <li key={i}>
             <div className="flex justify-between gap-2 text-sm">
-              <span className="font-display">{o}</span>
+              <span className="font-title">{o}</span>
               <span className="font-num">{Math.round((p.totals[i] / sum) * 100)}%</span>
             </div>
             <div className="mt-0.5 h-4 bg-ink p-[2px]">
@@ -147,7 +147,7 @@ function Subathon({ data }: { data: WidgetData }) {
   const running = !s.pausedLeft && Boolean(s.endsAt) && left > 0;
   return (
     <div className="px-frame px-frame-raised inline-block bg-paper px-5 py-3 text-center">
-      <div className="font-display text-sm text-ink-soft">
+      <div className="font-title text-sm text-ink-soft">
         {d.fun.subathon}
         {s.pausedLeft !== null && <span className="ml-2 bg-ink px-1 text-paper">{d.fun.subathonPause}</span>}
       </div>

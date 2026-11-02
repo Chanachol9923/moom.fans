@@ -16,7 +16,7 @@ export function AccountTab({ name, email }: { name: string; email: string }) {
   return (
     <div className="grid gap-4">
       <Panel>
-        <div className="font-display text-xl">{name}</div>
+        <div className="font-title text-xl">{name}</div>
         <div className="text-sm text-ink-faint">{email}</div>
         <p className="mt-3 text-sm text-ink-soft">{d.desktop.accountNote}</p>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">

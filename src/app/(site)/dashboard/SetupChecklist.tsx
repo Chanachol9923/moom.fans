@@ -82,7 +82,7 @@ function Step({ n, done, title, open, children }: { n: number; done: boolean; ti
           >
             {done ? "✓" : n}
           </span>
-          <span className={cx("flex-1 font-display", done && "text-ink-soft line-through decoration-2")}>{title}</span>
+          <span className={cx("flex-1 font-display font-semibold", done && "text-ink-soft line-through decoration-2")}>{title}</span>
           <span className="text-ink-faint group-open:rotate-90" aria-hidden>
             ▸
           </span>

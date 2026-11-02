@@ -56,7 +56,7 @@ export function OverlayApp({
       onWheelTick={engine.wheelTick}
       notice={
         engine.soundBlocked && !preview ? (
-          <div className="absolute top-3 right-3 bg-ink/80 px-2 py-1 font-display text-xs text-paper">
+          <div className="absolute top-3 right-3 bg-ink/80 px-2 py-1 font-title text-xs text-paper">
             {d.alert.clickForSound}
           </div>
         ) : null
