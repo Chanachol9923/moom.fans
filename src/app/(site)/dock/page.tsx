@@ -4,6 +4,7 @@ import { ActionButton } from "@/components/ActionButton";
 import type { AlertPayload } from "@moom/shared/alerts";
 import { requireStreamer } from "@/lib/auth";
 import { formatBaht } from "@moom/shared/i18n";
+import { supporterLabel } from "@/lib/supporter";
 import { getT } from "@/lib/i18n/server";
 import { BUCKETS } from "@/lib/storage";
 import { signedDownloadUrl } from "@/lib/storage.server";
@@ -62,7 +63,7 @@ export default async function DockPage() {
             <li key={t.id} className="px-frame bg-paper p-2">
               <div className="flex items-baseline gap-2">
                 <span className="font-num text-lg">{formatBaht(Number(t.amount), locale)}</span>
-                <span className="truncate font-medium">{t.supporter_name}</span>
+                <span className="truncate font-medium">{supporterLabel(t, d)}</span>
               </div>
               {t.message && <p className="line-clamp-2 text-ink-soft">{t.message}</p>}
               {slips.get(t.id) && (

@@ -158,7 +158,7 @@ export function OverlaySettingsForm({
         </Field>
       </Panel>
 
-      <div className="sticky bottom-3 flex items-center gap-3">
+      <div className="sticky bottom-[68px] z-10 -mx-2 flex flex-wrap items-center gap-3 border-t-[3px] border-dashed border-ink/20 bg-paper px-2 py-2 md:bottom-0">
         <Button type="submit" variant="primary" disabled={pending}>
           {pending ? d.common.loading : d.common.save}
         </Button>

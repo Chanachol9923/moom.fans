@@ -15,6 +15,16 @@ export default async function AppPage() {
       <div>
         <h1 className="text-3xl">{d.appPage.title}</h1>
         <p className="mt-2 max-w-2xl text-ink-soft">{d.appPage.body}</p>
+        <ul className="mt-3 grid max-w-2xl gap-1.5">
+          {d.appPage.perks.map((p) => (
+            <li key={p} className="flex gap-2">
+              <span className="text-leaf" aria-hidden>
+                ✓
+              </span>
+              <span>{p}</span>
+            </li>
+          ))}
+        </ul>
       </div>
       <Panel>
         {DOWNLOAD_URL ? (

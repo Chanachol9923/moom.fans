@@ -4,6 +4,7 @@ import type { AlertPayload } from "@moom/shared/alerts";
 import { requireStreamer } from "@/lib/auth";
 import { getPrivate } from "@/lib/domain/streamer";
 import { formatBaht } from "@moom/shared/i18n";
+import { supporterLabel } from "@/lib/supporter";
 import { getT } from "@/lib/i18n/server";
 import { BUCKETS } from "@/lib/storage";
 import { signedDownloadUrl } from "@/lib/storage.server";
@@ -23,7 +24,7 @@ export default async function ReviewPage() {
     supabase.from("transactions").select("*").eq("status", "pending_review").order("created_at").limit(50),
     supabase
       .from("transactions")
-      .select("id, kind, supporter_name, amount, product_title, created_at")
+      .select("id, kind, supporter_name, is_anonymous, amount, product_title, created_at")
       .eq("status", "awaiting_payment")
       .gte("created_at", since)
       .order("created_at", { ascending: false })
@@ -85,7 +86,7 @@ export default async function ReviewPage() {
                         {d.review.at} {time(t.submitted_at ?? t.created_at)}
                       </span>
                     </div>
-                    <div className="mt-1 font-medium">{t.supporter_name}</div>
+                    <div className="mt-1 font-medium">{supporterLabel(t, d)}</div>
                     {t.product_title && <div className="text-ink-soft">{t.product_title}</div>}
                     {t.message && <p className="mt-1 break-words text-ink-soft">“{t.message}”</p>}
                     {t.media_url && (
@@ -99,7 +100,8 @@ export default async function ReviewPage() {
                         {v.problems?.join(" · ") || v.reason}
                       </div>
                     )}
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    {/* Two big buttons side by side: this is often done on a phone mid-stream. */}
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                       <ActionButton variant="primary" action={approvePayment.bind(null, t.id)}>
                         ✓ {d.review.approve}
                       </ActionButton>
@@ -173,7 +175,7 @@ export default async function ReviewPage() {
               <li key={t.id} className="flex flex-wrap items-center gap-3">
                 <span className="text-ink-faint">{time(t.created_at)}</span>
                 <span className="font-num">{formatBaht(Number(t.amount), locale)}</span>
-                <span>{t.supporter_name}</span>
+                <span>{supporterLabel(t, d)}</span>
                 {t.product_title && <span className="text-ink-soft">· {t.product_title}</span>}
                 <span className="ml-auto flex gap-2">
                   <ActionButton size="sm" action={approvePayment.bind(null, t.id)}>

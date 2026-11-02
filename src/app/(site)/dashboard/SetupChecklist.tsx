@@ -33,9 +33,14 @@ export async function SetupChecklist({ state, pageUrl, overlayUrl }: { state: Se
         </Step>
         <Step n={2} done={state.styled} title={S.styleTitle} open={next === 1}>
           <p>{S.styleBody}</p>
-          <Link href="/dashboard/page" className="px-btn px-btn-sm px-btn-primary justify-self-start">
-            {S.styleAction} →
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/dashboard/settings" className="px-btn px-btn-sm px-btn-primary">
+              {S.pictureAction} →
+            </Link>
+            <Link href="/dashboard/page" className="px-btn px-btn-sm">
+              {S.styleAction} →
+            </Link>
+          </div>
         </Step>
         <Step n={3} done={state.obs} title={S.obsTitle} open={next === 2}>
           <ol className="list-decimal space-y-1 pl-5">

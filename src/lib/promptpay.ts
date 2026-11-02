@@ -76,6 +76,14 @@ export function promptPayPayload(opts: {
 }
 
 /** Masked for display, e.g. 081-xxx-5678. */
+/** Grouped for reading back: 081-234-5678, 1-2345-67890-12-3. */
+export function formatPromptPayId(type: PromptPayType, raw: string): string {
+  const id = normalizePromptPayId(raw);
+  if (type === "phone") return `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}`;
+  if (type === "national_id") return `${id[0]}-${id.slice(1, 5)}-${id.slice(5, 10)}-${id.slice(10, 12)}-${id[12]}`;
+  return id;
+}
+
 export function maskPromptPayId(type: PromptPayType, raw: string): string {
   const id = normalizePromptPayId(raw);
   if (type === "phone") return `${id.slice(0, 3)}-xxx-${id.slice(-4)}`;

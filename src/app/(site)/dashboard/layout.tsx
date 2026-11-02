@@ -26,8 +26,9 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
           </form>
         }
       />
-      <div className="mx-auto grid w-full max-w-6xl gap-5 px-4 pb-16 md:grid-cols-[200px_1fr]">
-        <aside className="md:sticky md:top-4 md:self-start">
+      {/* pb-28 on phones keeps content clear of the bottom tab bar. */}
+      <div className="mx-auto grid w-full max-w-6xl gap-5 px-4 pb-28 md:grid-cols-[200px_1fr] md:pb-16">
+        <aside className="min-w-0 md:sticky md:top-4 md:self-start">
           <div className="mb-3 hidden md:block">
             <div className="font-display text-lg leading-tight">{profile.display_name}</div>
             <Link
@@ -39,7 +40,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             </Link>
           </div>
           <DashNav pending={(pendingTx ?? 0) + (heldAlerts ?? 0)} />
-          <Link href={creatorUrl(profile.slug)} target="_blank" className={buttonClass("ghost", "sm", "mt-2 md:hidden")}>
+          <Link href={creatorUrl(profile.slug)} target="_blank" className={buttonClass("ghost", "sm", "md:hidden")}>
             {d.nav.viewPage} ↗
           </Link>
         </aside>

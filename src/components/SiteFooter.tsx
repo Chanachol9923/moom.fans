@@ -5,8 +5,7 @@ export async function SiteFooter() {
   const { d } = await getT();
   return (
     <footer className="border-t-[3px] border-dashed border-ink/30">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-5 text-sm text-ink-soft">
-        <span>{d.landing.footer}</span>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-end gap-3 px-4 py-5 text-sm text-ink-soft">
         <nav className="flex gap-4 font-display">
           <Link href="/help" className="hover:text-ink">
             {d.landing.linkHelp}

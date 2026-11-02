@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ActionButton } from "@/components/ActionButton";
 import { CopyField } from "@moom/shared/ui/CopyField";
 import { Panel } from "@moom/shared/ui/kit";
@@ -26,6 +27,12 @@ export default async function OverlayPage() {
   return (
     <div className="grid gap-5">
       <h1 className="text-3xl">{d.overlay.title}</h1>
+      <p className="px-frame bg-sky/40 p-3 text-sm">
+        {d.overlay.appTip}{" "}
+        <Link href="/dashboard/app" className="font-display underline">
+          {d.overlay.appTipLink} →
+        </Link>
+      </p>
 
       <Panel title={d.overlay.urlLabel}>
         <CopyField value={url} secret />

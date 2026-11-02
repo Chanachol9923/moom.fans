@@ -1,6 +1,7 @@
 import { Panel, Tag } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { formatBaht } from "@moom/shared/i18n";
+import { supporterLabel } from "@/lib/supporter";
 import { getT } from "@/lib/i18n/server";
 
 const PAGE = 100;
@@ -13,7 +14,7 @@ export default async function LedgerPage({ searchParams }: PageProps<"/dashboard
   const [{ data: rows }, { data: downloads }] = await Promise.all([
     supabase
       .from("transactions")
-      .select("id, kind, supporter_name, supporter_email, amount, message, product_title, status, verify_method, created_at, download_count")
+      .select("id, kind, supporter_name, is_anonymous, supporter_email, amount, message, product_title, status, verify_method, created_at, download_count")
       .order("created_at", { ascending: false })
       .range(page * PAGE, page * PAGE + PAGE - 1),
     supabase.from("downloads").select("id, transaction_id, created_at").order("created_at", { ascending: false }).limit(20),
@@ -50,7 +51,7 @@ export default async function LedgerPage({ searchParams }: PageProps<"/dashboard
                     <td className="py-2 pr-3 whitespace-nowrap text-ink-faint">{when(r.created_at)}</td>
                     <td className="font-num py-2 pr-3 whitespace-nowrap">{formatBaht(Number(r.amount), locale)}</td>
                     <td className="py-2 pr-3">
-                      {r.supporter_name}
+                      {supporterLabel(r, d)}
                       {r.supporter_email && <div className="text-xs text-ink-faint">{r.supporter_email}</div>}
                     </td>
                     <td className="max-w-xs py-2 pr-3 break-words text-ink-soft">

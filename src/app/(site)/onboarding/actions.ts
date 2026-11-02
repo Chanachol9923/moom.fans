@@ -12,6 +12,16 @@ export type OnboardingState = {
   values?: { slug: string; displayName: string; promptpay: string };
 };
 
+export type SlugCheck = "ok" | "invalid" | "taken";
+
+/** Live check while typing a link name. Profiles are public, so this reveals nothing new. */
+export async function checkSlug(raw: string): Promise<SlugCheck> {
+  const slug = String(raw).trim().toLowerCase();
+  if (!isValidSlug(slug)) return "invalid";
+  const { data } = await admin().from("profiles").select("id").eq("slug", slug).maybeSingle();
+  return data ? "taken" : "ok";
+}
+
 const Input = z.object({
   slug: z.string().trim().toLowerCase(),
   displayName: z.string().trim().min(1).max(60),

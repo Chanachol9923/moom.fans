@@ -5,7 +5,9 @@ import { requireStreamer } from "@/lib/auth";
 import { getPrivate, moneyTotals, overlayUrl } from "@/lib/domain/streamer";
 import { creatorUrl } from "@/lib/hosts";
 import { fmt, formatBaht } from "@moom/shared/i18n";
+import { supporterLabel } from "@/lib/supporter";
 import { getT } from "@/lib/i18n/server";
+import { DEFAULT_PAGE_CONFIG, parsePageConfig } from "@/lib/page-config";
 import { SetupChecklist, type SetupState } from "./SetupChecklist";
 
 export default async function Overview() {
@@ -17,7 +19,7 @@ export default async function Overview() {
     supabase
       .from("transactions")
       .select(
-        "id, kind, supporter_name, amount, message, product_title, status, created_at",
+        "id, kind, supporter_name, is_anonymous, amount, message, product_title, status, created_at",
       )
       .order("created_at", { ascending: false })
       .limit(8),
@@ -35,9 +37,14 @@ export default async function Overview() {
       .select("id", { count: "exact", head: true })
       .eq("status", "verified"),
   ]);
-  const page = profile.page as Record<string, unknown> | null;
+  // What makes a page feel like theirs: a picture, or a theme/background of their own.
+  const cfg = parsePageConfig(profile.page);
   const setup: SetupState = {
-    styled: !!profile.avatar_path || (!!page && Object.keys(page).length > 0),
+    styled:
+      !!profile.avatar_path ||
+      !!profile.banner_path ||
+      cfg.theme !== DEFAULT_PAGE_CONFIG.theme ||
+      !!cfg.backgroundImagePath,
     obs: (played.count ?? 0) > 0,
     firstTip: (tipped.count ?? 0) > 0,
   };
@@ -65,15 +72,7 @@ export default async function Overview() {
         ) : null}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label={d.dash.today} value={formatBaht(totals.today, locale)} />
-        <Stat
-          label={d.dash.thisMonth}
-          value={formatBaht(totals.month, locale)}
-        />
-        <Stat label={d.dash.allTime} value={formatBaht(totals.all, locale)} />
-      </div>
-
+      {/* Before setup is done the checklist matters more than three zeros. */}
       {!setupDone && (
         <SetupChecklist
           state={setup}
@@ -81,6 +80,15 @@ export default async function Overview() {
           overlayUrl={overlayUrl(priv.overlay_token)}
         />
       )}
+
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 [&_.font-num]:text-lg sm:[&_.font-num]:text-2xl">
+        <Stat label={d.dash.today} value={formatBaht(totals.today, locale)} />
+        <Stat
+          label={d.dash.thisMonth}
+          value={formatBaht(totals.month, locale)}
+        />
+        <Stat label={d.dash.allTime} value={formatBaht(totals.all, locale)} />
+      </div>
 
       {setupDone && (
         <div className="grid gap-5 lg:grid-cols-2">
@@ -121,7 +129,7 @@ export default async function Overview() {
                 <span className="font-num">
                   {formatBaht(Number(t.amount), locale)}
                 </span>
-                <span className="font-medium">{t.supporter_name}</span>
+                <span className="font-medium">{supporterLabel(t, d)}</span>
                 <span className="min-w-0 flex-1 truncate text-ink-soft">
                   {t.kind === "purchase"
                     ? `[${d.review.kindPurchase}] ${t.product_title}`
