@@ -351,8 +351,19 @@
   animation: px-bob 1.2s steps(2) infinite;
 }
 
+/* Loading placeholder: a stepped shimmer, not a smooth gradient. */
+@keyframes px-skeleton {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.px-skeleton {
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 var(--px) color-mix(in srgb, var(--ink) 12%, transparent);
+  animation: px-skeleton 1.2s steps(4) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .px-blink, .px-bob {
+  .px-blink, .px-bob, .px-skeleton {
     animation: none;
   }
 }

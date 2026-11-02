@@ -129,7 +129,7 @@ export default async function Overview() {
                 <span className="font-num">
                   {formatBaht(Number(t.amount), locale)}
                 </span>
-                <span className="font-medium">{supporterLabel(t, d)}</span>
+                <span className="font-semibold">{supporterLabel(t, d)}</span>
                 <span className="min-w-0 flex-1 truncate text-ink-soft">
                   {t.kind === "purchase"
                     ? `[${d.review.kindPurchase}] ${t.product_title}`

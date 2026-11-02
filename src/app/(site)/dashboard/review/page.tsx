@@ -86,7 +86,7 @@ export default async function ReviewPage() {
                         {d.review.at} {time(t.submitted_at ?? t.created_at)}
                       </span>
                     </div>
-                    <div className="mt-1 font-medium">{supporterLabel(t, d)}</div>
+                    <div className="mt-1 font-semibold">{supporterLabel(t, d)}</div>
                     {t.product_title && <div className="text-ink-soft">{t.product_title}</div>}
                     {t.message && <p className="mt-1 break-words text-ink-soft">“{t.message}”</p>}
                     {t.media_url && (

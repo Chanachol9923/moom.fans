@@ -59,7 +59,7 @@ function ProductCard({
       <div className="relative aspect-[4/3] overflow-hidden bg-paper-2">
         {p.coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- user upload on storage CDN
-          <img src={p.coverUrl} alt="" className="size-full object-cover" />
+          <img src={p.coverUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
         ) : (
           <div className="grid size-full place-items-center">
             <PixelSprite sprite={PRESETS.cat} size={64} />

@@ -30,7 +30,7 @@ export async function AlertQueue({ streamerId }: { streamerId: string }) {
   const line = (p: AlertPayload) => (
     <>
       <span className="font-num">{formatBaht(p.amount, locale)}</span>
-      <span className="font-medium">{p.name}</span>
+      <span className="font-semibold">{p.name}</span>
       <span className="min-w-0 flex-1 truncate text-ink-soft">{p.productTitle ?? p.message}</span>
     </>
   );

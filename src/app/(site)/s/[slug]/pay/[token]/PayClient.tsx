@@ -90,7 +90,7 @@ export function PayClient({
           <>
             <h1 className="text-2xl">{d.pay.title}</h1>
             <p className="text-ink-soft">{fmt(d.pay.to, { name: streamerName })}</p>
-            {view.productTitle && <p className="mt-1 font-medium">{view.productTitle}</p>}
+            {view.productTitle && <p className="mt-1 font-semibold">{view.productTitle}</p>}
 
             <div className="mt-4 text-center">
               <div className="px-label">{d.pay.amount}</div>

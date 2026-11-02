@@ -63,7 +63,7 @@ export default async function DockPage() {
             <li key={t.id} className="px-frame bg-paper p-2">
               <div className="flex items-baseline gap-2">
                 <span className="font-num text-lg">{formatBaht(Number(t.amount), locale)}</span>
-                <span className="truncate font-medium">{supporterLabel(t, d)}</span>
+                <span className="truncate font-semibold">{supporterLabel(t, d)}</span>
               </div>
               {t.message && <p className="line-clamp-2 text-ink-soft">{t.message}</p>}
               {slips.get(t.id) && (

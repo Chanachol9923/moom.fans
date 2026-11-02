@@ -12,7 +12,9 @@ export function mergeQueue(current: OverlayAlert[], incoming: OverlayAlert[], ha
     seen.add(a.id);
     out.push(a);
   }
-  return out.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  out.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  // Nothing new: hand back the same array so React skips the update.
+  return out.length === current.length && out.every((a, i) => a === current[i]) ? current : out;
 }
 
 /** Highest-threshold matching rule of each kind, so a big tip doesn't fire every tier at once. */

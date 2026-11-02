@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import type { OverlayAlert, OverlayState } from "@moom/shared/alerts";
 import { useT } from "@moom/shared/i18n/react";
 import { httpApi, useOverlayEngine, type OverlayApi } from "@moom/shared/overlay/engine";
@@ -7,12 +7,12 @@ import { AccountTab } from "./AccountTab";
 import { lineText } from "./chat/types";
 import { useChat } from "./chat/useChat";
 import { ChatTab } from "./ChatTab";
-import { useDeviceSettings } from "./device";
+import { useDeviceSettings, type DeviceSettings } from "./device";
 import { DeviceTab } from "./DeviceTab";
 import { HomeTab } from "./HomeTab";
 import { appLink, openExternal, registerHotkey } from "./platform";
 import { SITE, supabase } from "./session";
-import { StageClients } from "./stage-link";
+import { StageClients, type ToStage } from "./stage-link";
 import { pickVoice, speakLocal, useVoices } from "./voice";
 
 type Boot = { token: string; initial: OverlayState; name: string; email: string };
@@ -135,25 +135,8 @@ function Running({ token, initial, name, email }: Boot) {
     voiceRef.current = { voices, device, volume: cfg.volume };
   });
 
-  // ---- chat: YouTube + Twitch, read on this PC ---------------------------------------
-  const chat = useChat({
-    youtube: device.youtube,
-    twitch: device.twitch ?? cfg.twitchChannel,
-    style: device.chatStyle,
-    blockedWords: cfg.blockedWords,
-    onLine: (l) => {
-      if (cfg.petsEnabled) link.current?.send({ t: "speak", user: l.user, text: lineText(l) });
-    },
-  });
-  const chatMsg = useMemo(
-    () => ({ t: "chat" as const, lines: chat.lines, style: device.chatStyle, brandFontUrl: cfg.brandFontUrl ?? null }),
-    [chat.lines, device.chatStyle, cfg.brandFontUrl],
-  );
-  const latestChat = useRef(chatMsg);
-  useEffect(() => {
-    latestChat.current = chatMsg;
-    link.current?.send(chatMsg);
-  }, [chatMsg]);
+  // Chat lives in <ChatRunner> below so a busy chat re-renders only itself.
+  const latestChat = useRef<ChatMsg | null>(null);
 
   // ---- talk to the OBS pages -----------------------------------------------------
   const latestView = useRef(view);
@@ -170,7 +153,7 @@ function Running({ token, initial, name, email }: Boot) {
       if (m.t === "hello") {
         if (clients.current.hello(m.id, m.preview)) {
           l.send({ t: "view", view: latestView.current });
-          l.send(latestChat.current);
+          if (latestChat.current) l.send(latestChat.current);
         }
       } else if (m.t === "bye") clients.current.bye(m.id);
       else if (m.t === "tick") tickRef.current();
@@ -214,7 +197,10 @@ function Running({ token, initial, name, email }: Boot) {
   }, [device.hotkey, panic, resume]);
 
   // ---- "updated from the web" note when account settings change while running -------
-  const cfgJson = JSON.stringify(engine.state.config) + JSON.stringify(engine.state.pets);
+  const cfgJson = useMemo(
+    () => JSON.stringify(engine.state.config) + JSON.stringify(engine.state.pets),
+    [engine.state.config, engine.state.pets],
+  );
   const firstCfg = useRef(cfgJson);
   const [synced, setSynced] = useState(false);
   useEffect(() => {
@@ -305,15 +291,17 @@ function Running({ token, initial, name, email }: Boot) {
             onTest={sendTest}
           />
         )}
-        {tab === "chat" && (
-          <ChatTab
-            device={device}
-            setDevice={setDevice}
-            chat={chat}
-            accountTwitch={cfg.twitchChannel}
-            brandFontUrl={cfg.brandFontUrl ?? null}
-          />
-        )}
+        <ChatRunner
+          visible={tab === "chat"}
+          device={device}
+          setDevice={setDevice}
+          twitchChannel={cfg.twitchChannel}
+          blockedWords={cfg.blockedWords}
+          petsEnabled={cfg.petsEnabled}
+          brandFontUrl={cfg.brandFontUrl ?? null}
+          linkRef={link}
+          latestRef={latestChat}
+        />
         {tab === "device" && (
           <DeviceTab
             device={device}
@@ -328,4 +316,54 @@ function Running({ token, initial, name, email }: Boot) {
       </main>
     </div>
   );
+}
+
+type ChatMsg = Extract<ToStage, { t: "chat" }>;
+
+/**
+ * Reads YouTube/Twitch chat, sends it to the OBS chat page and the pets, and shows the
+ * Chat tab when it's open. Kept apart from the alert engine: a fast chat updates this
+ * component many times a second and nothing else needs to redraw for it.
+ */
+function ChatRunner({
+  visible,
+  device,
+  setDevice,
+  twitchChannel,
+  blockedWords,
+  petsEnabled,
+  brandFontUrl,
+  linkRef,
+  latestRef,
+}: {
+  visible: boolean;
+  device: DeviceSettings;
+  setDevice: (p: Partial<DeviceSettings>) => void;
+  twitchChannel: string | null;
+  blockedWords: string[];
+  petsEnabled: boolean;
+  brandFontUrl: string | null;
+  linkRef: RefObject<ReturnType<typeof appLink> | null>;
+  latestRef: RefObject<ChatMsg | null>;
+}) {
+  const chat = useChat({
+    youtube: device.youtube,
+    twitch: device.twitch ?? twitchChannel,
+    style: device.chatStyle,
+    blockedWords,
+    onLine: (l) => {
+      if (petsEnabled) linkRef.current?.send({ t: "speak", user: l.user, text: lineText(l) });
+    },
+  });
+  const msg = useMemo<ChatMsg>(
+    () => ({ t: "chat", lines: chat.lines, style: device.chatStyle, brandFontUrl }),
+    [chat.lines, device.chatStyle, brandFontUrl],
+  );
+  useEffect(() => {
+    latestRef.current = msg;
+    linkRef.current?.send(msg);
+  }, [msg, linkRef, latestRef]);
+
+  if (!visible) return null;
+  return <ChatTab device={device} setDevice={setDevice} chat={chat} accountTwitch={twitchChannel} brandFontUrl={brandFontUrl} />;
 }

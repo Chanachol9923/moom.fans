@@ -35,6 +35,16 @@ export function useChat({
     latest.current = { filter, style, onLine };
   });
 
+  // Busy Twitch chats send many lines a second; draw them in one go every 100 ms.
+  const pending = useRef<ChatLine[]>([]);
+  const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (flushTimer.current) clearTimeout(flushTimer.current);
+    },
+    [],
+  );
+
   const add = useCallback((incoming: ChatLine[]) => {
     const { filter: f, style: s, onLine: cb } = latest.current;
     const clean = incoming
@@ -45,11 +55,16 @@ export function useChat({
         parts: l.parts.map((p) => (p.t === "text" ? { ...p, text: f.mask(p.text) } : p)),
       }));
     if (!clean.length) return;
-    setLines((prev) => {
-      const seen = new Set(prev.map((l) => l.id));
-      return [...prev, ...clean.filter((l) => !seen.has(l.id))].slice(-KEEP);
-    });
     for (const l of clean) cb?.(l);
+    pending.current.push(...clean);
+    flushTimer.current ??= setTimeout(() => {
+      flushTimer.current = null;
+      const batch = pending.current.splice(0);
+      setLines((prev) => {
+        const seen = new Set(prev.map((l) => l.id));
+        return [...prev, ...batch.filter((l) => !seen.has(l.id))].slice(-KEEP);
+      });
+    }, 100);
   }, []);
 
   const remove = useCallback((test: (l: ChatLine) => boolean) => setLines((prev) => prev.filter((l) => !test(l))), []);

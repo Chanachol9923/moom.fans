@@ -19,6 +19,10 @@ import { VtsClient } from "../vts";
 // VTube Studio live on the PC) and the StageView is sent to the OBS page.
 
 const POLL_MS = 10_000;
+/** With realtime up, polling is only a safety net. */
+const POLL_LIVE_MS = 45_000;
+
+const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.stringify(b);
 const BROADCAST_EVENT = "moom";
 
 export type OverlayApi = {
@@ -136,7 +140,16 @@ export function useOverlayEngine(opts: EngineOptions) {
   const refresh = useCallback(async () => {
     const next = await api.current.state().catch(() => null);
     if (!next) return;
-    setState(next);
+    // Keep unchanged parts as the same objects, so a poll that finds nothing new
+    // doesn't re-render the stage or resend it to OBS.
+    setState((prev) => {
+      const config = same(prev.config, next.config) ? prev.config : next.config;
+      const pets = same(prev.pets, next.pets) ? prev.pets : next.pets;
+      if (config === prev.config && pets === prev.pets && same(prev.alerts, next.alerts) && same(prev.streamer, next.streamer)) {
+        return prev;
+      }
+      return { ...next, config, pets };
+    });
     setQueue((q) => mergeQueue(q, next.alerts, handled.current));
   }, []);
 
@@ -151,8 +164,18 @@ export function useOverlayEngine(opts: EngineOptions) {
   }, [stopCurrent]);
   const resume = useCallback(() => setPaused(false), []);
 
+  const live = useRef(false);
   useEffect(() => {
-    const id = setInterval(refresh, POLL_MS);
+    live.current = connected === "live" && !!initial.realtime;
+  }, [connected, initial.realtime]);
+
+  useEffect(() => {
+    let last = Date.now();
+    const id = setInterval(() => {
+      if (Date.now() - last < (live.current ? POLL_LIVE_MS : POLL_MS) - 500) return;
+      last = Date.now();
+      void refresh();
+    }, POLL_MS);
     // Back online after a network drop: catch up now rather than at the next poll.
     window.addEventListener("online", refresh);
     let channel: RealtimeChannel | null = null;
