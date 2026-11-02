@@ -1,17 +1,40 @@
 // Read-only Twitch chat over IRC-over-WebSocket with an anonymous "justinfan" login.
 // No OAuth needed for reading public chat.
 
-export type ChatMessage = { user: string; displayName: string; text: string };
+export type ChatMessage = {
+  user: string;
+  displayName: string;
+  text: string;
+  /** IRC tags: id, color, badges, emotes… */
+  tags: Record<string, string>;
+};
+
+/** A moderator removed one message (msgId) or everything from one user. */
+export type ChatClear = { msgId?: string; user?: string };
 
 export function parsePrivmsg(line: string): ChatMessage | null {
   // @tags :user!user@user.tmi.twitch.tv PRIVMSG #channel :message
   const m = line.match(/^(?:@(\S+) )?:(\w+)!\S+ PRIVMSG #\w+ :(.*)$/);
   if (!m) return null;
   const tags = Object.fromEntries((m[1] ?? "").split(";").map((kv) => kv.split("=") as [string, string]));
-  return { user: m[2].toLowerCase(), displayName: tags["display-name"] || m[2], text: m[3] };
+  return { user: m[2].toLowerCase(), displayName: tags["display-name"] || m[2], text: m[3], tags };
 }
 
-export function connectTwitchChat(channel: string, onMessage: (m: ChatMessage) => void): () => void {
+export function parseClear(line: string): ChatClear | null {
+  const msg = line.match(/^@(\S+) :tmi\.twitch\.tv CLEARMSG #\w+ :/);
+  if (msg) {
+    const id = msg[1].split(";").find((kv) => kv.startsWith("target-msg-id="));
+    return id ? { msgId: id.slice("target-msg-id=".length) } : null;
+  }
+  const user = line.match(/^(?:@\S+ )?:tmi\.twitch\.tv CLEARCHAT #\w+ :(\w+)$/);
+  return user ? { user: user[1].toLowerCase() } : null;
+}
+
+export function connectTwitchChat(
+  channel: string,
+  onMessage: (m: ChatMessage) => void,
+  onClear?: (c: ChatClear) => void,
+): () => void {
   let ws: WebSocket | null = null;
   let stopped = false;
   let retry = 1000;
@@ -34,6 +57,10 @@ export function connectTwitchChat(channel: string, onMessage: (m: ChatMessage) =
         }
         const msg = parsePrivmsg(line);
         if (msg) onMessage(msg);
+        else if (onClear) {
+          const c = parseClear(line);
+          if (c) onClear(c);
+        }
       }
     };
     ws.onclose = () => {

@@ -5,7 +5,7 @@ describe("parsePrivmsg", () => {
   it("parses tagged messages", () => {
     const line =
       "@badge-info=;color=#FF0000;display-name=NokNoi;emotes= :noknoi!noknoi@noknoi.tmi.twitch.tv PRIVMSG #moom :สวัสดีจ้า";
-    expect(parsePrivmsg(line)).toEqual({ user: "noknoi", displayName: "NokNoi", text: "สวัสดีจ้า" });
+    expect(parsePrivmsg(line)).toMatchObject({ user: "noknoi", displayName: "NokNoi", text: "สวัสดีจ้า" });
   });
 
   it("ignores other lines", () => {

@@ -4,7 +4,7 @@ import type { AlertLook } from "@moom/shared/alerts";
 import { useT } from "@moom/shared/i18n/react";
 import { LOOK_PRESETS } from "@moom/shared/overlay/design";
 import { Button, Check, cx } from "@moom/shared/ui/kit";
-import { FontPicker } from "../FontPicker";
+import { FontPicker } from "@moom/shared/ui/FontPicker";
 
 /** No-code controls for one tier's look. Every change shows in the preview next to it. */
 export function LookEditor({

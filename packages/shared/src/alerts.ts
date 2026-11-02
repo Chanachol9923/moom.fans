@@ -126,6 +126,8 @@ export type OverlayConfig = {
   displaySeconds: number;
   alertSoundUrl: string | null;
   ttsEnabled: boolean;
+  /** How much of the message is read aloud. Missing on old servers: 150, the column default. */
+  ttsMaxChars?: number;
   mediaEnabled: boolean;
   vtsEnabled: boolean;
   vtsRules: VtsRule[];

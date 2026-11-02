@@ -1,4 +1,5 @@
-// Moom desktop: the app window runs the alert engine (sound, TTS, VTube Studio, hotkeys).
+// Moom desktop: the app window runs the alert engine (sound, TTS, VTube Studio, hotkeys)
+// and reads YouTube/Twitch chat.
 // OBS loads http://127.0.0.1:4848/, a page that only draws. This file serves that page
 // and relays messages between it and the app window over a local WebSocket.
 
@@ -162,6 +163,8 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        // YouTube live chat: the window can't fetch youtube.com itself (CORS).
+        .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![overlay_send, overlay_server_error, device_name])
         .setup(|app| {
             // Installed builds register moom:// in the installer; dev runs need it at runtime.

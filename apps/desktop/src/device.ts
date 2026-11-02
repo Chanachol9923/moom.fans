@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { DEFAULT_CHAT_STYLE, parseChatStyle, type ChatStyle } from "./chat/style";
 
 // Settings that belong to this PC, not the account: they never sync to the web.
 
@@ -9,15 +10,37 @@ export type DeviceSettings = {
   volume: number | null;
   /** Tauri accelerator, e.g. "CommandOrControl+Shift+X". */
   hotkey: string;
+  /** Who reads alerts aloud: this PC's voices, or the website's cloud voice. */
+  tts: "pc" | "web";
+  /** speechSynthesis voiceURI; "" = best voice for the account language. */
+  voiceURI: string;
+  rate: number;
+  pitch: number;
+  /** What to read chat from. Twitch null = the channel set on the website. */
+  youtube: string;
+  twitch: string | null;
+  chatStyle: ChatStyle;
 };
 
 const KEY = "moom.desktop.device";
 export const DEFAULT_HOTKEY = "CommandOrControl+Shift+X";
-const DEFAULTS: DeviceSettings = { sinkId: "", volume: null, hotkey: DEFAULT_HOTKEY };
+const DEFAULTS: DeviceSettings = {
+  sinkId: "",
+  volume: null,
+  hotkey: DEFAULT_HOTKEY,
+  tts: "pc",
+  voiceURI: "",
+  rate: 1,
+  pitch: 1,
+  youtube: "",
+  twitch: null,
+  chatStyle: DEFAULT_CHAT_STYLE,
+};
 
 function load(): DeviceSettings {
   try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? "{}") };
+    const raw = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? "{}") } as DeviceSettings;
+    return { ...raw, tts: raw.tts === "web" ? "web" : "pc", chatStyle: parseChatStyle(raw.chatStyle) };
   } catch {
     return DEFAULTS;
   }

@@ -1,11 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The app window: open links, sign-in deep links, the panic hotkey.",
+  "description": "The app window: open links, sign-in deep links, the panic hotkey, YouTube chat.",
   "windows": ["main"],
   "permissions": [
     "core:default",
     "opener:default",
+    { "identifier": "opener:allow-open-url", "allow": [{ "url": "ms-settings:*" }] },
+    { "identifier": "http:default", "allow": [{ "url": "https://www.youtube.com/*" }] },
     "deep-link:default",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",

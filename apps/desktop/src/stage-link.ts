@@ -1,10 +1,16 @@
 import type { StageView } from "@moom/shared/overlay/engine";
+import type { ChatStyle } from "./chat/style";
+import type { ChatLine } from "./chat/types";
 
 // Messages between the app window (which runs the alert engine) and the OBS page
 // (which only draws). The app is the source of truth; the OBS page says hello every
 // few seconds so the app knows it's there and resends the current view.
 
-export type ToStage = { t: "view"; view: StageView } | { t: "speak"; user: string; text: string };
+export type ToStage =
+  | { t: "view"; view: StageView }
+  | { t: "speak"; user: string; text: string }
+  /** The whole visible chat each time, so a page that just opened is up to date at once. */
+  | { t: "chat"; lines: ChatLine[]; style: ChatStyle; brandFontUrl: string | null };
 
 export type FromStage =
   | { t: "hello"; id: string; preview: boolean }

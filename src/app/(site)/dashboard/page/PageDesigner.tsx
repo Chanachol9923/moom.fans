@@ -11,7 +11,7 @@ import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import type { Store } from "../../s/[slug]/data";
 import { StoreView } from "../../s/[slug]/StoreView";
 import { savePageConfig } from "../more-actions";
-import { FontPicker } from "../FontPicker";
+import { FontPicker } from "@moom/shared/ui/FontPicker";
 
 export function PageDesigner({
   store,

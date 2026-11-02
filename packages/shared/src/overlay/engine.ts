@@ -2,6 +2,8 @@
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EXIT_MS, isOverlayEvent, type OverlayAlert, type OverlayConfig, type OverlayPet, type OverlayState } from "../alerts";
+import type { Locale } from "../i18n";
+import { alertSpeech } from "../tts";
 import { tierFor } from "./design";
 import { mergeQueue, vtsActionsFor } from "./queue";
 import { OverlayAudio } from "./sound";
@@ -81,6 +83,13 @@ export type EngineOptions = {
   holdInitial?: boolean;
   /** Pet speech bubbles from Twitch chat. */
   onSpeak?: (user: string, text: string) => void;
+  /**
+   * Read alerts aloud here instead of fetching the server's voice (the desktop app uses
+   * the PC's own voices). Resolves when done or when `signal` aborts.
+   */
+  speak?: (text: string, signal: AbortSignal, locale: Locale) => Promise<void>;
+  /** Skip Twitch chat in the engine; the host app reads chat itself. */
+  noTwitch?: boolean;
 };
 
 export function useOverlayEngine(opts: EngineOptions) {
@@ -100,9 +109,11 @@ export function useOverlayEngine(opts: EngineOptions) {
   const abort = useRef<AbortController | null>(null);
   const vts = useRef<VtsClient | null>(null);
   const onSpeak = useRef(opts.onSpeak);
+  const speak = useRef(opts.speak);
   useEffect(() => {
     onSpeak.current = opts.onSpeak;
-  }, [opts.onSpeak]);
+    speak.current = opts.speak;
+  }, [opts.onSpeak, opts.speak]);
 
   const cfg = state.config;
   const volume = opts.silent ? 0 : (opts.volumeOverride ?? cfg.volume);
@@ -201,9 +212,9 @@ export function useOverlayEngine(opts: EngineOptions) {
 
   // ---- Twitch chat -> pet bubbles -------------------------------------------------
   useEffect(() => {
-    if (!cfg.petsEnabled || !cfg.twitchChannel || !state.pets.some((p) => p.chatter)) return;
+    if (opts.noTwitch || !cfg.petsEnabled || !cfg.twitchChannel || !state.pets.some((p) => p.chatter)) return;
     return connectTwitchChat(cfg.twitchChannel, (m) => onSpeak.current?.(m.user, m.text));
-  }, [cfg.petsEnabled, cfg.twitchChannel, state.pets]);
+  }, [opts.noTwitch, cfg.petsEnabled, cfg.twitchChannel, state.pets]);
 
   // ---- the player loop --------------------------------------------------------------
   // One alert at a time. `busy` covers the gap between picking an alert and `current`
@@ -241,8 +252,12 @@ export function useOverlayEngine(opts: EngineOptions) {
           if (!c?.connected) break;
           (rule.kind === "hotkey" ? c.triggerHotkey(rule.ref) : c.throwItem(rule.ref)).catch(() => {});
         }
-        const tts = opts.silent ? null : api.current.ttsUrl(alert.id);
-        if (p.tts && cfg.ttsEnabled && a && tts && !signal.aborted) await a.playUrl(tts, signal).catch(() => {});
+        if (p.tts && cfg.ttsEnabled && !opts.silent && !signal.aborted) {
+          const local = speak.current;
+          const tts = local ? null : api.current.ttsUrl(alert.id);
+          if (local) await local(alertSpeech(alert.kind, p, cfg.ttsMaxChars ?? 150), signal, p.locale).catch(() => {});
+          else if (a && tts) await a.playUrl(tts, signal).catch(() => {});
+        }
         const rest = minMs - (performance.now() - started);
         if (rest > 0) await sleep(rest, signal);
         if ((tierFor(cfg.tiers, p.amount)?.tier.exit ?? "fade") !== "none" && !signal.aborted) {

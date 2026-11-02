@@ -23,6 +23,31 @@ export async function openExternal(url: string) {
   await openUrl(url);
 }
 
+/** Windows' speech settings, where a Thai voice can be added. */
+export const SPEECH_SETTINGS = "ms-settings:speech";
+
+/**
+ * GET/POST to youtube.com and return the body. The app window can't call other sites
+ * directly (CORS), so the installed app goes through Tauri's HTTP plugin and the browser
+ * test mode through Vite's dev proxy.
+ */
+export async function httpText(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+): Promise<string> {
+  let res: Response;
+  if (isTauri) {
+    const http = await import("@tauri-apps/plugin-http");
+    res = await http.fetch(url, { ...init, connectTimeout: 15_000 });
+  } else {
+    const u = new URL(url);
+    if (u.origin !== "https://www.youtube.com") throw new Error("not proxied");
+    res = await fetch(`/yt${u.pathname}${u.search}`, init);
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.text();
+}
+
 export async function deviceName(): Promise<string> {
   if (!isTauri) return "Browser";
   const { invoke } = await import("@tauri-apps/api/core");

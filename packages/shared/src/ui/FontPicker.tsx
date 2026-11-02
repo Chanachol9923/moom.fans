@@ -1,7 +1,7 @@
 "use client";
-import { useT } from "@moom/shared/i18n/react";
-import { GOOGLE_FONTS, fontStack, googleFontsHref, type FontChoice } from "@moom/shared/fonts";
-import { Select } from "@moom/shared/ui/kit";
+import { useT } from "../i18n/react";
+import { GOOGLE_FONTS, fontStack, googleFontsHref, type FontChoice } from "../fonts";
+import { Select } from "./kit";
 
 const KINDS = ["sans", "display", "hand", "serif", "pixel"] as const;
 

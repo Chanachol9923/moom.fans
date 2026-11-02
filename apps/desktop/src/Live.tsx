@@ -1,15 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { OverlayAlert, OverlayState } from "@moom/shared/alerts";
 import { useT } from "@moom/shared/i18n/react";
 import { httpApi, useOverlayEngine, type OverlayApi } from "@moom/shared/overlay/engine";
 import { Button, Panel, cx } from "@moom/shared/ui/kit";
 import { AccountTab } from "./AccountTab";
+import { lineText } from "./chat/types";
+import { useChat } from "./chat/useChat";
+import { ChatTab } from "./ChatTab";
 import { useDeviceSettings } from "./device";
 import { DeviceTab } from "./DeviceTab";
 import { HomeTab } from "./HomeTab";
 import { appLink, openExternal, registerHotkey } from "./platform";
 import { SITE, supabase } from "./session";
 import { StageClients } from "./stage-link";
+import { pickVoice, speakLocal, useVoices } from "./voice";
 
 type Boot = { token: string; initial: OverlayState; name: string; email: string };
 
@@ -85,7 +89,7 @@ function appApi(token: string): OverlayApi {
   };
 }
 
-export type Tab = "home" | "device" | "account";
+export type Tab = "home" | "chat" | "device" | "account";
 
 function Running({ token, initial, name, email }: Boot) {
   const { d, locale } = useT();
@@ -94,6 +98,24 @@ function Running({ token, initial, name, email }: Boot) {
   const api = useMemo(() => appApi(token), [token]);
 
   const link = useRef<ReturnType<typeof appLink> | null>(null);
+
+  // Alerts read aloud with this PC's voices unless the streamer picked the web voice.
+  const voices = useVoices();
+  const voiceRef = useRef({ voices, device, volume: initial.config.volume });
+  const speak = useCallback(
+    (text: string, signal: AbortSignal, locale: string) => {
+      const { voices: vs, device: dv, volume } = voiceRef.current;
+      // The sentence's own language: a Thai voice can't read English and vice versa.
+      const lang = locale === "th" ? "th-TH" : "en-US";
+      return speakLocal(
+        text,
+        { voice: pickVoice(vs, dv.voiceURI, lang), lang, rate: dv.rate, pitch: dv.pitch, volume: dv.volume ?? volume },
+        signal,
+      );
+    },
+    [],
+  );
+
   const engine = useOverlayEngine({
     api,
     initial,
@@ -103,8 +125,35 @@ function Running({ token, initial, name, email }: Boot) {
     sinkId: device.sinkId,
     volumeOverride: device.volume,
     onSpeak: (user, text) => link.current?.send({ t: "speak", user, text }),
+    speak: device.tts === "pc" ? speak : undefined,
+    // Chat is read below, once, for both the chat box and the pets.
+    noTwitch: true,
   });
   const { view, wheelTick, panic, resume } = engine;
+  const cfg = engine.state.config;
+  useEffect(() => {
+    voiceRef.current = { voices, device, volume: cfg.volume };
+  });
+
+  // ---- chat: YouTube + Twitch, read on this PC ---------------------------------------
+  const chat = useChat({
+    youtube: device.youtube,
+    twitch: device.twitch ?? cfg.twitchChannel,
+    style: device.chatStyle,
+    blockedWords: cfg.blockedWords,
+    onLine: (l) => {
+      if (cfg.petsEnabled) link.current?.send({ t: "speak", user: l.user, text: lineText(l) });
+    },
+  });
+  const chatMsg = useMemo(
+    () => ({ t: "chat" as const, lines: chat.lines, style: device.chatStyle, brandFontUrl: cfg.brandFontUrl ?? null }),
+    [chat.lines, device.chatStyle, cfg.brandFontUrl],
+  );
+  const latestChat = useRef(chatMsg);
+  useEffect(() => {
+    latestChat.current = chatMsg;
+    link.current?.send(chatMsg);
+  }, [chatMsg]);
 
   // ---- talk to the OBS pages -----------------------------------------------------
   const latestView = useRef(view);
@@ -119,7 +168,10 @@ function Running({ token, initial, name, email }: Boot) {
   useEffect(() => {
     const l = appLink((m) => {
       if (m.t === "hello") {
-        if (clients.current.hello(m.id, m.preview)) l.send({ t: "view", view: latestView.current });
+        if (clients.current.hello(m.id, m.preview)) {
+          l.send({ t: "view", view: latestView.current });
+          l.send(latestChat.current);
+        }
       } else if (m.t === "bye") clients.current.bye(m.id);
       else if (m.t === "tick") tickRef.current();
       setClientCount(clients.current.count());
@@ -203,7 +255,8 @@ function Running({ token, initial, name, email }: Boot) {
         message: d.desktop.testMessage,
         productTitle: null,
         media: null,
-        tts: false,
+        // Lets the streamer hear the PC voice too; the web voice has nothing to fetch for a local test.
+        tts: true,
         locale,
       },
     };
@@ -212,6 +265,7 @@ function Running({ token, initial, name, email }: Boot) {
 
   const tabs: Array<[Tab, string]> = [
     ["home", d.desktop.tabHome],
+    ["chat", d.desktop.tabChat],
     ["device", d.desktop.tabDevice],
     ["account", d.desktop.tabAccount],
   ];
@@ -251,10 +305,20 @@ function Running({ token, initial, name, email }: Boot) {
             onTest={sendTest}
           />
         )}
+        {tab === "chat" && (
+          <ChatTab
+            device={device}
+            setDevice={setDevice}
+            chat={chat}
+            accountTwitch={cfg.twitchChannel}
+            brandFontUrl={cfg.brandFontUrl ?? null}
+          />
+        )}
         {tab === "device" && (
           <DeviceTab
             device={device}
             setDevice={setDevice}
+            ttsOnAccount={cfg.ttsEnabled}
             accountVolume={engine.state.config.volume}
             hotkeyOk={hotkeyOk}
             onTest={sendTest}

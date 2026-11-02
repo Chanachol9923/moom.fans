@@ -72,6 +72,7 @@ export async function loadOverlayState(token: string): Promise<OverlayState | nu
     displaySeconds: settings.display_seconds,
     alertSoundUrl: publicMediaUrl(settings.alert_sound_path),
     ttsEnabled: settings.tts_enabled,
+    ttsMaxChars: settings.tts_max_chars,
     mediaEnabled: settings.media_enabled,
     vtsEnabled: settings.vts_enabled,
     vtsRules: asRules(settings.vts_rules),
