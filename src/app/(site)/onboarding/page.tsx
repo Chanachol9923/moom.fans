@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AccountBar } from "@/components/AccountBar";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Panel } from "@moom/shared/ui/kit";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -23,6 +24,9 @@ export default async function OnboardingPage() {
     <>
       <SiteHeader />
       <main className="mx-auto w-full max-w-lg px-4 py-10">
+        <div className="mb-4">
+          <AccountBar email={user.email} />
+        </div>
         <Panel title={d.onboarding.title} raised>
           <p className="mb-5 text-ink-soft">{d.onboarding.subtitle}</p>
           {subdomainsEnabled() ? (

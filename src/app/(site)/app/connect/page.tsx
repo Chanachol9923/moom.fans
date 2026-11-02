@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AccountBar } from "@/components/AccountBar";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Panel } from "@moom/shared/ui/kit";
 import { CHALLENGE_RE } from "@/lib/domain/app-link";
@@ -34,6 +35,13 @@ export default async function ConnectPage({ searchParams }: PageProps<"/app/conn
       <>
         <SiteHeader />
         <main className="mx-auto w-full max-w-md px-4 py-10">
+          {/* Approving the app under the wrong account would link it to someone else's alerts. */}
+          <div className="mb-4">
+            <AccountBar
+              email={user.email}
+              next={`/app/connect?${new URLSearchParams({ state, challenge, device }).toString()}`}
+            />
+          </div>
           <Panel title={d.appLink.title} raised>
             <p className="text-lg">
               {fmt(d.appLink.body, { device: device || d.appLink.unknownDevice, name: profile.display_name })}

@@ -79,6 +79,10 @@ export const en: Dict = {
     endBody: "Sign up with email, add your PromptPay number and you have a link to put under your stream.",
   },
   auth: {
+    signedInAs: "Signed in as {email}",
+    signedInNoEmail: "Signed in",
+    notYou: "Not you?",
+    switchAccount: "Use another account",
     title: "Sign in",
     subtitle: "For streamers. Viewers never need an account.",
     email: "Email",

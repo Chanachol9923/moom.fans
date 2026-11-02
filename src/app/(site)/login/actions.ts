@@ -36,8 +36,13 @@ export async function signInWithProvider(form: FormData) {
   redirect(data.url);
 }
 
-export async function signOut() {
+export async function signOut(form?: FormData) {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // "Not this account?": straight to sign-in, then back to the page they were on.
+  if (form?.get("relogin")) {
+    const back = safeNext(String(form.get("next") ?? ""));
+    redirect(back ? `/login?next=${encodeURIComponent(back)}` : "/login");
+  }
   redirect("/");
 }
