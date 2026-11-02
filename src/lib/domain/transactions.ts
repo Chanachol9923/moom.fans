@@ -78,12 +78,13 @@ export async function createTransaction(slug: string, input: CreateTxInput) {
     .maybeSingle();
   if (!priv) throw new TxError("not_found");
 
-  if (!input.anonymous && !input.name) throw new TxError("name_required");
+  // Purchases need a name for the receipt; a tip without one is simply anonymous.
+  if (input.kind === "purchase" && !input.anonymous && !input.name) throw new TxError("name_required");
   const base = {
     streamer_id: profile.id,
     // Anonymous supporters may still type a name for the streamer's eyes only.
     supporter_name: input.name || "-",
-    is_anonymous: input.anonymous,
+    is_anonymous: input.anonymous || !input.name,
     show_on_wall: input.showOnWall,
     message: input.message,
     public_token: newToken(),

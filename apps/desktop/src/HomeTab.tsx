@@ -63,6 +63,24 @@ export function HomeTab({
         )}
       </div>
 
+      {/* Until OBS is connected, that's the one thing to do: put it first, step by step. */}
+      {clientCount === 0 && !serverError && (
+        <Panel title={d.desktop.connectTitle}>
+          <ol className="grid gap-1.5">
+            {[d.desktop.connect1, d.desktop.connect2, d.desktop.connect3].map((s, i) => (
+              <li key={s} className="flex gap-2">
+                <span className="grid size-6 shrink-0 place-items-center bg-ink font-display text-xs text-paper">{i + 1}</span>
+                <span>{s}</span>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-3">
+            <CopyField value={obsUrl()} />
+          </div>
+          <p className="mt-2 text-sm text-ink-faint">{d.desktop.connectWaiting}</p>
+        </Panel>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
         <StagePreview />
         <div className="grid content-start gap-2 sm:w-52">

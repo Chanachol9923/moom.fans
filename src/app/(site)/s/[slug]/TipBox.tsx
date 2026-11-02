@@ -68,7 +68,8 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
     router.push(`${store.basePath}/pay/${json.token}`);
   }
 
-  const pick = (selected: boolean) => `px-btn px-btn-sm ${selected ? "px-btn-primary" : ""}`;
+  // Thumb-sized on phones, where most tips happen.
+  const pick = (selected: boolean) => `px-btn min-h-11 min-w-16 text-base ${selected ? "px-btn-primary" : ""}`;
 
   return (
     <form action={submit} className="px-frame px-frame-raised bg-paper p-4 sm:p-5">
@@ -154,7 +155,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
       <p className="mb-3 text-sm text-ink-faint">{fmt(d.store.minTip, { amount: formatBaht(store.minTip, locale) })}</p>
 
       <Field label={d.store.yourName} htmlFor="tip-name">
-        <Input id="tip-name" name="name" required={!anonymous} maxLength={40} autoComplete="nickname" />
+        <Input id="tip-name" name="name" maxLength={40} autoComplete="nickname" placeholder={d.store.namePlaceholder} />
       </Field>
       <Check checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} label={d.store.anonymousLabel} />
       <Field label={d.store.message} htmlFor="tip-msg" hint={d.store.messageHint}>
@@ -218,6 +219,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
           ? d.common.loading
           : `${cfg.buttonLabel || d.store.send} · ${typeof total === "number" ? formatBaht(total, locale) : "—"}`}
       </Button>
+      <p className="mt-2 text-center text-xs text-ink-faint">{fmt(d.store.payDirect, { name: store.displayName })}</p>
     </form>
   );
 }
