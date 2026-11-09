@@ -1,9 +1,23 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
-import { Button, Check, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/kit";
+import {
+  Button,
+  Check,
+  Field,
+  Input,
+  Panel,
+  Select,
+  Textarea,
+} from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
-import { BACKGROUNDS, THEME_IDS, THEMES, type PageConfig } from "@/lib/page-config";
+import {
+  BACKGROUNDS,
+  MAX_PAGE_CSS,
+  THEME_IDS,
+  THEMES,
+  type PageConfig,
+} from "@/lib/page-config";
 import { ICON_IDS, iconSprite } from "@moom/shared/pets/icons";
 import type { PetSprite } from "@moom/shared/pets/sprites";
 import { publicMediaUrl } from "@/lib/storage";
@@ -13,6 +27,7 @@ import { StoreView } from "../../s/[slug]/StoreView";
 import { savePageConfig } from "../more-actions";
 import { FontPicker } from "@moom/shared/ui/FontPicker";
 import { errorText } from "@/lib/errors";
+import { Choice, Slider } from "../alerts/LookEditor";
 
 export function PageDesigner({
   store,
@@ -66,14 +81,28 @@ export function PageDesigner({
     if (f.size > 2 * 1024 * 1024) return setFontError(d.fonts.brandTooBig);
     // Browsers often leave font files untyped; storage only takes known types.
     const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
-    const type = { woff2: "font/woff2", woff: "font/woff", ttf: "font/ttf", otf: "font/otf" }[ext];
+    const type = {
+      woff2: "font/woff2",
+      woff: "font/woff",
+      ttf: "font/ttf",
+      otf: "font/otf",
+    }[ext];
     if (!type) return setFontError(d.design.uploadFailed);
     setFontBusy(true);
     try {
-      const path = await uploadPublicMedia(supabase, userId, new File([f], f.name, { type }), "fonts");
+      const path = await uploadPublicMedia(
+        supabase,
+        userId,
+        new File([f], f.name, { type }),
+        "fonts",
+      );
       set("brandFontPath", path);
       // Picking it right away is what people expect after uploading.
-      setCfg((c) => (c.fonts.heading === "default" ? { ...c, fonts: { ...c.fonts, heading: "brand" } } : c));
+      setCfg((c) =>
+        c.fonts.heading === "default"
+          ? { ...c, fonts: { ...c.fonts, heading: "brand" } }
+          : c,
+      );
     } catch (err) {
       setFontError(errorText((err as Error).message, d));
     } finally {
@@ -95,10 +124,15 @@ export function PageDesigner({
                 className={`p-1 text-center text-xs ${cfg.theme === t ? "outline-[3px] outline-ink outline-solid" : ""}`}
               >
                 <span className="flex h-10 border-2 border-ink">
-                  <span className="flex-1" style={{ background: THEMES[t].paper }} />
+                  <span
+                    className="flex-1"
+                    style={{ background: THEMES[t].paper }}
+                  />
                   <span className="w-3" style={{ background: THEMES[t].ink }} />
                 </span>
-                <span className="mt-1 block font-display">{d.page.themeNames[t]}</span>
+                <span className="mt-1 block font-display">
+                  {d.page.themeNames[t]}
+                </span>
               </button>
             ))}
           </div>
@@ -130,7 +164,15 @@ export function PageDesigner({
                   setBgBusy(true);
                   setBgError(null);
                   try {
-                    set("backgroundImagePath", await uploadPublicMedia(supabase, userId, f, "background"));
+                    set(
+                      "backgroundImagePath",
+                      await uploadPublicMedia(
+                        supabase,
+                        userId,
+                        f,
+                        "background",
+                      ),
+                    );
                   } catch (err) {
                     setBgError(errorText((err as Error).message, d));
                   } finally {
@@ -141,6 +183,50 @@ export function PageDesigner({
             </label>
           )}
           {bgError && <p className="text-sm text-tomato">{bgError}</p>}
+          {cfg.background === "image" && cfg.backgroundImagePath && (
+            <div className="grid gap-x-4 sm:grid-cols-2">
+              <Choice
+                label={d.page.bgSize}
+                value={cfg.bgImage.size}
+                options={d.page.bgSizes}
+                onChange={(size) => set("bgImage", { ...cfg.bgImage, size })}
+              />
+              <Slider
+                label={d.page.bgDim}
+                value={cfg.bgImage.dim}
+                min={0}
+                max={80}
+                step={5}
+                show={`${cfg.bgImage.dim}%`}
+                onChange={(dim) => set("bgImage", { ...cfg.bgImage, dim })}
+              />
+              <Slider
+                label={d.design.look.imageX}
+                value={cfg.bgImage.x}
+                min={0}
+                max={100}
+                step={1}
+                show={`${cfg.bgImage.x}%`}
+                onChange={(x) => set("bgImage", { ...cfg.bgImage, x })}
+              />
+              <Slider
+                label={d.design.look.imageY}
+                value={cfg.bgImage.y}
+                min={0}
+                max={100}
+                step={1}
+                show={`${cfg.bgImage.y}%`}
+                onChange={(y) => set("bgImage", { ...cfg.bgImage, y })}
+              />
+              <Check
+                label={d.page.bgFixed}
+                checked={cfg.bgImage.fixed}
+                onChange={(e) =>
+                  set("bgImage", { ...cfg.bgImage, fixed: e.target.checked })
+                }
+              />
+            </div>
+          )}
           <Field label={d.page.frameColor}>
             <div className="flex items-center gap-2">
               <input
@@ -150,7 +236,12 @@ export function PageDesigner({
                 className="h-9 w-12 cursor-pointer"
               />
               {cfg.frameColor && (
-                <Button type="button" size="sm" variant="ghost" onClick={() => set("frameColor", null)}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => set("frameColor", null)}
+                >
                   {d.page.frameDefault}
                 </Button>
               )}
@@ -158,7 +249,10 @@ export function PageDesigner({
           </Field>
           {pets.length > 0 && (
             <Field label={d.page.pet}>
-              <Select value={cfg.petId ?? ""} onChange={(e) => set("petId", e.target.value || null)}>
+              <Select
+                value={cfg.petId ?? ""}
+                onChange={(e) => set("petId", e.target.value || null)}
+              >
                 <option value="">{d.page.petNone}</option>
                 {pets.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -168,6 +262,107 @@ export function PageDesigner({
               </Select>
             </Field>
           )}
+        </Panel>
+
+        <Panel title={d.page.colorsTitle}>
+          <p className="mb-3 text-sm text-ink-soft">{d.page.colorsHint}</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {(["paper", "card", "text", "muted", "field"] as const).map((k) => {
+              const theme = THEMES[cfg.theme];
+              const fallback = {
+                paper: theme.paper,
+                card: theme.paper2,
+                text: theme.ink,
+                muted: theme.inkSoft,
+                field: theme.field,
+              }[k];
+              return (
+                <div key={k} className="grid gap-1">
+                  <label className="flex items-center gap-1.5 text-sm">
+                    <input
+                      type="color"
+                      value={cfg.colors[k] ?? fallback}
+                      onChange={(e) =>
+                        set("colors", { ...cfg.colors, [k]: e.target.value })
+                      }
+                      className="h-8 w-10 cursor-pointer border-[3px] border-ink bg-paper"
+                    />
+                    {d.page.colorNames[k]}
+                  </label>
+                  {cfg.colors[k] && (
+                    <button
+                      type="button"
+                      className="justify-self-start text-xs underline"
+                      onClick={() =>
+                        set("colors", { ...cfg.colors, [k]: null })
+                      }
+                    >
+                      {d.page.colorReset}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Panel>
+
+        <Panel title={d.page.shapeTitle}>
+          <Choice
+            label={d.page.shape}
+            value={cfg.shape}
+            options={d.page.shapes}
+            onChange={(shape) => set("shape", shape)}
+          />
+          {cfg.shape === "rounded" && (
+            <Slider
+              label={d.page.radius}
+              value={cfg.radius}
+              min={0}
+              max={32}
+              step={1}
+              show={`${cfg.radius}px`}
+              onChange={(radius) => set("radius", radius)}
+            />
+          )}
+          <Choice
+            label={d.page.layout}
+            value={cfg.layout}
+            options={d.page.layouts}
+            onChange={(layout) => set("layout", layout)}
+          />
+          <Choice
+            label={d.page.width}
+            value={cfg.width}
+            options={d.page.widths}
+            onChange={(width) => set("width", width)}
+          />
+          <Choice
+            label={d.page.banner}
+            value={cfg.header.banner}
+            options={d.page.banners}
+            onChange={(banner) => set("header", { ...cfg.header, banner })}
+          />
+          <Choice
+            label={d.page.avatar}
+            value={cfg.header.avatar}
+            options={d.page.avatars}
+            onChange={(avatar) => set("header", { ...cfg.header, avatar })}
+          />
+          <Choice
+            label={d.page.headerAlign}
+            value={cfg.header.align}
+            options={d.page.aligns}
+            onChange={(align) => set("header", { ...cfg.header, align })}
+          />
+          <Slider
+            label={d.page.textScale}
+            value={cfg.textScale}
+            min={0.9}
+            max={1.25}
+            step={0.05}
+            show={`${Math.round(cfg.textScale * 100)}%`}
+            onChange={(textScale) => set("textScale", textScale)}
+          />
         </Panel>
 
         <Panel title={d.page.fonts}>
@@ -191,7 +386,11 @@ export function PageDesigner({
               />
             </Field>
           </div>
-          <Field label={d.fonts.brandTitle} hint={d.fonts.brandHint} error={fontError}>
+          <Field
+            label={d.fonts.brandTitle}
+            hint={d.fonts.brandHint}
+            error={fontError}
+          >
             <div className="flex flex-wrap items-center gap-2">
               <label className="px-btn px-btn-sm cursor-pointer">
                 {fontBusy ? "…" : d.fonts.brandUpload}
@@ -208,7 +407,12 @@ export function PageDesigner({
               </label>
               {cfg.brandFontPath && (
                 <>
-                  <span className="truncate text-sm text-ink-soft">{cfg.brandFontPath.split("/").pop()?.replace(/^[a-z0-9]+-/, "")}</span>
+                  <span className="truncate text-sm text-ink-soft">
+                    {cfg.brandFontPath
+                      .split("/")
+                      .pop()
+                      ?.replace(/^[a-z0-9]+-/, "")}
+                  </span>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -217,8 +421,12 @@ export function PageDesigner({
                       setCfg((c) => ({
                         ...c,
                         fonts: {
-                          heading: c.fonts.heading === "brand" ? "default" : c.fonts.heading,
-                          body: c.fonts.body === "brand" ? "default" : c.fonts.body,
+                          heading:
+                            c.fonts.heading === "brand"
+                              ? "default"
+                              : c.fonts.heading,
+                          body:
+                            c.fonts.body === "brand" ? "default" : c.fonts.body,
                         },
                       }));
                     }}
@@ -233,41 +441,91 @@ export function PageDesigner({
 
         <Panel title={d.page.texts}>
           <Field label={d.page.tipTitle}>
-            <Input value={cfg.tipTitle} maxLength={60} placeholder={d.store.tipTitle} onChange={(e) => set("tipTitle", e.target.value)} />
+            <Input
+              value={cfg.tipTitle}
+              maxLength={60}
+              placeholder={d.store.tipTitle}
+              onChange={(e) => set("tipTitle", e.target.value)}
+            />
           </Field>
           <Field label={d.page.tipNote}>
-            <Textarea value={cfg.tipNote} maxLength={300} rows={2} onChange={(e) => set("tipNote", e.target.value)} />
+            <Textarea
+              value={cfg.tipNote}
+              maxLength={300}
+              rows={2}
+              onChange={(e) => set("tipNote", e.target.value)}
+            />
           </Field>
           <Field label={d.page.buttonLabel}>
-            <Input value={cfg.buttonLabel} maxLength={30} placeholder={d.store.send} onChange={(e) => set("buttonLabel", e.target.value)} />
+            <Input
+              value={cfg.buttonLabel}
+              maxLength={30}
+              placeholder={d.store.send}
+              onChange={(e) => set("buttonLabel", e.target.value)}
+            />
           </Field>
           <Field label={d.page.thanks}>
-            <Textarea value={cfg.thanksMessage} maxLength={300} rows={2} placeholder={d.pay.statusVerifiedTip} onChange={(e) => set("thanksMessage", e.target.value)} />
+            <Textarea
+              value={cfg.thanksMessage}
+              maxLength={300}
+              rows={2}
+              placeholder={d.pay.statusVerifiedTip}
+              onChange={(e) => set("thanksMessage", e.target.value)}
+            />
           </Field>
         </Panel>
 
         <Panel title={d.page.sections}>
           <ul className="grid gap-1">
             {cfg.sections.map((s, i) => (
-              <li key={s.id} className="flex items-center gap-2 bg-paper-2 px-2 py-1">
+              <li
+                key={s.id}
+                className="flex items-center gap-2 bg-paper-2 px-2 py-1"
+              >
                 <input
                   type="checkbox"
                   checked={s.visible}
                   aria-label={d.page.visible}
-                  onChange={(e) => set("sections", cfg.sections.map((x) => (x.id === s.id ? { ...x, visible: e.target.checked } : x)))}
+                  onChange={(e) =>
+                    set(
+                      "sections",
+                      cfg.sections.map((x) =>
+                        x.id === s.id ? { ...x, visible: e.target.checked } : x,
+                      ),
+                    )
+                  }
                 />
-                <span className="flex-1 font-display">{d.page.sectionNames[s.id]}</span>
-                <Button type="button" size="sm" variant="ghost" onClick={() => move(i, -1)} aria-label={d.page.up}>
+                <span className="flex-1 font-display">
+                  {d.page.sectionNames[s.id]}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => move(i, -1)}
+                  aria-label={d.page.up}
+                >
                   ↑
                 </Button>
-                <Button type="button" size="sm" variant="ghost" onClick={() => move(i, 1)} aria-label={d.page.down}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => move(i, 1)}
+                  aria-label={d.page.down}
+                >
                   ↓
                 </Button>
               </li>
             ))}
           </ul>
           <Field label={d.page.focus}>
-            <Select value={cfg.focus} onChange={(e) => set("focus", e.target.value as PageConfig["focus"])}>
+            <Select
+              value={cfg.focus}
+              onChange={(e) =>
+                set("focus", e.target.value as PageConfig["focus"])
+              }
+            >
               <option value="tip">{d.page.focusTip}</option>
               <option value="shop">{d.page.focusShop}</option>
             </Select>
@@ -276,16 +534,52 @@ export function PageDesigner({
 
         <div id="wall" className="scroll-mt-4" />
         <Panel title={d.page.wall}>
-          <Check checked={cfg.wall.showAmounts} onChange={(e) => set("wall", { ...cfg.wall, showAmounts: e.target.checked })} label={d.page.showAmounts} />
+          <Check
+            checked={cfg.wall.showAmounts}
+            onChange={(e) =>
+              set("wall", { ...cfg.wall, showAmounts: e.target.checked })
+            }
+            label={d.page.showAmounts}
+          />
           <div className="grid grid-cols-3 gap-3">
             <Field label={d.page.recentCount}>
-              <Input type="number" min={0} max={20} value={cfg.wall.recentCount} onChange={(e) => set("wall", { ...cfg.wall, recentCount: clamp(e.target.value, 0, 20) })} />
+              <Input
+                type="number"
+                min={0}
+                max={20}
+                value={cfg.wall.recentCount}
+                onChange={(e) =>
+                  set("wall", {
+                    ...cfg.wall,
+                    recentCount: clamp(e.target.value, 0, 20),
+                  })
+                }
+              />
             </Field>
             <Field label={d.page.topCount}>
-              <Input type="number" min={0} max={10} value={cfg.wall.topCount} onChange={(e) => set("wall", { ...cfg.wall, topCount: clamp(e.target.value, 0, 10) })} />
+              <Input
+                type="number"
+                min={0}
+                max={10}
+                value={cfg.wall.topCount}
+                onChange={(e) =>
+                  set("wall", {
+                    ...cfg.wall,
+                    topCount: clamp(e.target.value, 0, 10),
+                  })
+                }
+              />
             </Field>
             <Field label={d.page.topPeriod}>
-              <Select value={cfg.wall.topPeriod} onChange={(e) => set("wall", { ...cfg.wall, topPeriod: e.target.value as "30d" | "all" })}>
+              <Select
+                value={cfg.wall.topPeriod}
+                onChange={(e) =>
+                  set("wall", {
+                    ...cfg.wall,
+                    topPeriod: e.target.value as "30d" | "all",
+                  })
+                }
+              >
                 <option value="30d">{d.page.period30d}</option>
                 <option value="all">{d.page.periodAll}</option>
               </Select>
@@ -295,15 +589,40 @@ export function PageDesigner({
 
         <Panel title={d.page.unit}>
           <p className="mb-2 text-sm text-ink-soft">{d.page.unitHint}</p>
-          <Check checked={cfg.unit.enabled} onChange={(e) => set("unit", { ...cfg.unit, enabled: e.target.checked })} label={d.page.unitEnabled} />
+          <Check
+            checked={cfg.unit.enabled}
+            onChange={(e) =>
+              set("unit", { ...cfg.unit, enabled: e.target.checked })
+            }
+            label={d.page.unitEnabled}
+          />
           {cfg.unit.enabled && (
             <>
               <div className="grid grid-cols-2 gap-3">
                 <Field label={d.page.unitName}>
-                  <Input value={cfg.unit.name} maxLength={20} onChange={(e) => set("unit", { ...cfg.unit, name: e.target.value || cfg.unit.name })} />
+                  <Input
+                    value={cfg.unit.name}
+                    maxLength={20}
+                    onChange={(e) =>
+                      set("unit", {
+                        ...cfg.unit,
+                        name: e.target.value || cfg.unit.name,
+                      })
+                    }
+                  />
                 </Field>
                 <Field label={d.page.unitPrice}>
-                  <Input type="number" min={1} value={cfg.unit.price} onChange={(e) => set("unit", { ...cfg.unit, price: Math.max(1, Number(e.target.value) || 1) })} />
+                  <Input
+                    type="number"
+                    min={1}
+                    value={cfg.unit.price}
+                    onChange={(e) =>
+                      set("unit", {
+                        ...cfg.unit,
+                        price: Math.max(1, Number(e.target.value) || 1),
+                      })
+                    }
+                  />
                 </Field>
               </div>
               <Field label={d.page.unitIcon}>
@@ -325,13 +644,41 @@ export function PageDesigner({
                 <Input
                   defaultValue={cfg.unit.presets.join(", ")}
                   onBlur={(e) => {
-                    const list = [...new Set(e.target.value.split(/[,\s]+/).map(Number).filter((n) => Number.isInteger(n) && n > 0 && n < 1000))].slice(0, 5);
-                    if (list.length) set("unit", { ...cfg.unit, presets: list });
+                    const list = [
+                      ...new Set(
+                        e.target.value
+                          .split(/[,\s]+/)
+                          .map(Number)
+                          .filter(
+                            (n) => Number.isInteger(n) && n > 0 && n < 1000,
+                          ),
+                      ),
+                    ].slice(0, 5);
+                    if (list.length)
+                      set("unit", { ...cfg.unit, presets: list });
                   }}
                 />
               </Field>
             </>
           )}
+        </Panel>
+
+        <Panel title={d.page.cssTitle}>
+          <details>
+            <summary className="cursor-pointer font-display">
+              {d.page.cssOpen}
+            </summary>
+            <p className="my-2 text-sm text-ink-soft">{d.page.cssHint}</p>
+            <Textarea
+              rows={8}
+              maxLength={MAX_PAGE_CSS}
+              className="font-mono text-sm"
+              value={cfg.css.replace(/\\3c /g, "<")}
+              onChange={(e) => set("css", e.target.value)}
+              spellCheck={false}
+              aria-label={d.page.cssTitle}
+            />
+          </details>
         </Panel>
 
         <div className="sticky bottom-[68px] z-10 -mx-2 flex flex-wrap items-center gap-3 border-t-[3px] border-dashed border-ink/20 bg-paper px-2 py-2 md:bottom-0">
@@ -347,17 +694,16 @@ export function PageDesigner({
           >
             {pending ? d.common.loading : d.common.save}
           </Button>
-          {saved && <span className="font-display text-leaf">✓ {d.common.saved}</span>}
+          {saved && (
+            <span className="font-display text-leaf">✓ {d.common.saved}</span>
+          )}
         </div>
       </div>
 
       <div className="xl:sticky xl:top-4">
-        <div className="px-label">{d.page.preview}</div>
-        <div className="px-frame max-h-[85vh] overflow-auto">
-          <div className="pointer-events-auto origin-top-left">
-            <StoreView store={previewStore} d={d} locale={locale} preview />
-          </div>
-        </div>
+        <DevicePreview>
+          <StoreView store={previewStore} d={d} locale={locale} preview />
+        </DevicePreview>
       </div>
     </div>
   );
@@ -366,4 +712,59 @@ export function PageDesigner({
 function clamp(v: string, min: number, max: number) {
   const n = Math.floor(Number(v));
   return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : min;
+}
+
+const DEVICES = { phone: 390, desktop: 1280 } as const;
+
+/**
+ * The page as viewers see it: a phone at 390 px, or a desktop at 1280 px scaled down to
+ * fit. The page lays itself out by its own width (container queries), so both are exact.
+ */
+function DevicePreview({ children }: { children: React.ReactNode }) {
+  const { d } = useT();
+  const [device, setDevice] = useState<keyof typeof DEVICES>("phone");
+  const box = useRef<HTMLDivElement>(null);
+  const [room, setRoom] = useState(400);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setRoom(e.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const width = DEVICES[device];
+  const scale = Math.min(1, room / width);
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="px-label">{d.page.preview}</span>
+        <div
+          className="flex gap-1"
+          role="radiogroup"
+          aria-label={d.page.preview}
+        >
+          {(Object.keys(DEVICES) as Array<keyof typeof DEVICES>).map((k) => (
+            <button
+              key={k}
+              type="button"
+              role="radio"
+              aria-checked={device === k}
+              onClick={() => setDevice(k)}
+              className={`px-btn px-btn-sm ${device === k ? "px-btn-primary" : "px-btn-ghost"}`}
+            >
+              {d.page.devices[k]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div ref={box} className="px-checker flex justify-center">
+        <div
+          className="px-frame max-h-[calc(100dvh-6rem)] overflow-y-auto overflow-x-hidden"
+          style={{ width: width * scale }}
+        >
+          <div style={{ width, zoom: scale }}>{children}</div>
+        </div>
+      </div>
+    </div>
+  );
 }

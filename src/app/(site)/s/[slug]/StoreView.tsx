@@ -4,7 +4,7 @@ import { LocaleSwitch } from "@/components/LocaleSwitch";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { siteUrl } from "@/lib/hosts";
 import { formatBaht, type Dict, type Locale } from "@moom/shared/i18n";
-import { backgroundStyle, themeVars, type SectionId } from "@/lib/page-config";
+import { backgroundStyle, safePageCss, themeVars, type SectionId } from "@/lib/page-config";
 import { brandFontCss, googleFontsHref } from "@moom/shared/fonts";
 import { PRESETS } from "@moom/shared/pets/sprites";
 import type { Store } from "./data";
@@ -12,6 +12,9 @@ import { ProductGrid } from "./ProductGrid";
 import { TipBox } from "./TipBox";
 
 /** Presentational storefront. Also rendered by the page designer preview and the dev gallery. */
+const BANNER = { none: "hidden", short: "h-36 @min-[40rem]:h-48", tall: "h-56 @min-[40rem]:h-72" } as const;
+const WIDTH = { narrow: "max-w-3xl", normal: "max-w-5xl", wide: "max-w-7xl" } as const;
+
 export function StoreView({ store, d, locale, preview = false }: { store: Store; d: Dict; locale: Locale; preview?: boolean }) {
   const cfg = store.page;
   const visible = (id: SectionId) => cfg.sections.find((s) => s.id === id)?.visible ?? true;
@@ -58,14 +61,20 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
   return (
     <div
       style={{ ...themeVars(cfg, store.accent), ...backgroundStyle(cfg, store.backgroundUrl) }}
-      className={`${preview ? "" : "min-h-dvh"} pb-16`}
+      // A container, so the layout follows the page's own width: the same in the browser,
+      // and right in the dashboard's phone/desktop preview whatever the window size.
+      className={`moom-page @container ${preview ? "" : "min-h-dvh"} pb-16`}
+      data-shape={cfg.shape}
+      data-layout={cfg.layout}
     >
       {/* No `precedence`: React would suspend the page until the font loads, and the
           nearest loading screen flashes as if the page reloaded. Text swaps in instead. */}
       {fontsHref && <link key={fontsHref} rel="stylesheet" href={fontsHref} />}
       {brandCss && <style>{brandCss}</style>}
+      {/* Cleaned by safePageCss; @scope keeps it on the page even inside the dashboard preview. */}
+      {cfg.css && <style>{`@scope (.moom-page) {\n${safePageCss(cfg.css)}\n}`}</style>}
       <div
-        className="h-36 w-full sm:h-48"
+        className={`moom-page__banner w-full ${BANNER[cfg.header.banner]}`}
         style={
           store.bannerUrl
             ? { backgroundImage: `url(${store.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
@@ -78,10 +87,18 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
               }
         }
       />
-      <div className="mx-auto w-full max-w-5xl px-4">
-        <header className="-mt-12 flex flex-wrap items-end gap-4">
-          <div className="relative">
-            <div className="px-frame size-24 shrink-0 overflow-hidden bg-paper sm:size-28">
+      <div className={`mx-auto w-full px-4 ${WIDTH[cfg.width]}`}>
+        <header
+          className={`moom-page__header flex flex-wrap gap-4 ${cfg.header.banner === "none" ? "pt-8" : "-mt-12"} ${
+            cfg.header.align === "center" ? "flex-col items-center text-center" : "items-end"
+          }`}
+        >
+          <div className={cfg.header.avatar === "hidden" ? "hidden" : "relative"}>
+            <div
+              className={`moom-page__avatar size-24 shrink-0 overflow-hidden bg-paper @min-[40rem]:size-28 ${
+                cfg.header.avatar === "round" ? "rounded-full border-[3px] border-ink" : "px-frame"
+              }`}
+            >
               {store.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- user upload on storage CDN
                 <img src={store.avatarUrl} alt="" className="size-full object-cover" />
@@ -97,10 +114,10 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
               </div>
             )}
           </div>
-          <div className={`min-w-0 flex-1 pb-1 ${store.pet ? "sm:pl-8" : ""}`}>
-            <h1 className="text-3xl leading-tight break-words sm:text-4xl">{store.displayName}</h1>
+          <div className={`min-w-0 flex-1 pb-1 ${store.pet && cfg.header.align === "left" ? "@min-[40rem]:pl-8" : ""}`}>
+            <h1 className="text-3xl leading-tight break-words @min-[40rem]:text-4xl">{store.displayName}</h1>
             {store.links.length > 0 && (
-              <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+              <ul className={`mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm ${cfg.header.align === "center" ? "justify-center" : ""}`}>
                 {store.links.map((l) => (
                   <li key={l.url}>
                     <a href={l.url} target="_blank" rel="noopener noreferrer nofollow" className="text-accent underline decoration-dotted">
@@ -116,9 +133,23 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
           </div>
         </header>
 
-        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
-          <div className={`lg:sticky lg:top-4 ${cfg.focus === "shop" ? "order-2 lg:order-none" : ""}`}>{tip}</div>
-          <div className="grid gap-6">{right}</div>
+        <div
+          className={`mt-8 grid items-start gap-6 ${
+            cfg.layout === "single"
+              ? "mx-auto max-w-2xl"
+              : cfg.layout === "split-right"
+                ? "@min-[64rem]:grid-cols-[1fr_minmax(0,380px)]"
+                : "@min-[64rem]:grid-cols-[minmax(0,380px)_1fr]"
+          }`}
+        >
+          <div
+            className={`moom-page__tip ${cfg.layout === "single" ? "" : "@min-[64rem]:sticky @min-[64rem]:top-4"} ${
+              cfg.focus === "shop" ? "order-2 @min-[64rem]:order-none" : ""
+            } ${cfg.layout === "split-right" ? "@min-[64rem]:order-2" : ""}`}
+          >
+            {tip}
+          </div>
+          <div className="moom-page__content grid gap-6">{right}</div>
         </div>
 
         <footer className="mt-16 text-center text-sm text-ink-faint">
@@ -135,7 +166,7 @@ function SupportersWall({ store, d, locale }: { store: Store; d: Dict; locale: L
   const show = store.page.wall.showAmounts;
   if (!store.recent.length && !store.top.length) return <p className="text-ink-soft">{d.store.noSupporters}</p>;
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
+    <div className="grid gap-5 @min-[40rem]:grid-cols-2">
       {store.top.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm text-ink-soft">{store.page.wall.topPeriod === "30d" ? d.store.top30 : d.store.topAll}</h3>

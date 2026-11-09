@@ -32,7 +32,7 @@ export function ProductGrid({ store, preview = false }: { store: Store; preview?
 
   return (
     <>
-      <ul className="grid gap-5 sm:grid-cols-2">
+      <ul className="grid gap-5 @min-[40rem]:grid-cols-2">
         {store.products.map((p) => (
           <ProductCard key={p.id} p={p} playing={playing === p.id} onListen={() => toggle(p)} onBuy={() => !preview && setBuying(p)} />
         ))}

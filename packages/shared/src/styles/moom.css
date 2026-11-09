@@ -387,6 +387,26 @@
   }
 }
 
+/* Tip page shapes (Page design). Pixel is the default notched frame above. */
+.moom-page:is([data-shape="rounded"], [data-shape="square"]) :is(.px-frame, .px-btn, .px-input, .px-tag) {
+  box-shadow: none;
+  border: 3px solid var(--ink);
+  margin: 0;
+}
+.moom-page[data-shape="rounded"] :is(.px-frame, .px-btn, .px-input) {
+  border-radius: var(--page-radius, 14px);
+}
+.moom-page[data-shape="rounded"] .px-tag {
+  border-radius: 999px;
+}
+.moom-page:is([data-shape="rounded"], [data-shape="square"]) .px-frame-raised {
+  box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--ink) 22%, transparent);
+}
+.moom-page:is([data-shape="rounded"], [data-shape="square"]) .px-input:focus {
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
 /* Shows where the OBS page is transparent. */
 .px-checker {
   background-color: #8c806f;

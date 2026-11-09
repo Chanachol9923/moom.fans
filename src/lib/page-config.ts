@@ -17,6 +17,22 @@ export type ThemeId = keyof typeof THEMES;
 export const THEME_IDS = Object.keys(THEMES) as ThemeId[];
 
 export const BACKGROUNDS = ["dots", "grid", "checker", "plain", "image"] as const;
+export const MAX_PAGE_CSS = 10_000;
+
+/**
+ * The streamer's CSS for their public page. It can restyle anything on the page, but it
+ * can't break out of the <style> tag, pull in other stylesheets, or load images from
+ * other sites (which would let a third party log every viewer's IP).
+ */
+export function safePageCss(css: string): string {
+  const storage = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/`;
+  return css
+    .replace(/</g, "\\3c ")
+    .replace(/@import[^;]*;?/gi, "")
+    .replace(/url\(\s*(['"]?)([^'")]*)\1\s*\)/gi, (m, _q, u: string) =>
+      (storage.length > 30 && u.startsWith(storage)) || u.startsWith("data:image/") ? m : "none",
+    );
+}
 export const SECTION_IDS = ["goal", "about", "shop", "supporters"] as const;
 export type SectionId = (typeof SECTION_IDS)[number];
 
@@ -67,6 +83,43 @@ export const PageConfigSchema = z.object({
     .catch({ heading: "default", body: "default" }),
   /** The streamer's own font file in public media, used wherever "brand" is picked. */
   brandFontPath: z.string().max(300).regex(/^[\w\-./]+$/).nullable().catch(null),
+  /** Own colours on top of the theme; null keeps the theme's. */
+  colors: z
+    .object({
+      paper: hexOrNull.catch(null),
+      card: hexOrNull.catch(null),
+      text: hexOrNull.catch(null),
+      muted: hexOrNull.catch(null),
+      field: hexOrNull.catch(null),
+    })
+    .catch({ paper: null, card: null, text: null, muted: null, field: null }),
+  /** How the background picture sits. */
+  bgImage: z
+    .object({
+      x: z.number().min(0).max(100).catch(50),
+      y: z.number().min(0).max(100).catch(50),
+      size: z.enum(["cover", "contain", "tile"]).catch("cover"),
+      /** Darken it, 0..80 %, so text stays readable. */
+      dim: z.number().min(0).max(80).catch(0),
+      fixed: z.boolean().catch(true),
+    })
+    .catch({ x: 50, y: 50, size: "cover", dim: 0, fixed: true }),
+  /** Corners of boxes, buttons and fields. */
+  shape: z.enum(["pixel", "rounded", "square"]).catch("pixel"),
+  radius: z.number().int().min(0).max(32).catch(14),
+  /** Tip box on the left or right on wide screens, or one column everywhere. */
+  layout: z.enum(["split", "split-right", "single"]).catch("split"),
+  width: z.enum(["narrow", "normal", "wide"]).catch("normal"),
+  header: z
+    .object({
+      banner: z.enum(["none", "short", "tall"]).catch("short"),
+      avatar: z.enum(["square", "round", "hidden"]).catch("square"),
+      align: z.enum(["left", "center"]).catch("left"),
+    })
+    .catch({ banner: "short", avatar: "square", align: "left" }),
+  textScale: z.number().min(0.9).max(1.25).catch(1),
+  /** The streamer's own CSS, scoped to the page. */
+  css: z.string().max(MAX_PAGE_CSS).catch("").transform(safePageCss),
 });
 
 export type PageConfig = z.infer<typeof PageConfigSchema>;
@@ -91,20 +144,23 @@ export function parsePageConfig(raw: unknown): PageConfig {
 export const DEFAULT_PAGE_CONFIG: PageConfig = parsePageConfig({});
 
 /** CSS custom properties that re-skin everything inside the storefront wrapper. */
-export function themeVars(cfg: PageConfig, accent: string): Record<string, string> {
+export function themeVars(cfg: PageConfig, accent: string): Record<string, string | undefined> {
   const t = THEMES[cfg.theme];
+  const c = cfg.colors;
   const heading = fontFamilyName(cfg.fonts.heading);
   const body = fontFamilyName(cfg.fonts.body);
   return {
-    "--paper": t.paper,
-    "--paper-2": t.paper2,
+    "--paper": c.paper ?? t.paper,
+    "--paper-2": c.card ?? t.paper2,
     "--paper-3": t.paper3,
-    "--ink": cfg.frameColor ?? t.ink,
-    "--ink-soft": t.inkSoft,
-    "--ink-faint": t.inkFaint,
-    "--field": t.field,
+    "--ink": cfg.frameColor ?? c.text ?? t.ink,
+    "--ink-soft": c.muted ?? t.inkSoft,
+    "--ink-faint": c.muted ?? t.inkFaint,
+    "--field": c.field ?? t.field,
     "--accent": accent,
-    color: t.ink,
+    "--page-radius": `${cfg.radius}px`,
+    color: c.text ?? t.ink,
+    fontSize: cfg.textScale === 1 ? undefined : `${cfg.textScale * 100}%`,
     // The composite stacks (--font-title, --font-display, --font-sans) are resolved once at :root, so
     // they're overridden here as well as the faces they're built from. Text inherits an
     // already-resolved family, hence the explicit fontFamily for the body face.
@@ -127,7 +183,7 @@ export function themeVars(cfg: PageConfig, accent: string): Record<string, strin
 }
 
 export function backgroundStyle(cfg: PageConfig, imageUrl: string | null): React.CSSProperties {
-  const t = THEMES[cfg.theme];
+  const t = { ...THEMES[cfg.theme], paper: cfg.colors.paper ?? THEMES[cfg.theme].paper, paper2: cfg.colors.card ?? THEMES[cfg.theme].paper2 };
   const dot = `color-mix(in srgb, ${t.ink} 10%, transparent)`;
   switch (cfg.background) {
     case "plain":
@@ -146,15 +202,20 @@ export function backgroundStyle(cfg: PageConfig, imageUrl: string | null): React
         backgroundPosition: "0 0, 12px 12px",
       };
     case "image":
-      return imageUrl
-        ? {
-            backgroundColor: t.paper,
-            backgroundImage: `url(${imageUrl})`,
-            backgroundSize: "cover",
-            backgroundAttachment: "fixed",
-            backgroundPosition: "center",
-          }
-        : { backgroundColor: t.paper };
+      if (!imageUrl) return { backgroundColor: t.paper };
+      {
+        const b = cfg.bgImage;
+        // Darkening is a flat layer over the picture, not a decorative gradient.
+        const dim = b.dim ? `linear-gradient(rgba(0,0,0,${b.dim / 100}), rgba(0,0,0,${b.dim / 100})), ` : "";
+        return {
+          backgroundColor: t.paper,
+          backgroundImage: `${dim}url(${imageUrl})`,
+          backgroundSize: b.size === "tile" ? "auto" : b.size,
+          backgroundRepeat: b.size === "tile" ? "repeat" : "no-repeat",
+          backgroundAttachment: b.fixed ? "fixed" : "scroll",
+          backgroundPosition: `${b.x}% ${b.y}%`,
+        };
+      }
     default:
       return {
         backgroundColor: t.paper,

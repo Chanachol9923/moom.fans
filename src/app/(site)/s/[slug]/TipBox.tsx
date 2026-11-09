@@ -72,7 +72,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
   const pick = (selected: boolean) => `px-btn min-h-11 min-w-16 text-base ${selected ? "px-btn-primary" : ""}`;
 
   return (
-    <form action={submit} className="px-frame px-frame-raised bg-paper p-4 sm:p-5">
+    <form action={submit} className="px-frame px-frame-raised bg-paper p-4 @min-[40rem]:p-5">
       <h2 className="mb-1 text-2xl">{cfg.tipTitle || d.store.tipTitle}</h2>
       {cfg.tipNote && <p className="mb-3 whitespace-pre-line text-sm text-ink-soft">{cfg.tipNote}</p>}
 
@@ -244,7 +244,7 @@ function GifPicker({
       <p className="mb-1.5 text-xs text-ink-faint">
         {min > 0 ? fmt(d.store.gifMin, { amount: formatBaht(min, locale) }) : d.store.gifHint}
       </p>
-      <div className={`grid grid-cols-4 gap-1.5 sm:grid-cols-5 ${allowed ? "" : "opacity-50"}`} role="radiogroup">
+      <div className={`grid grid-cols-4 gap-1.5 @min-[40rem]:grid-cols-5 ${allowed ? "" : "opacity-50"}`} role="radiogroup">
         <button
           type="button"
           role="radio"
