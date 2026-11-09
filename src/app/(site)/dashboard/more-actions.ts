@@ -238,7 +238,9 @@ async function listAll(bucket: string, prefix: string, depth = 0): Promise<strin
 /** The goal widget's designed look; null goes back to the classic bar. */
 export async function saveGoalLook(raw: unknown): Promise<{ ok: boolean; error?: string }> {
   const { supabase, profile } = await streamerForAction();
-  const look = raw === null ? null : parseGoalLook(raw);
+  const parsed = raw === null ? null : parseGoalLook(raw);
+  // A picture from someone else's folder never makes it in.
+  const look = parsed && parsed.image && !parsed.image.startsWith(`${profile.id}/`) ? { ...parsed, image: null } : parsed;
   const { data: row } = await supabase.from("overlay_settings").select("*").eq("streamer_id", profile.id).single();
   const looks = { ...((row?.widget_looks ?? {}) as Record<string, unknown>) };
   if (look) looks.goal = look;

@@ -32,8 +32,25 @@ export type GoalLook = {
   };
   /** Dark outline around text, for reading straight over the game. */
   outline: boolean;
+  /** Picture, GIF or short video (public-media path), and where it goes. */
+  image: string | null;
+  imagePlace: GoalImagePlace;
+  /** Height in px at 1080p (side, top, rider, end). */
+  imageSize: number;
+  /** Behind: focus point in %, zoom and opacity. */
+  imageX: number;
+  imageY: number;
+  imageZoom: number;
+  imageOpacity: number;
   css: string;
 };
+
+/**
+ * side: next to everything; top: above the title; behind: fills the box; rider: sits on
+ * the bar and moves along as the goal fills; end: the prize waiting at the end of the bar.
+ */
+export const GOAL_IMAGE_PLACES = ["side", "top", "behind", "rider", "end"] as const;
+export type GoalImagePlace = (typeof GOAL_IMAGE_PLACES)[number];
 
 export const MAX_GOAL_CSS = 10_000;
 
@@ -52,6 +69,13 @@ export const DEFAULT_GOAL_LOOK: GoalLook = {
   show: { title: true, percent: true, amounts: true, deadline: true },
   colors: { bg: "#f2ead7", bgAlpha: 100, border: "#241e19", title: "#241e19", text: "#554a3f", fill: "", track: "#241e19" },
   outline: false,
+  image: null,
+  imagePlace: "rider",
+  imageSize: 56,
+  imageX: 50,
+  imageY: 50,
+  imageZoom: 1,
+  imageOpacity: 60,
   css: "",
 };
 
@@ -136,6 +160,13 @@ export function parseGoalLook(v: unknown): GoalLook | null {
       track: hex(c.track, D.colors.track),
     },
     outline: l.outline === true,
+    image: typeof l.image === "string" && /^[\w\-./]{1,300}$/.test(l.image) && !l.image.includes("..") ? l.image : null,
+    imagePlace: pick(l.imagePlace, GOAL_IMAGE_PLACES, D.imagePlace),
+    imageSize: Math.round(num(l.imageSize, 16, 400, D.imageSize)),
+    imageX: Math.round(num(l.imageX, 0, 100, D.imageX)),
+    imageY: Math.round(num(l.imageY, 0, 100, D.imageY)),
+    imageZoom: Math.round(num(l.imageZoom, 1, 4, D.imageZoom) * 100) / 100,
+    imageOpacity: Math.round(num(l.imageOpacity, 5, 100, D.imageOpacity)),
     // Only ever placed in a <style> on the widget page; keep it from closing the tag.
     css: typeof l.css === "string" ? l.css.slice(0, MAX_GOAL_CSS).replace(/</g, "\\3c ") : "",
   };

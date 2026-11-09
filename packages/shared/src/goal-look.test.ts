@@ -24,6 +24,13 @@ describe("parseGoalLook", () => {
     expect(l.css).not.toContain("<");
   });
 
+  it("keeps a safe picture path and placement, and bounds the picture settings", () => {
+    const l = parseGoalLook({ image: "uid/goals/run.gif", imagePlace: "rider", imageSize: 999, imageOpacity: 0 })!;
+    expect(l).toMatchObject({ image: "uid/goals/run.gif", imagePlace: "rider", imageSize: 400, imageOpacity: 5 });
+    expect(parseGoalLook({ image: "../other/x.png", imagePlace: "floating" })).toMatchObject({ image: null, imagePlace: "rider" });
+    expect(parseGoalLook({ image: "https://evil.example/x.png" })?.image).toBeNull();
+  });
+
   it("returns null for nothing", () => {
     expect(parseGoalLook(null)).toBeNull();
     expect(parseGoalLook("x")).toBeNull();

@@ -11,6 +11,7 @@ import { GoalLookEditor } from "./GoalLookEditor";
 import { parseGoalLook } from "@moom/shared/goal-look";
 import { parsePresets } from "@moom/shared/presets";
 import { parsePageConfig } from "@/lib/page-config";
+import { publicEnv } from "@/lib/env";
 
 export default async function GoalsPage() {
   const { supabase, profile } = await requireStreamer();
@@ -33,6 +34,11 @@ export default async function GoalsPage() {
         <p className="mt-1 text-ink-soft">{d.goals.subtitle}</p>
       </div>
 
+      <Panel title={d.goals.new}>
+        {goal && <p className="mb-3 text-sm text-ink-faint">{d.goals.replaceHint}</p>}
+        <GoalForm />
+      </Panel>
+
       {goal ? (
         <Panel title={d.goals.active} aside={<ActionButton size="sm" variant="ghost" action={endGoal.bind(null, goal.id)}>{d.goals.end}</ActionButton>}>
           <GoalBar {...goal} accent={profile.accent_color} d={d} locale={locale} />
@@ -52,12 +58,9 @@ export default async function GoalsPage() {
           accent={profile.accent_color}
           locale={locale}
           brandFont={Boolean(page.brandFontPath)}
+          userId={profile.id}
+          supabase={{ url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey() }}
         />
-      </Panel>
-
-      <Panel title={d.goals.new}>
-        {goal && <p className="mb-3 text-sm text-ink-faint">{d.goals.replaceHint}</p>}
-        <GoalForm />
       </Panel>
 
       {past?.length ? (

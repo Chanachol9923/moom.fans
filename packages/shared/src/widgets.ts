@@ -29,6 +29,7 @@ export type WidgetData = {
   goal: { title: string; raised: number; target: number; endsAt: string | null } | null;
   /** Designed in the dashboard; null = the classic pixel bar. */
   goalLook: GoalLook | null;
+  goalImageUrl: string | null;
   recent: Array<{ name: string; amount: number; at: string }>;
   top: Array<{ name: string; total: number }>;
   poll: { title: string; options: string[]; totals: number[]; weightBy: "amount" | "count" } | null;

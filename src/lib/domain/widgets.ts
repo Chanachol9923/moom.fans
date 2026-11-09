@@ -3,6 +3,7 @@ import { activeGoal, activePoll, subathonState, wallData } from "@/lib/domain/wa
 import { publicEnv } from "@/lib/env";
 import { creatorUrl } from "@/lib/hosts";
 import { parsePageConfig } from "@/lib/page-config";
+import { publicMediaUrl } from "@/lib/storage";
 import { overlayTopic } from "@/lib/realtime";
 import { admin } from "@/lib/supabase/admin";
 import { parseGoalLook } from "@moom/shared/goal-look";
@@ -28,6 +29,7 @@ export async function loadWidgetData(token: string): Promise<WidgetData | null> 
     admin().from("overlay_settings").select("*").eq("streamer_id", s.streamer_id).maybeSingle(),
   ]);
   const looks = (settings.data?.widget_looks ?? {}) as Record<string, unknown>;
+  const goalLook = parseGoalLook(looks.goal);
   return {
     accent: profile.accent_color,
     locale: profile.locale,
@@ -35,7 +37,8 @@ export async function loadWidgetData(token: string): Promise<WidgetData | null> 
     showAmounts: page.wall.showAmounts,
     topPeriod: page.wall.topPeriod,
     goal: goal && { title: goal.title, raised: goal.raised, target: goal.target, endsAt: goal.endsAt },
-    goalLook: parseGoalLook(looks.goal),
+    goalLook,
+    goalImageUrl: publicMediaUrl(goalLook?.image?.startsWith(`${s.streamer_id}/`) ? goalLook.image : null),
     recent: wall.recent,
     top: wall.top,
     poll: poll && { title: poll.title, options: poll.options, totals: poll.totals, weightBy: poll.weightBy },

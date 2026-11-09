@@ -9,6 +9,9 @@ import { FontPicker } from "@moom/shared/ui/FontPicker";
 import { GoalBar } from "@moom/shared/ui/GoalBar";
 import { Button, Check, Field, Textarea } from "@moom/shared/ui/kit";
 import { errorText, isNextControl } from "@/lib/errors";
+import { publicMediaUrl } from "@/lib/storage";
+import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
+import { MAX_GIF_BYTES, mediaKindOf } from "@moom/shared/overlay/design";
 import { Choice, Slider } from "../alerts/LookEditor";
 import { saveGoalLook } from "../more-actions";
 import { PresetBar } from "../PresetBar";
@@ -23,6 +26,8 @@ export function GoalLookEditor({
   accent,
   locale,
   brandFont,
+  userId,
+  supabase,
 }: {
   initial: GoalLook | null;
   presets: SavedPreset[];
@@ -30,6 +35,8 @@ export function GoalLookEditor({
   accent: string;
   locale: Locale;
   brandFont: boolean;
+  userId: string;
+  supabase: SupabasePublic;
 }) {
   const { d } = useT();
   const G = d.goalLook;
@@ -55,6 +62,26 @@ export function GoalLookEditor({
         setStatus(d.common.errNetwork);
       }
     });
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const [localUrl, setLocalUrl] = useState<string | null>(null);
+  const imageUrl = look.image ? (localUrl ?? publicMediaUrl(look.image)) : null;
+  const upload = async (f: File | undefined) => {
+    if (!f) return;
+    setUploadErr(null);
+    if (f.size > MAX_GIF_BYTES) return setUploadErr(d.common.errTooBig);
+    setUploading(true);
+    try {
+      const path = await uploadPublicMedia(supabase, userId, f, "goals");
+      setLocalUrl(URL.createObjectURL(f));
+      set({ image: path });
+    } catch (err) {
+      setUploadErr(errorText((err as Error).message, d));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const fonts = googleFontsHref([look.font, look.numFont]);
   const builtins = (Object.keys(GOAL_PRESETS) as Array<keyof typeof GOAL_PRESETS>).map((k) => ({ name: G.presetNames[k], look: GOAL_PRESETS[k] }));
@@ -118,6 +145,55 @@ export function GoalLookEditor({
           )}
         </div>
 
+        <div className="grid gap-2 border-y-[3px] border-dashed border-ink/15 py-3">
+          <div className="px-label">{G.image}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            {imageUrl &&
+              (mediaKindOf(look.image) === "video" ? (
+                <video src={imageUrl} className="h-12 w-auto bg-paper-2" muted autoPlay loop playsInline />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- streamer upload
+                <img src={imageUrl} alt="" className="h-12 w-auto bg-paper-2" />
+              ))}
+            <label className="px-btn px-btn-sm cursor-pointer">
+              {uploading ? d.common.uploading : look.image ? G.imageChange : G.imageAdd}
+              <input
+                type="file"
+                accept="image/gif,image/webp,image/png,image/jpeg,video/webm,video/mp4"
+                className="hidden"
+                onChange={(e) => {
+                  void upload(e.target.files?.[0]);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {look.image && (
+              <Button size="sm" variant="ghost" onClick={() => set({ image: null })}>
+                {G.imageRemove}
+              </Button>
+            )}
+          </div>
+          {uploadErr && <p className="text-sm text-tomato">{uploadErr}</p>}
+          {!look.image && <p className="text-sm text-ink-faint">{G.imageHint}</p>}
+          {look.image && (
+            <>
+              <Choice label={G.imagePlace} value={look.imagePlace} options={G.imagePlaces} onChange={(imagePlace) => set({ imagePlace })} />
+              <div className="grid gap-x-4 sm:grid-cols-2">
+                {look.imagePlace !== "behind" ? (
+                  <Slider label={G.imageSize} value={look.imageSize} min={16} max={400} step={2} show={`${look.imageSize}px`} onChange={(imageSize) => set({ imageSize })} />
+                ) : (
+                  <>
+                    <Slider label={d.design.look.imageX} value={look.imageX} min={0} max={100} step={1} show={`${look.imageX}%`} onChange={(imageX) => set({ imageX })} />
+                    <Slider label={d.design.look.imageY} value={look.imageY} min={0} max={100} step={1} show={`${look.imageY}%`} onChange={(imageY) => set({ imageY })} />
+                    <Slider label={d.design.look.imageZoom} value={look.imageZoom} min={1} max={4} step={0.05} show={`${Math.round(look.imageZoom * 100)}%`} onChange={(imageZoom) => set({ imageZoom })} />
+                    <Slider label={G.imageOpacity} value={look.imageOpacity} min={5} max={100} step={5} show={`${look.imageOpacity}%`} onChange={(imageOpacity) => set({ imageOpacity })} />
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
         <div className="flex flex-wrap gap-x-5">
           <Check label={G.show.title} checked={look.show.title} onChange={(e) => show("title", e.target.checked)} />
           <Check label={G.show.percent} checked={look.show.percent} onChange={(e) => show("percent", e.target.checked)} />
@@ -156,7 +232,7 @@ export function GoalLookEditor({
       <div className="self-start lg:sticky lg:top-4">
         <div className="px-label">{G.preview}</div>
         <FitWidth width={800}>
-          <GoalBar {...sample} accent={accent} d={d} locale={locale} look={{ ...look, css: "" }} />
+          <GoalBar {...sample} accent={accent} d={d} locale={locale} look={{ ...look, css: "" }} imageUrl={imageUrl} />
         </FitWidth>
         <p className="mt-2 text-sm text-ink-faint">{G.previewHint}</p>
       </div>

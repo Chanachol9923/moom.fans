@@ -67,7 +67,7 @@ function GoalWidget({ data, goal }: { data: WidgetData; goal: NonNullable<Widget
       {fonts && <link key={fonts} rel="stylesheet" href={fonts} />}
       {/* Already escaped by parseGoalLook. Only ever rendered on this OBS page. */}
       {l.css && <style>{l.css}</style>}
-      <GoalBar {...goal} accent={data.accent} d={d} locale={data.locale} look={l} />
+      <GoalBar {...goal} accent={data.accent} d={d} locale={data.locale} look={l} imageUrl={data.goalImageUrl} />
     </>
   );
 }
