@@ -8,7 +8,7 @@ import { getUser } from "@/lib/supabase/server";
 import { newToken } from "@/lib/tokens";
 
 export type OnboardingState = {
-  errors?: Partial<Record<"slug" | "displayName" | "promptpay" | "form", "invalid" | "taken" | "error">>;
+  errors?: Partial<Record<"slug" | "displayName" | "promptpay" | "form", "invalid" | "taken" | "error" | "network">>;
   values?: { slug: string; displayName: string; promptpay: string };
 };
 

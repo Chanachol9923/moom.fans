@@ -29,7 +29,9 @@ export function FontPicker({
   const href = googleFontsHref([value]);
   return (
     <div>
-      {href && <link rel="stylesheet" href={href} precedence="default" />}
+      {/* No `precedence`: React would suspend the page until the font loads, and the
+          nearest loading screen flashes as if the page reloaded. Text swaps in instead. */}
+      {href && <link key={href} rel="stylesheet" href={href} />}
       <Select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
         <optgroup label={F.groupMoom}>
           {builtins.map((b) => (

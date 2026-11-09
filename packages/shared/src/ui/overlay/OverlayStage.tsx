@@ -36,7 +36,7 @@ export function OverlayStage({
   return (
     <div className="moom-stage relative h-dvh w-dvw overflow-hidden text-[18px]">
       {/* Already escaped by safeCss on the server. Only ever rendered on the OBS page. */}
-      {fontsHref && <link rel="stylesheet" href={fontsHref} precedence="default" />}
+      {fontsHref && <link key={fontsHref} rel="stylesheet" href={fontsHref} />}
       {brandCss && <style>{brandCss}</style>}
       {cfg.customCss ? <style>{cfg.customCss}</style> : null}
       {showPets && <PetsLayer pets={pets} speakRef={speakRef} />}

@@ -5,6 +5,9 @@ import { useT } from "@moom/shared/i18n/react";
 import type { ProfileRow } from "@/lib/supabase/database.types";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import { saveProfile, type SaveResult } from "../actions";
+import { errorText, guardForm } from "@/lib/errors";
+
+const save = guardForm(saveProfile, () => ({ ok: false, error: "network" }));
 
 export function SettingsForm({
   profile: p,
@@ -28,17 +31,28 @@ export function SettingsForm({
   supabase: SupabasePublic;
 }) {
   const { d } = useT();
-  const [state, action, pending] = useActionState<SaveResult, FormData>(saveProfile, { ok: false });
+  const [state, action, pending] = useActionState<SaveResult, FormData>(save, { ok: false });
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
   const [avatar, setAvatar] = useState({ path: p.avatar_path ?? "", url: avatarUrl });
   const [banner, setBanner] = useState({ path: p.banner_path ?? "", url: bannerUrl });
   const [accent, setAccent] = useState(p.accent_color);
 
   const pick = (kind: "avatar" | "banner") => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
+    e.target.value = "";
     if (!f) return;
-    const path = await uploadPublicMedia(supabase, userId, f, kind);
-    const url = URL.createObjectURL(f);
-    (kind === "avatar" ? setAvatar : setBanner)({ path, url });
+    setUploadErr(null);
+    setUploading(kind);
+    try {
+      const path = await uploadPublicMedia(supabase, userId, f, kind);
+      const url = URL.createObjectURL(f);
+      (kind === "avatar" ? setAvatar : setBanner)({ path, url });
+    } catch (err) {
+      setUploadErr(errorText((err as Error).message, d));
+    } finally {
+      setUploading(null);
+    }
   };
 
   return (
@@ -52,7 +66,7 @@ export function SettingsForm({
               {/* eslint-disable-next-line @next/next/no-img-element -- local preview / CDN */}
               {avatar.url && <img src={avatar.url} alt="" className="size-full object-cover" />}
             </div>
-            <span className="px-label mt-1">{d.settings.avatar}</span>
+            <span className="px-label mt-1">{uploading === "avatar" ? d.common.uploading : d.settings.avatar}</span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick("avatar")} />
           </label>
           <label className="min-w-48 flex-1 cursor-pointer">
@@ -60,10 +74,11 @@ export function SettingsForm({
               className="px-frame h-24 bg-paper-2 bg-cover bg-center"
               style={banner.url ? { backgroundImage: `url(${banner.url})` } : { background: accent }}
             />
-            <span className="px-label mt-1">{d.settings.banner}</span>
+            <span className="px-label mt-1">{uploading === "banner" ? d.common.uploading : d.settings.banner}</span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick("banner")} />
           </label>
         </div>
+        {uploadErr && <p className="-mt-2 mb-4 text-sm text-tomato">{uploadErr}</p>}
 
         <div className="grid gap-x-5 sm:grid-cols-[1fr_160px]">
           <Field label={d.onboarding.displayName} htmlFor="display_name">
@@ -138,7 +153,7 @@ export function SettingsForm({
         {state.ok && !pending && <span className="font-display text-leaf">✓ {d.common.saved}</span>}
         {state.error && (
           <span className="text-tomato">
-            {state.error === "promptpay" ? d.onboarding.promptpayInvalid : `${d.common.error} (${state.error})`}
+            {state.error === "promptpay" ? d.onboarding.promptpayInvalid : errorText(state.error, d)}
           </span>
         )}
       </div>

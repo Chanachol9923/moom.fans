@@ -5,6 +5,7 @@ import type { VtsRule } from "@moom/shared/alerts";
 import { useT } from "@moom/shared/i18n/react";
 import { VtsClient, type VtsHotkey, type VtsItemFile } from "@moom/shared/vts";
 import { saveVtsRules } from "../actions";
+import { isNextControl } from "@/lib/errors";
 
 export function VtsManager({ enabled: initialEnabled, rules: initialRules }: { enabled: boolean; rules: VtsRule[] }) {
   const { d } = useT();
@@ -15,6 +16,7 @@ export function VtsManager({ enabled: initialEnabled, rules: initialRules }: { e
   const [enabled, setEnabled] = useState(initialEnabled);
   const [rules, setRules] = useState<VtsRule[]>(initialRules);
   const [saved, setSaved] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [pending, start] = useTransition();
 
   useEffect(() => () => client.current?.close(), []);
@@ -164,14 +166,21 @@ export function VtsManager({ enabled: initialEnabled, rules: initialRules }: { e
             disabled={pending}
             onClick={() =>
               start(async () => {
-                await saveVtsRules(enabled, rules.filter((r) => r.ref));
-                setSaved(true);
+                setFailed(false);
+                try {
+                  await saveVtsRules(enabled, rules.filter((r) => r.ref));
+                  setSaved(true);
+                } catch (e) {
+                  if (isNextControl(e)) throw e;
+                  setFailed(true);
+                }
               })
             }
           >
             {pending ? "…" : d.common.save}
           </Button>
           {saved && <span className="font-display text-leaf">✓ {d.common.saved}</span>}
+          {failed && <span className="text-tomato">{d.common.errNetwork}</span>}
         </div>
       </Panel>
     </>

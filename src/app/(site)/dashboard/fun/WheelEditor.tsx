@@ -5,6 +5,7 @@ import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import type { WheelConfig } from "@moom/shared/wheel";
 import { saveWheel } from "../more-actions";
+import { isNextControl } from "@/lib/errors";
 
 export function WheelEditor({ initial }: { initial: WheelConfig }) {
   const { d } = useT();
@@ -12,6 +13,7 @@ export function WheelEditor({ initial }: { initial: WheelConfig }) {
     initial.items.length ? initial : { ...initial, items: [{ label: "", weight: 1 }, { label: "", weight: 1 }] },
   );
   const [saved, setSaved] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [pending, start] = useTransition();
   const total = cfg.items.reduce((s, i) => s + Math.max(0, i.weight), 0) || 1;
   const upd = (patch: Partial<WheelConfig>) => {
@@ -58,14 +60,21 @@ export function WheelEditor({ initial }: { initial: WheelConfig }) {
           disabled={pending}
           onClick={() =>
             start(async () => {
-              await saveWheel({ ...cfg, items: cfg.items.filter((i) => i.label.trim()) });
-              setSaved(true);
+              setFailed(false);
+              try {
+                await saveWheel({ ...cfg, items: cfg.items.filter((i) => i.label.trim()) });
+                setSaved(true);
+              } catch (e) {
+                if (isNextControl(e)) throw e;
+                setFailed(true);
+              }
             })
           }
         >
           {pending ? "…" : d.common.save}
         </Button>
         {saved && <span className="font-display text-leaf">✓ {d.common.saved}</span>}
+          {failed && <span className="text-tomato">{d.common.errNetwork}</span>}
       </div>
     </div>
   );

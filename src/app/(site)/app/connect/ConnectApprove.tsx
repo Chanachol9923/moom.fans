@@ -5,6 +5,7 @@ import { CopyField } from "@moom/shared/ui/CopyField";
 import { Button, buttonClass } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { approveAppLink } from "./actions";
+import { isNextControl } from "@/lib/errors";
 
 export function ConnectApprove({ state, challenge, device }: { state: string; challenge: string; device: string }) {
   const { d } = useT();
@@ -31,8 +32,11 @@ export function ConnectApprove({ state, challenge, device }: { state: string; ch
         disabled={pending}
         onClick={() =>
           start(async () => {
-            const r = await approveAppLink(challenge, device);
-            if ("error" in r) return setError(true);
+            const r = await approveAppLink(challenge, device).catch((e) => {
+              if (isNextControl(e)) throw e;
+              return { error: "network" as const };
+            });
+            if (!r || "error" in r) return setError(true);
             setCode(r.code);
             // Hand the code to the app. The browser asks "Open Moom?" the first time.
             window.location.href = `moom://auth?${new URLSearchParams({ code: r.code, state }).toString()}`;
@@ -44,7 +48,7 @@ export function ConnectApprove({ state, challenge, device }: { state: string; ch
       <Link href="/dashboard" className={buttonClass("ghost")}>
         {d.appLink.deny}
       </Link>
-      {error && <p className="w-full text-tomato">{d.common.error}</p>}
+      {error && <p className="w-full text-tomato">{d.appLink.failed}</p>}
     </div>
   );
 }

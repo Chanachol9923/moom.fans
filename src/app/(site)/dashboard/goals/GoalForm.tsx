@@ -3,10 +3,13 @@ import { useActionState } from "react";
 import { Button, Check, Field, Input } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { createGoal } from "../more-actions";
+import { errorText, guardForm } from "@/lib/errors";
+
+const save = guardForm(createGoal, () => ({ ok: false, error: "network" }));
 
 export function GoalForm() {
   const { d } = useT();
-  const [state, action, pending] = useActionState(createGoal, { ok: false });
+  const [state, action, pending] = useActionState(save, { ok: false });
   return (
     <form action={action} key={state.ok ? "done" : "form"}>
       <div className="grid gap-x-5 sm:grid-cols-2">
@@ -29,7 +32,7 @@ export function GoalForm() {
           {pending ? d.common.loading : d.goals.new}
         </Button>
         {state.ok && <span className="font-display text-leaf">✓ {d.common.saved}</span>}
-        {state.error && <span className="text-tomato">{d.common.error}</span>}
+        {state.error && <span className="text-tomato">{errorText(state.error, d)}</span>}
       </div>
     </form>
   );

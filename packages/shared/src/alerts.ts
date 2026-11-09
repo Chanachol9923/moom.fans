@@ -83,6 +83,10 @@ export type AlertLook = {
   width: number;
   /** Picture height in px at 1080p. */
   imageSize: number;
+  /** Behind-text picture: focus point in % (0 = left/top, 100 = right/bottom) and zoom. */
+  imageX: number;
+  imageY: number;
+  imageZoom: number;
   frame: "pixel" | "rounded" | "none";
   /** Corner radius for the rounded frame. */
   radius: number;

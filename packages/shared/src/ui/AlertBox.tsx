@@ -259,16 +259,23 @@ function CustomAlert({
   const justify = l.align === "center" ? "center" : l.align === "right" ? "flex-end" : "flex-start";
   const visual = <Visual media={media} size={l.imageSize} />;
 
+  // Which part of the picture shows, and how close: the same point stays put when zooming.
+  const bgPlace = {
+    objectPosition: `${l.imageX}% ${l.imageY}%`,
+    transform: l.imageZoom !== 1 ? `scale(${l.imageZoom})` : undefined,
+    transformOrigin: `${l.imageX}% ${l.imageY}%`,
+  };
+
   if (l.layout === "background") {
     return (
       <div {...rootProps} className={`${cls} relative overflow-hidden`} style={{ ...style, minHeight: l.imageSize }}>
         {media && (
-          <div className="absolute inset-0 grid place-items-center opacity-90">
+          <div className="absolute inset-0 grid place-items-center overflow-hidden opacity-90">
             {media.kind === "video" ? (
-              <video className="moom-alert__image size-full object-cover" src={media.url} autoPlay muted loop playsInline />
+              <video className="moom-alert__image size-full object-cover" style={bgPlace} src={media.url} autoPlay muted loop playsInline />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element -- shared with the desktop app
-              <img className="moom-alert__image size-full object-cover" src={media.url} alt="" />
+              <img className="moom-alert__image size-full object-cover" style={bgPlace} src={media.url} alt="" />
             )}
           </div>
         )}

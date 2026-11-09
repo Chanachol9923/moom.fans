@@ -6,6 +6,7 @@ import { MAX_GIF_BYTES, MAX_GIFS, mediaKindOf, newGifId, type StoredGif } from "
 import { Button, Field, Input, Panel } from "@moom/shared/ui/kit";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import { saveAlertGifs, sendTestGif } from "../actions";
+import { errorText } from "@/lib/errors";
 
 const TYPES = "image/gif,image/webp,image/png,image/jpeg,video/webm,video/mp4";
 
@@ -46,13 +47,14 @@ export function GifManager({
     setBusy((n) => n + Math.min(room, list.length));
     for (const f of list.slice(0, room)) {
       try {
-        if (f.size > MAX_GIF_BYTES) throw new Error("size");
+        if (f.size > MAX_GIF_BYTES) throw new Error("too_big");
         const path = await uploadPublicMedia(supabase, userId, f, "gifs");
         setUrls((u) => ({ ...u, [path]: URL.createObjectURL(f) }));
         const label = f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").slice(0, 40);
         setGifs((g) => (g.length >= MAX_GIFS ? g : [...g, { id: newGifId(), path, label }]));
       } catch (e) {
-        bad.push(`${f.name}: ${(e as Error).message === "size" ? G.tooBig : d.design.uploadFailed}`);
+        const code = (e as Error).message;
+        bad.push(`${f.name}: ${code === "too_big" ? G.tooBig : errorText(code, d)}`);
       } finally {
         setBusy((n) => n - 1);
       }

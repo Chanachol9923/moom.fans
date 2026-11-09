@@ -12,6 +12,7 @@ import type { Store } from "../../s/[slug]/data";
 import { StoreView } from "../../s/[slug]/StoreView";
 import { savePageConfig } from "../more-actions";
 import { FontPicker } from "@moom/shared/ui/FontPicker";
+import { errorText } from "@/lib/errors";
 
 export function PageDesigner({
   store,
@@ -31,6 +32,7 @@ export function PageDesigner({
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
   const [bgBusy, setBgBusy] = useState(false);
+  const [bgError, setBgError] = useState<string | null>(null);
   const [fontBusy, setFontBusy] = useState(false);
   const [fontError, setFontError] = useState<string | null>(null);
 
@@ -72,8 +74,8 @@ export function PageDesigner({
       set("brandFontPath", path);
       // Picking it right away is what people expect after uploading.
       setCfg((c) => (c.fonts.heading === "default" ? { ...c, fonts: { ...c.fonts, heading: "brand" } } : c));
-    } catch {
-      setFontError(d.design.uploadFailed);
+    } catch (err) {
+      setFontError(errorText((err as Error).message, d));
     } finally {
       setFontBusy(false);
     }
@@ -124,9 +126,13 @@ export function PageDesigner({
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
                   if (!f) return;
+                  e.target.value = "";
                   setBgBusy(true);
+                  setBgError(null);
                   try {
                     set("backgroundImagePath", await uploadPublicMedia(supabase, userId, f, "background"));
+                  } catch (err) {
+                    setBgError(errorText((err as Error).message, d));
                   } finally {
                     setBgBusy(false);
                   }
@@ -134,6 +140,7 @@ export function PageDesigner({
               />
             </label>
           )}
+          {bgError && <p className="text-sm text-tomato">{bgError}</p>}
           <Field label={d.page.frameColor}>
             <div className="flex items-center gap-2">
               <input

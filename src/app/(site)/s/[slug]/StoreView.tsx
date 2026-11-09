@@ -60,7 +60,9 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
       style={{ ...themeVars(cfg, store.accent), ...backgroundStyle(cfg, store.backgroundUrl) }}
       className={`${preview ? "" : "min-h-dvh"} pb-16`}
     >
-      {fontsHref && <link rel="stylesheet" href={fontsHref} precedence="default" />}
+      {/* No `precedence`: React would suspend the page until the font loads, and the
+          nearest loading screen flashes as if the page reloaded. Text swaps in instead. */}
+      {fontsHref && <link key={fontsHref} rel="stylesheet" href={fontsHref} />}
       {brandCss && <style>{brandCss}</style>}
       <div
         className="h-36 w-full sm:h-48"

@@ -13,6 +13,7 @@ import { removeObjects } from "@/lib/storage.server";
 import { admin } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/database.types";
 import { WheelSchema } from "@moom/shared/wheel";
+import { dbError } from "@/lib/action-error";
 
 const SAFE_PATH = /^[\w\-./]+$/;
 
@@ -74,7 +75,7 @@ export async function createGoal(_prev: { ok: boolean; error?: string }, form: F
     include_purchases: v.data.includePurchases,
     ends_at: ends,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError("dashboard", error) };
   await notifyOverlay(await channelOf(profile.id), { type: "config" });
   revalidatePath("/dashboard/goals");
   return { ok: true };
@@ -110,7 +111,7 @@ export async function startPoll(_prev: { ok: boolean; error?: string }, form: Fo
   const { error } = await supabase
     .from("polls")
     .insert({ streamer_id: profile.id, title: title.data, options, weight_by: weightBy });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError("dashboard", error) };
   await notifyOverlay(await channelOf(profile.id), { type: "config" });
   revalidatePath("/dashboard/fun");
   return { ok: true };

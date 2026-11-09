@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import { Button, Check, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
@@ -6,8 +7,11 @@ import type { OverlaySettingsRow } from "@/lib/supabase/database.types";
 import { TTS_VOICES } from "@/lib/tts/types";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import { saveOverlaySettings, testTts, type SaveResult } from "../actions";
+import { errorText, guardForm } from "@/lib/errors";
 
 const POSITIONS = ["top-left", "top-center", "top-right", "center", "bottom-left", "bottom-center", "bottom-right"] as const;
+
+const save = guardForm(saveOverlaySettings, () => ({ ok: false, error: "network" }));
 
 export function OverlaySettingsForm({
   settings: s,
@@ -27,9 +31,10 @@ export function OverlaySettingsForm({
 }) {
   const { d } = useT();
   const [voice, setVoice] = useState(s.tts_voice);
-  const [state, action, pending] = useActionState<SaveResult, FormData>(saveOverlaySettings, { ok: false });
+  const [state, action, pending] = useActionState<SaveResult, FormData>(save, { ok: false });
   const [soundPath, setSoundPath] = useState(s.alert_sound_path ?? "");
   const [soundBusy, setSoundBusy] = useState(false);
+  const [soundErr, setSoundErr] = useState<string | null>(null);
   const [preview, setPreview] = useState(soundUrl);
 
   return (
@@ -73,7 +78,7 @@ export function OverlaySettingsForm({
           </Field>
         </div>
 
-        <Field label={d.overlay.alertSound} hint={soundPath ? undefined : d.overlay.alertSoundDefault}>
+        <Field label={d.overlay.alertSound} hint={soundPath ? undefined : d.overlay.alertSoundDefault} error={soundErr ?? undefined}>
           <input type="hidden" name="alert_sound_path" value={soundPath} />
           <div className="flex flex-wrap items-center gap-2">
             {preview && <audio src={preview} controls className="h-9" />}
@@ -86,11 +91,15 @@ export function OverlaySettingsForm({
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
                   if (!f) return;
+                  e.target.value = "";
                   setSoundBusy(true);
+                  setSoundErr(null);
                   try {
                     const path = await uploadPublicMedia(supabase, userId, f, "sounds");
                     setSoundPath(path);
                     setPreview(URL.createObjectURL(f));
+                  } catch (err) {
+                    setSoundErr(errorText((err as Error).message, d));
                   } finally {
                     setSoundBusy(false);
                   }
@@ -163,7 +172,7 @@ export function OverlaySettingsForm({
           {pending ? d.common.loading : d.common.save}
         </Button>
         {state.ok && !pending && <span className="font-display text-leaf">✓ {d.common.saved}</span>}
-        {state.error && <span className="text-tomato">{d.common.error} ({state.error})</span>}
+        {state.error && <span className="text-tomato">{errorText(state.error, d)}</span>}
       </div>
     </form>
   );
@@ -196,8 +205,12 @@ function TtsTest({ voice, official }: { voice: string; official: boolean }) {
         </Button>
         {result?.ok && <span className="font-display text-sm text-leaf">✓ {d.overlay.ttsTestOk}</span>}
         {result && !result.ok && (
-          <span className="text-sm text-tomato">
-            {d.overlay.ttsTestFailed} <span className="font-mono text-xs opacity-70">({result.error})</span>
+          // The provider's error is for us, not the streamer: keep it in the tooltip.
+          <span className="text-sm text-tomato" title={result.error}>
+            {d.overlay.ttsTestFailed}{" "}
+            <Link href="/dashboard/app" className="font-display text-teal underline">
+              {d.overlay.ttsUseApp}
+            </Link>
           </span>
         )}
       </div>

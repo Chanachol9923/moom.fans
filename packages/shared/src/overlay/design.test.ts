@@ -83,6 +83,13 @@ describe("media and CSS", () => {
 });
 
 describe("parseLook", () => {
+  it("positions and zooms the behind-text picture within bounds", () => {
+    expect(parseLook({ imageX: 20, imageY: 80, imageZoom: 1.5 })).toMatchObject({ imageX: 20, imageY: 80, imageZoom: 1.5 });
+    expect(parseLook({ imageX: -5, imageY: 250, imageZoom: 9 })).toMatchObject({ imageX: 0, imageY: 100, imageZoom: 4 });
+    // Looks saved before these existed show the picture centred and unzoomed.
+    expect(parseLook({ layout: "background" })).toMatchObject({ imageX: 50, imageY: 50, imageZoom: 1 });
+  });
+
   it("keeps valid looks and clamps or replaces bad values", () => {
     expect(parseLook(LOOK_PRESETS.hype)).toEqual(LOOK_PRESETS.hype);
     const l = parseLook({ layout: "diagonal", scale: 9, width: 10, colors: { bg: "red", bgAlpha: 150, name: "#ABCDEF" } });

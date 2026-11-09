@@ -4,6 +4,7 @@ import { Button, Field, Input, Panel, buttonClass } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { deleteAccount } from "../more-actions";
+import { isNextControl } from "@/lib/errors";
 
 export function AccountPanel({ slug }: { slug: string }) {
   const { d } = useT();
@@ -30,8 +31,13 @@ export function AccountPanel({ slug }: { slug: string }) {
           onClick={() =>
             start(async () => {
               // On success the action redirects away; it only returns on failure.
-              const r = await deleteAccount(confirm);
-              if (r && !r.ok) setError(true);
+              try {
+                const r = await deleteAccount(confirm);
+                if (r && !r.ok) setError(true);
+              } catch (e) {
+                if (isNextControl(e)) throw e;
+                setError(true);
+              }
             })
           }
         >

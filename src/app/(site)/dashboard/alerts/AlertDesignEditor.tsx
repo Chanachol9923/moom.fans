@@ -243,7 +243,7 @@ function TierCard({
   };
 
   return (
-    <div className="px-frame grid gap-4 bg-paper-2 p-4 lg:grid-cols-[1fr_minmax(0,420px)]">
+    <div className="px-frame grid gap-4 bg-paper-2 p-4 lg:grid-cols-[1fr_minmax(0,420px)] xl:grid-cols-1">
       <div>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className="bg-ink px-2 py-0.5 font-display text-sm text-paper">
@@ -416,7 +416,7 @@ function TierCard({
         {uploadError && <p className="text-sm text-tomato">{d.design.uploadFailed}</p>}
       </div>
 
-      <div className="self-start lg:sticky lg:top-4">
+      <div className="self-start lg:sticky lg:top-4 xl:static">
         <div className="flex items-end justify-between">
           <div className="px-label">{d.design.preview}</div>
           <Button size="sm" variant="ghost" onClick={() => setReplays((n) => n + 1)}>

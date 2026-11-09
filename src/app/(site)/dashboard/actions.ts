@@ -20,6 +20,7 @@ import { isTtsVoice } from "@/lib/tts/types";
 import { ttsProvider } from "@/lib/tts";
 import { isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
 import { MAX_CSS, parseGifs, parseStoredTiers } from "@moom/shared/overlay/design";
+import { dbError } from "@/lib/action-error";
 
 /** Storage keys we generate only ever contain these characters. */
 const SAFE_PATH = /^[\w\-./]+$/;
@@ -120,7 +121,7 @@ export async function saveAlertDesign(tiers: unknown, css: string): Promise<Save
     .update({ alert_tiers: clean as unknown as Json, custom_css: String(css ?? "").slice(0, MAX_CSS) })
     .eq("streamer_id", profile.id);
   // 42703 / PGRST204: the columns don't exist yet (migration not applied on this database).
-  if (error) return { ok: false, error: error.code === "42703" || error.code === "PGRST204" ? "not_ready" : error.message };
+  if (error) return { ok: false, error: dbError("alerts", error) };
   await notifyOverlay(await channelOf(profile.id), { type: "config" });
   revalidatePath("/dashboard/alerts");
   return { ok: true };
@@ -135,7 +136,8 @@ export async function testTts(voice: string): Promise<{ ok: true; audio: string 
     const mp3 = await ttsProvider().synthesize({ text: d.overlay.ttsTestLine, voice });
     return { ok: true, audio: `data:audio/mpeg;base64,${mp3.toString("base64")}` };
   } catch (e) {
-    return { ok: false, error: (e as Error).message.slice(0, 120) };
+    console.error("[tts test]", (e as Error).message);
+    return { ok: false, error: "tts_unavailable" };
   }
 }
 
@@ -149,7 +151,7 @@ export async function saveAlertGifs(gifs: unknown, minAmount: number): Promise<S
     .from("overlay_settings")
     .update({ alert_gifs: clean as unknown as Json, gif_min_amount: min })
     .eq("streamer_id", profile.id);
-  if (error) return { ok: false, error: error.code === "42703" || error.code === "PGRST204" ? "not_ready" : error.message };
+  if (error) return { ok: false, error: dbError("alerts", error) };
   // Files taken out of the list are only ever used by it, so remove them from storage.
   const kept = new Set(clean.map((g) => g.path));
   const dropped = parseGifs(before?.alert_gifs, `${profile.id}/`)
@@ -237,7 +239,7 @@ export async function saveOverlaySettings(_prev: SaveResult, form: FormData): Pr
     .from("overlay_settings")
     .update({ ...settings, position: settings.position as OverlayPosition, ...sound })
     .eq("streamer_id", profile.id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError("dashboard", error) };
   const words = blocked_words
     .split(/\r?\n/)
     .map((w) => w.trim())
@@ -323,7 +325,7 @@ export async function saveProfile(_prev: SaveResult, form: FormData): Promise<Sa
       ...(own(v.banner_path) !== undefined ? { banner_path: own(v.banner_path) } : {}),
     })
     .eq("id", profile.id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError("dashboard", error) };
 
   const ppId = normalizePromptPayId(v.promptpay);
   const ppType = detectPromptPayType(ppId);
@@ -356,7 +358,7 @@ export async function createProduct(_prev: SaveResult & { id?: string }, form: F
     .insert({ ...v.data, streamer_id: profile.id })
     .select("id")
     .single();
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: dbError("dashboard", error) };
   revalidatePath("/dashboard/products");
   return { ok: true, id: data.id };
 }

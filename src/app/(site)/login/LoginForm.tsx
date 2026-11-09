@@ -4,6 +4,9 @@ import { Button, Field, Input } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { sendMagicLink, signInWithProvider, type LoginState } from "./actions";
+import { guardForm } from "@/lib/errors";
+
+const send = guardForm(sendMagicLink, (prev): LoginState => ({ ...prev, status: "error" }));
 
 export function LoginForm({
   discord,
@@ -18,7 +21,7 @@ export function LoginForm({
   next: string | null;
 }) {
   const { d } = useT();
-  const [state, action, pending] = useActionState<LoginState, FormData>(sendMagicLink, { status: "idle" });
+  const [state, action, pending] = useActionState<LoginState, FormData>(send, { status: "idle" });
 
   if (state.status === "sent") {
     return (

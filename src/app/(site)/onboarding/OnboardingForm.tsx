@@ -4,6 +4,10 @@ import { Button, Field, Input, Tag } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { detectPromptPayType, formatPromptPayId, isValidNationalId, normalizePromptPayId } from "@/lib/promptpay";
 import { checkSlug, createCorner, type OnboardingState, type SlugCheck } from "./actions";
+import { guardForm } from "@/lib/errors";
+
+// The typed values live in component state, so a failed request loses nothing.
+const create = guardForm(createCorner, (prev): OnboardingState => ({ ...prev, errors: { form: "network" } }));
 
 /** A link name from a display name, when it has Latin letters to work with. */
 function suggestSlug(name: string): string {
@@ -20,7 +24,7 @@ function suggestSlug(name: string): string {
 export function OnboardingForm({ before, after }: { before: string; after: string }) {
   const { d } = useT();
   const O = d.onboarding;
-  const [state, action, pending] = useActionState<OnboardingState, FormData>(createCorner, {});
+  const [state, action, pending] = useActionState<OnboardingState, FormData>(create, {});
   const [name, setName] = useState(state.values?.displayName ?? "");
   const [slug, setSlug] = useState(state.values?.slug ?? "");
   // Follow the display name until the streamer types a link name themselves.
@@ -114,7 +118,7 @@ export function OnboardingForm({ before, after }: { before: string; after: strin
         )}
       </Field>
       <p className="mb-3 text-sm text-ink-faint">{O.promptpayPrivacy}</p>
-      {e.form && <p className="mb-3 text-tomato">{d.common.error}</p>}
+      {e.form && <p className="mb-3 text-tomato">{e.form === "network" ? d.common.errNetwork : d.common.error}</p>}
       <Button type="submit" variant="primary" className="w-full" disabled={pending}>
         {pending ? d.common.loading : O.submit}
       </Button>

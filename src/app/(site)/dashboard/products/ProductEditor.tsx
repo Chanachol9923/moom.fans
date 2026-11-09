@@ -5,6 +5,7 @@ import { Button, Field, Input, Panel, Tag, Textarea } from "@moom/shared/ui/kit"
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import type { ProductRow } from "@/lib/supabase/database.types";
+import { errorText, guardForm } from "@/lib/errors";
 import { uploadPublicMedia, uploadToSigned, type SupabasePublic } from "@/lib/upload-client";
 import {
   attachProductMedia,
@@ -22,11 +23,14 @@ export function NewProduct() {
   const { d } = useT();
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState<SaveResult & { id?: string }, FormData>(
-    async (prev, form) => {
-      const r = await createProduct(prev, form);
-      if (r?.ok) setOpen(false);
-      return r ?? prev;
-    },
+    guardForm<SaveResult & { id?: string }>(
+      async (prev, form) => {
+        const r = await createProduct(prev, form);
+        if (r?.ok) setOpen(false);
+        return r ?? prev;
+      },
+      (): SaveResult & { id?: string } => ({ ok: false, error: "network" }),
+    ),
     { ok: false },
   );
   if (!open) {
@@ -59,7 +63,7 @@ export function NewProduct() {
           <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
             {d.common.cancel}
           </Button>
-          {state.error && <span className="self-center text-tomato">{d.common.error}</span>}
+          {state.error && <span className="self-center text-tomato">{errorText(state.error, d)}</span>}
         </div>
       </form>
     </Panel>
@@ -103,7 +107,8 @@ export function ProductEditor({
       }
       router.refresh();
     } catch (e) {
-      setError((e as Error).message);
+      // Upload helpers throw an ErrorCode; the attach actions can fail on the network.
+      setError(errorText((e as Error).message, d));
     } finally {
       setBusy(null);
     }

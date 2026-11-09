@@ -20,23 +20,41 @@ export function LookEditor({
   const { d } = useT();
   const L = d.design.look;
   const set = (patch: Partial<AlertLook>) => onChange({ ...look, ...patch });
-  const color = (k: keyof AlertLook["colors"], v: string | number) => onChange({ ...look, colors: { ...look.colors, [k]: v } });
+  const color = (k: keyof AlertLook["colors"], v: string | number) =>
+    onChange({ ...look, colors: { ...look.colors, [k]: v } });
 
   return (
     <div className="grid gap-3">
       <div>
         <div className="px-label">{L.presets}</div>
         <div className="flex flex-wrap gap-1.5">
-          {(Object.keys(LOOK_PRESETS) as Array<keyof typeof LOOK_PRESETS>).map((k) => (
-            <Button key={k} size="sm" variant="ghost" onClick={() => onChange(LOOK_PRESETS[k])}>
-              {L.presetNames[k]}
-            </Button>
-          ))}
+          {(Object.keys(LOOK_PRESETS) as Array<keyof typeof LOOK_PRESETS>).map(
+            (k) => (
+              <Button
+                key={k}
+                size="sm"
+                variant="ghost"
+                onClick={() => onChange(LOOK_PRESETS[k])}
+              >
+                {L.presetNames[k]}
+              </Button>
+            ),
+          )}
         </div>
       </div>
 
-      <Choice label={L.layout} value={look.layout} options={L.layouts} onChange={(layout) => set({ layout })} />
-      <Choice label={L.align} value={look.align} options={L.aligns} onChange={(align) => set({ align })} />
+      <Choice
+        label={L.layout}
+        value={look.layout}
+        options={L.layouts}
+        onChange={(layout) => set({ layout })}
+      />
+      <Choice
+        label={L.align}
+        value={look.align}
+        options={L.aligns}
+        onChange={(align) => set({ align })}
+      />
       <div className="grid gap-x-4 sm:grid-cols-2">
         <div className="mb-2">
           <label className="px-label" htmlFor={`font-title-${look.layout}`}>
@@ -63,14 +81,50 @@ export function LookEditor({
           />
         </div>
       </div>
-      {!brandFont && <p className="-mt-1 text-xs text-ink-faint">{L.brandHint}</p>}
-      <Choice label={L.frame} value={look.frame} options={L.frames} onChange={(frame) => set({ frame })} />
-      <Choice label={L.shadow} value={look.shadow} options={L.shadows} onChange={(shadow) => set({ shadow })} />
+      {!brandFont && (
+        <p className="-mt-1 text-xs text-ink-faint">{L.brandHint}</p>
+      )}
+      <Choice
+        label={L.frame}
+        value={look.frame}
+        options={L.frames}
+        onChange={(frame) => set({ frame })}
+      />
+      <Choice
+        label={L.shadow}
+        value={look.shadow}
+        options={L.shadows}
+        onChange={(shadow) => set({ shadow })}
+      />
 
       <div className="grid gap-x-4 sm:grid-cols-2">
-        <Slider label={L.weight} value={look.weight} min={300} max={900} step={100} show={String(look.weight)} onChange={(weight) => set({ weight })} />
-        <Slider label={L.scale} value={look.scale} min={0.6} max={2.5} step={0.05} show={`${Math.round(look.scale * 100)}%`} onChange={(scale) => set({ scale })} />
-        <Slider label={L.width} value={look.width} min={240} max={1600} step={10} show={`${look.width}px`} onChange={(width) => set({ width })} />
+        <Slider
+          label={L.weight}
+          value={look.weight}
+          min={300}
+          max={900}
+          step={100}
+          show={String(look.weight)}
+          onChange={(weight) => set({ weight })}
+        />
+        <Slider
+          label={L.scale}
+          value={look.scale}
+          min={0.6}
+          max={2.5}
+          step={0.05}
+          show={`${Math.round(look.scale * 100)}%`}
+          onChange={(scale) => set({ scale })}
+        />
+        <Slider
+          label={L.width}
+          value={look.width}
+          min={240}
+          max={1600}
+          step={10}
+          show={`${look.width}px`}
+          onChange={(width) => set({ width })}
+        />
         {look.layout !== "text" && (
           <Slider
             label={L.imageSize}
@@ -82,8 +136,56 @@ export function LookEditor({
             onChange={(imageSize) => set({ imageSize })}
           />
         )}
+        {look.layout === "background" && (
+          <>
+            <Slider
+              label={L.imageX}
+              value={look.imageX}
+              min={0}
+              max={100}
+              step={1}
+              show={`${look.imageX}%`}
+              onChange={(imageX) => set({ imageX })}
+            />
+            <Slider
+              label={L.imageY}
+              value={look.imageY}
+              min={0}
+              max={100}
+              step={1}
+              show={`${look.imageY}%`}
+              onChange={(imageY) => set({ imageY })}
+            />
+            <Slider
+              label={L.imageZoom}
+              value={look.imageZoom}
+              min={1}
+              max={4}
+              step={0.05}
+              show={`${Math.round(look.imageZoom * 100)}%`}
+              onChange={(imageZoom) => set({ imageZoom })}
+            />
+            <div className="flex items-end pb-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => set({ imageX: 50, imageY: 50, imageZoom: 1 })}
+              >
+                {L.imageReset}
+              </Button>
+            </div>
+          </>
+        )}
         {look.frame === "rounded" && (
-          <Slider label={L.radius} value={look.radius} min={0} max={60} step={1} show={`${look.radius}px`} onChange={(radius) => set({ radius })} />
+          <Slider
+            label={L.radius}
+            value={look.radius}
+            min={0}
+            max={60}
+            step={1}
+            show={`${look.radius}px`}
+            onChange={(radius) => set({ radius })}
+          />
         )}
         <Slider
           label={L.bgAlpha}
@@ -99,23 +201,33 @@ export function LookEditor({
       <div>
         <div className="px-label">{L.colors}</div>
         <div className="flex flex-wrap gap-3">
-          {(["bg", "border", "text", "name", "amount", "message"] as const).map((k) => (
-            <label key={k} className="flex items-center gap-1.5 text-sm">
-              <input
-                type="color"
-                value={look.colors[k]}
-                onChange={(e) => color(k, e.target.value)}
-                className="h-8 w-10 cursor-pointer border-[3px] border-ink bg-paper"
-              />
-              {L.colorNames[k]}
-            </label>
-          ))}
+          {(["bg", "border", "text", "name", "amount", "message"] as const).map(
+            (k) => (
+              <label key={k} className="flex items-center gap-1.5 text-sm">
+                <input
+                  type="color"
+                  value={look.colors[k]}
+                  onChange={(e) => color(k, e.target.value)}
+                  className="h-8 w-10 cursor-pointer border-[3px] border-ink bg-paper"
+                />
+                {L.colorNames[k]}
+              </label>
+            ),
+          )}
         </div>
       </div>
 
       <div className="flex flex-wrap gap-x-5">
-        <Check label={L.outline} checked={look.outline} onChange={(e) => set({ outline: e.target.checked })} />
-        <Check label={L.showBar} checked={look.showBar} onChange={(e) => set({ showBar: e.target.checked })} />
+        <Check
+          label={L.outline}
+          checked={look.outline}
+          onChange={(e) => set({ outline: e.target.checked })}
+        />
+        <Check
+          label={L.showBar}
+          checked={look.showBar}
+          onChange={(e) => set({ showBar: e.target.checked })}
+        />
       </div>
     </div>
   );
@@ -143,7 +255,10 @@ function Choice<T extends string>({
             role="radio"
             aria-checked={value === k}
             onClick={() => onChange(k)}
-            className={cx("px-btn px-btn-sm", value === k ? "px-btn-primary" : "px-btn-ghost")}
+            className={cx(
+              "px-btn px-btn-sm",
+              value === k ? "px-btn-primary" : "px-btn-ghost",
+            )}
           >
             {options[k]}
           </button>

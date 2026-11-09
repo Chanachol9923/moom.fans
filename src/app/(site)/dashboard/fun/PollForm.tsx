@@ -3,10 +3,13 @@ import { useActionState } from "react";
 import { Button, Field, Input, Select, Textarea } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { startPoll } from "../more-actions";
+import { errorText, guardForm } from "@/lib/errors";
+
+const save = guardForm(startPoll, () => ({ ok: false, error: "network" }));
 
 export function PollForm() {
   const { d } = useT();
-  const [state, action, pending] = useActionState(startPoll, { ok: false });
+  const [state, action, pending] = useActionState(save, { ok: false });
   return (
     <form action={action} key={state.ok ? "done" : "form"} className="grid gap-x-5 sm:grid-cols-2">
       <div>
@@ -27,7 +30,7 @@ export function PollForm() {
         <Button type="submit" variant="primary" disabled={pending}>
           {pending ? d.common.loading : d.fun.pollStart}
         </Button>
-        {state.error && <span className="text-tomato">{d.common.error}</span>}
+        {state.error && <span className="text-tomato">{errorText(state.error, d)}</span>}
       </div>
     </form>
   );

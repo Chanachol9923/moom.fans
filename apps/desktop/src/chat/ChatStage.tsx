@@ -43,7 +43,7 @@ export function ChatStage({
       }
       data-look={s.look}
     >
-      {href && <link rel="stylesheet" href={href} precedence="default" />}
+      {href && <link key={href} rel="stylesheet" href={href} />}
       {brand && <style>{brand}</style>}
       {s.css && <style>{s.css}</style>}
       {shown.map((l) => (
