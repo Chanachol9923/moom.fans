@@ -21,7 +21,8 @@ export type StoreProduct = {
 export type StoreLink = { label: string; url: string };
 
 /** A GIF the supporter can pick to show with their alert. */
-export type StoreGif = { id: string; url: string; kind: "image" | "video"; label: string };
+/** `min` is the smallest tip that may pick this GIF (its own, or the overall one). */
+export type StoreGif = { id: string; url: string; kind: "image" | "video"; label: string; min: number };
 
 export type Store = {
   slug: string;
@@ -114,7 +115,7 @@ export const loadStore = cache(async (slug: string, locale: Locale): Promise<Sto
     gifs: parseGifs(s?.alert_gifs, `${p.id}/`).flatMap((g): StoreGif[] => {
       const url = publicMediaUrl(g.path);
       const kind = mediaKindOf(g.path);
-      return url && kind ? [{ id: g.id, url, kind, label: g.label }] : [];
+      return url && kind ? [{ id: g.id, url, kind, label: g.label, min: g.min ?? Number(s?.gif_min_amount ?? 0) }] : [];
     }),
     gifMin: Number(s?.gif_min_amount ?? 0),
     brandFontUrl: page.brandFontPath?.startsWith(`${p.id}/`) ? publicMediaUrl(page.brandFontPath) : null,

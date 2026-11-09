@@ -33,7 +33,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
       : null;
 
   // Picking a GIF may need a bigger tip; below that the choice is kept but not sent.
-  const gifAllowed = typeof total === "number" && total >= store.gifMin;
+  const canPick = (g: { min: number }) => typeof total === "number" && total >= g.min;
 
   async function submit(form: FormData) {
     if (preview) return;
@@ -54,7 +54,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
         anonymous,
         showOnWall: form.get("showOnWall") === "on",
         pollOption: vote ?? undefined,
-        gifId: gifAllowed && gifId ? gifId : undefined,
+        gifId: gifId && store.gifs.some((g) => g.id === gifId && canPick(g)) ? gifId : undefined,
         website: form.get("website"),
       }),
     }).catch(() => null);
@@ -184,7 +184,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
       )}
 
       {store.gifs.length > 0 && (
-        <GifPicker gifs={store.gifs} value={gifId} onChange={setGifId} min={store.gifMin} allowed={gifAllowed} />
+        <GifPicker gifs={store.gifs} value={gifId} onChange={setGifId} min={Math.min(...store.gifs.map((g) => g.min))} canPick={canPick} />
       )}
 
       {store.media && (
@@ -229,13 +229,13 @@ function GifPicker({
   value,
   onChange,
   min,
-  allowed,
+  canPick,
 }: {
   gifs: Store["gifs"];
   value: string | null;
   onChange: (id: string | null) => void;
   min: number;
-  allowed: boolean;
+  canPick: (g: { min: number }) => boolean;
 }) {
   const { d, locale } = useT();
   return (
@@ -244,7 +244,7 @@ function GifPicker({
       <p className="mb-1.5 text-xs text-ink-faint">
         {min > 0 ? fmt(d.store.gifMin, { amount: formatBaht(min, locale) }) : d.store.gifHint}
       </p>
-      <div className={`grid grid-cols-4 gap-1.5 @min-[40rem]:grid-cols-5 ${allowed ? "" : "opacity-50"}`} role="radiogroup">
+      <div className="grid grid-cols-4 gap-1.5 @min-[40rem]:grid-cols-5" role="radiogroup">
         <button
           type="button"
           role="radio"
@@ -262,9 +262,9 @@ function GifPicker({
             aria-checked={value === g.id}
             aria-label={g.label || d.store.gifPick}
             title={g.label || undefined}
-            disabled={!allowed}
+            disabled={!canPick(g)}
             onClick={() => onChange(g.id)}
-            className={`relative aspect-square overflow-hidden bg-paper-2 ${value === g.id ? "outline-[3px] outline-accent" : "outline-[3px] outline-transparent hover:outline-paper-3"}`}
+            className={`relative aspect-square overflow-hidden bg-paper-2 disabled:opacity-40 ${value === g.id ? "outline-[3px] outline-accent" : "outline-[3px] outline-transparent hover:outline-paper-3"}`}
           >
             {g.kind === "video" ? (
               <video src={g.url} className="size-full object-contain" autoPlay muted loop playsInline preload="metadata" />
@@ -272,8 +272,11 @@ function GifPicker({
               // eslint-disable-next-line @next/next/no-img-element -- streamer uploads, any size or animation
               <img src={g.url} alt="" loading="lazy" className="size-full object-contain" />
             )}
-            {g.label && (
-              <span className="absolute inset-x-0 bottom-0 truncate bg-ink/70 px-1 text-[10px] text-paper">{g.label}</span>
+            {(g.label || g.min > min) && (
+              <span className="absolute inset-x-0 bottom-0 truncate bg-ink/70 px-1 text-[10px] text-paper">
+                {g.min > min ? `฿${g.min} · ` : ""}
+                {g.label}
+              </span>
             )}
           </button>
         ))}

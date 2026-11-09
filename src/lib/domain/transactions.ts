@@ -122,9 +122,9 @@ export async function createTransaction(slug: string, input: CreateTxInput) {
         .select("alert_gifs, gif_min_amount")
         .eq("streamer_id", profile.id)
         .single();
-      const listed = parseGifs(g?.alert_gifs).some((x) => x.id === input.gifId);
-      // Removed since the page loaded, or the tip is below the streamer's minimum for picking.
-      if (!g || !listed || amount < Number(g.gif_min_amount)) throw new TxError("gif_unavailable");
+      const picked = parseGifs(g?.alert_gifs).find((x) => x.id === input.gifId);
+      // Removed since the page loaded, or the tip is below that GIF's minimum (its own or the overall one).
+      if (!g || !picked || amount < (picked.min ?? Number(g.gif_min_amount))) throw new TxError("gif_unavailable");
       alert_gif = input.gifId;
     }
     let media_url: string | null = null;

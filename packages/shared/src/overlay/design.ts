@@ -141,7 +141,8 @@ export function parseLook(v: unknown): AlertLook | null {
 
 // ---- GIFs the supporter can pick ----------------------------------------------------
 
-export type StoredGif = { id: string; path: string; label: string };
+/** `min`: this GIF's own smallest tip; null = the overall minimum. */
+export type StoredGif = { id: string; path: string; label: string; min: number | null };
 
 export function newGifId(): string {
   return Math.random().toString(36).slice(2, 10).padEnd(8, "0");
@@ -161,7 +162,13 @@ export function parseGifs(v: unknown, ownerPrefix?: string): StoredGif[] {
     if (!GIF_ID.test(id) || seen.has(id)) continue;
     if (!/^[\w\-./]{1,300}$/.test(path) || path.includes("..") || (ownerPrefix && !path.startsWith(ownerPrefix))) continue;
     seen.add(id);
-    out.push({ id, path, label: typeof g.label === "string" ? g.label.trim().slice(0, 40) : "" });
+    const min = g.min === null || g.min === undefined || g.min === "" ? null : Number(g.min);
+    out.push({
+      id,
+      path,
+      label: typeof g.label === "string" ? g.label.trim().slice(0, 40) : "",
+      min: min !== null && Number.isFinite(min) && min >= 0 ? Math.min(1_000_000, Math.round(min * 100) / 100) : null,
+    });
   }
   return out;
 }

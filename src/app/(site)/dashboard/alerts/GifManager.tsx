@@ -51,7 +51,7 @@ export function GifManager({
         const path = await uploadPublicMedia(supabase, userId, f, "gifs");
         setUrls((u) => ({ ...u, [path]: URL.createObjectURL(f) }));
         const label = f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").slice(0, 40);
-        setGifs((g) => (g.length >= MAX_GIFS ? g : [...g, { id: newGifId(), path, label }]));
+        setGifs((g) => (g.length >= MAX_GIFS ? g : [...g, { id: newGifId(), path, label, min: null }]));
       } catch (e) {
         const code = (e as Error).message;
         bad.push(`${f.name}: ${code === "too_big" ? G.tooBig : errorText(code, d)}`);
@@ -128,6 +128,22 @@ export function GifManager({
                       <img src={url} alt="" className="size-full object-contain" />
                     ))}
                 </div>
+                <Input
+                  type="number"
+                  min={0}
+                  step="1"
+                  value={g.min ?? ""}
+                  placeholder={G.ownMinPlaceholder}
+                  aria-label={G.ownMin}
+                  title={G.ownMin}
+                  className="mt-2 text-sm"
+                  onChange={(e) => {
+                    dirty();
+                    const v = e.target.value;
+                    const min = v === "" ? null : Math.max(0, Number(v) || 0);
+                    setGifs((all) => all.map((x, j) => (j === i ? { ...x, min } : x)));
+                  }}
+                />
                 <Input
                   value={g.label}
                   maxLength={40}

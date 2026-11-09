@@ -837,6 +837,8 @@ export const en: Dict = {
       min: "Smallest tip that can pick",
       hint: "GIF, WebP, PNG or WebM up to 5 MB each. Small files load fast on phones. A transparent WebM looks best on stream.",
       label: "Name (optional)",
+      ownMin: "Smallest tip for this GIF (baht)",
+      ownMinPlaceholder: "Min, empty = overall",
       empty: "No GIFs yet. The tip page won't show a GIF picker.",
       tooBig: "bigger than 5 MB",
       tooMany: "Only {max} GIFs fit; the rest were skipped.",

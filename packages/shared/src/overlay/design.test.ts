@@ -110,8 +110,8 @@ describe("parseGifs", () => {
       `${UID}/`,
     );
     expect(list).toEqual([
-      { id: "gif00001", path: `${UID}/gifs/1.gif`, label: "cat 1" },
-      { id: "gif00002", path: `${UID}/gifs/2.gif`, label: "cat 2" },
+      { id: "gif00001", path: `${UID}/gifs/1.gif`, label: "cat 1", min: null },
+      { id: "gif00002", path: `${UID}/gifs/2.gif`, label: "cat 2", min: null },
     ]);
     expect(parseGifs(Array.from({ length: 30 }, (_, i) => own(i)), `${UID}/`)).toHaveLength(MAX_GIFS);
   });
