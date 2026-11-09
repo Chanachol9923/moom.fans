@@ -3,19 +3,26 @@ import type { ReactNode } from "react";
 import type { AlertLook } from "@moom/shared/alerts";
 import { useT } from "@moom/shared/i18n/react";
 import { LOOK_PRESETS } from "@moom/shared/overlay/design";
+import type { SavedPreset } from "@moom/shared/presets";
 import { Button, Check, cx } from "@moom/shared/ui/kit";
 import { FontPicker } from "@moom/shared/ui/FontPicker";
+import { PresetBar } from "../PresetBar";
 
 /** No-code controls for one tier's look. Every change shows in the preview next to it. */
 export function LookEditor({
   look,
   onChange,
   brandFont,
+  presets,
+  onPresets,
 }: {
   look: AlertLook;
   onChange: (l: AlertLook) => void;
   /** A brand font has been uploaded in Page design. */
   brandFont: boolean;
+  /** The account's saved looks, shared by every tier. */
+  presets: SavedPreset[];
+  onPresets: (all: SavedPreset[]) => void;
 }) {
   const { d } = useT();
   const L = d.design.look;
@@ -25,23 +32,14 @@ export function LookEditor({
 
   return (
     <div className="grid gap-3">
-      <div>
-        <div className="px-label">{L.presets}</div>
-        <div className="flex flex-wrap gap-1.5">
-          {(Object.keys(LOOK_PRESETS) as Array<keyof typeof LOOK_PRESETS>).map(
-            (k) => (
-              <Button
-                key={k}
-                size="sm"
-                variant="ghost"
-                onClick={() => onChange(LOOK_PRESETS[k])}
-              >
-                {L.presetNames[k]}
-              </Button>
-            ),
-          )}
-        </div>
-      </div>
+      <PresetBar
+        kind="alert"
+        builtins={(Object.keys(LOOK_PRESETS) as Array<keyof typeof LOOK_PRESETS>).map((k) => ({ name: L.presetNames[k], look: LOOK_PRESETS[k] }))}
+        saved={presets}
+        onSaved={onPresets}
+        current={look}
+        onApply={onChange}
+      />
 
       <Choice
         label={L.layout}
@@ -233,7 +231,7 @@ export function LookEditor({
   );
 }
 
-function Choice<T extends string>({
+export function Choice<T extends string>({
   label,
   value,
   options,
@@ -268,7 +266,7 @@ function Choice<T extends string>({
   );
 }
 
-function Slider({
+export function Slider({
   label,
   value,
   min,

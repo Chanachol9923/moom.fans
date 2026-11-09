@@ -1,3 +1,4 @@
+import type { GoalLook } from "@moom/shared/goal-look";
 import type { Locale } from "@moom/shared/i18n";
 
 // Client-safe types for the OBS widgets (/widget/<token>/<kind>).
@@ -26,6 +27,8 @@ export type WidgetData = {
   showAmounts: boolean;
   topPeriod: "30d" | "all";
   goal: { title: string; raised: number; target: number; endsAt: string | null } | null;
+  /** Designed in the dashboard; null = the classic pixel bar. */
+  goalLook: GoalLook | null;
   recent: Array<{ name: string; amount: number; at: string }>;
   top: Array<{ name: string; total: number }>;
   poll: { title: string; options: string[]; totals: number[]; weightBy: "amount" | "count" } | null;

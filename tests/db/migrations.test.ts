@@ -352,6 +352,23 @@ describe("alert design", () => {
     expect(r.rows[0].ok).toBe(true);
   });
 
+  it("bounds widget looks and saved presets", async () => {
+    const r = await db.query<{ widget_looks: unknown; look_presets: unknown }>(
+      `select widget_looks, look_presets from public.overlay_settings where streamer_id = '${ALICE}'`,
+    );
+    expect(r.rows[0]).toEqual({ widget_looks: {}, look_presets: [] });
+    await expect(db.exec(`update public.overlay_settings set widget_looks = '[]' where streamer_id = '${ALICE}'`)).rejects.toThrow();
+    const many = JSON.stringify(Array.from({ length: 49 }, (_, i) => ({ id: `p${i}aaaaa`, kind: "goal", name: "x", look: {} })));
+    await expect(db.exec(`update public.overlay_settings set look_presets = '${many}' where streamer_id = '${ALICE}'`)).rejects.toThrow();
+    await as("authenticated", ALICE, () =>
+      db.exec(`update public.overlay_settings set widget_looks = '{"goal":{"bar":"thin"}}'`),
+    );
+    const mine = await db.query<{ streamer_id: string; widget_looks: unknown }>(`select streamer_id, widget_looks from public.overlay_settings`);
+    expect(mine.rows.find((x) => x.streamer_id === ALICE)?.widget_looks).toEqual({ goal: { bar: "thin" } });
+    expect(mine.rows.find((x) => x.streamer_id === BOB)?.widget_looks).toEqual({});
+    await db.exec(`update public.overlay_settings set widget_looks = '{}'`);
+  });
+
   it("accepts short videos in public media", async () => {
     const r = await db.query<{ ok: boolean }>(
       `select 'video/webm' = any(allowed_mime_types) as ok from storage.buckets where id = 'public-media'`,

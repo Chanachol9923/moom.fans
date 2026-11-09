@@ -10,6 +10,7 @@ export function sampleWidgetData(locale: Locale): WidgetData {
     showAmounts: true,
     topPeriod: "30d",
     goal: { title: th ? "ไมค์ตัวใหม่" : "New microphone", raised: 2730, target: 4500, endsAt: null },
+    goalLook: null,
     recent: [
       { name: th ? "นกกระจอก" : "sparrow", amount: 50, at: "" },
       { name: th ? "แมวส้ม" : "orange cat", amount: 199, at: "" },

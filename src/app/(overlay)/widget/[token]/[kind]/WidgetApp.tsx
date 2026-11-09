@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
+import { googleFontsHref } from "@moom/shared/fonts";
 import { GoalBar } from "@moom/shared/ui/GoalBar";
 import { isOverlayEvent } from "@moom/shared/alerts";
 import { formatBaht, getDict } from "@moom/shared/i18n";
@@ -37,20 +38,37 @@ export function WidgetApp({ token, kind, initial, demo = false }: { token: strin
     };
   }, [demo, token, initial.realtime]);
 
-  const d = getDict(data.locale);
   return (
     <div className="h-dvh w-dvw overflow-hidden p-3 text-[18px]" style={{ ["--accent" as string]: data.accent }}>
-      {kind === "goal" && data.goal && (
-        <div className="px-frame px-frame-raised bg-paper p-3">
-          <GoalBar {...data.goal} accent={data.accent} d={d} locale={data.locale} />
-        </div>
-      )}
+      {kind === "goal" && data.goal && <GoalWidget data={data} goal={data.goal} />}
       {kind === "recent" && <Ticker data={data} />}
       {kind === "top" && <Top data={data} />}
       {kind === "qr" && <Qr data={data} />}
       {kind === "poll" && data.poll && <Poll data={data} />}
       {kind === "subathon" && <Subathon data={data} />}
     </div>
+  );
+}
+
+function GoalWidget({ data, goal }: { data: WidgetData; goal: NonNullable<WidgetData["goal"]> }) {
+  const d = getDict(data.locale);
+  const l = data.goalLook;
+  if (!l) {
+    return (
+      <div className="px-frame px-frame-raised bg-paper p-3">
+        <GoalBar {...goal} accent={data.accent} d={d} locale={data.locale} />
+      </div>
+    );
+  }
+  const fonts = googleFontsHref([l.font, l.numFont]);
+  return (
+    <>
+      {/* Plain links: `precedence` would hold the widget back until the font loads. */}
+      {fonts && <link key={fonts} rel="stylesheet" href={fonts} />}
+      {/* Already escaped by parseGoalLook. Only ever rendered on this OBS page. */}
+      {l.css && <style>{l.css}</style>}
+      <GoalBar {...goal} accent={data.accent} d={d} locale={data.locale} look={l} />
+    </>
   );
 }
 

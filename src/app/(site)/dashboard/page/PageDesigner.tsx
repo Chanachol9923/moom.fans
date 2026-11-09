@@ -274,6 +274,7 @@ export function PageDesigner({
           </Field>
         </Panel>
 
+        <div id="wall" className="scroll-mt-4" />
         <Panel title={d.page.wall}>
           <Check checked={cfg.wall.showAmounts} onChange={(e) => set("wall", { ...cfg.wall, showAmounts: e.target.checked })} label={d.page.showAmounts} />
           <div className="grid grid-cols-3 gap-3">

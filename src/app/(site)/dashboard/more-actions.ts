@@ -13,6 +13,8 @@ import { removeObjects } from "@/lib/storage.server";
 import { admin } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/database.types";
 import { WheelSchema } from "@moom/shared/wheel";
+import { parseGoalLook } from "@moom/shared/goal-look";
+import { MAX_PRESETS_PER_KIND, MAX_PRESET_NAME, newPresetId, parsePresets, type PresetKind, type SavedPreset } from "@moom/shared/presets";
 import { dbError } from "@/lib/action-error";
 
 const SAFE_PATH = /^[\w\-./]+$/;
@@ -228,4 +230,61 @@ async function listAll(bucket: string, prefix: string, depth = 0): Promise<strin
     else out.push(...(await listAll(bucket, path, depth + 1)));
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// widget looks and saved presets
+
+/** The goal widget's designed look; null goes back to the classic bar. */
+export async function saveGoalLook(raw: unknown): Promise<{ ok: boolean; error?: string }> {
+  const { supabase, profile } = await streamerForAction();
+  const look = raw === null ? null : parseGoalLook(raw);
+  const { data: row } = await supabase.from("overlay_settings").select("*").eq("streamer_id", profile.id).single();
+  const looks = { ...((row?.widget_looks ?? {}) as Record<string, unknown>) };
+  if (look) looks.goal = look;
+  else delete looks.goal;
+  const { error } = await supabase
+    .from("overlay_settings")
+    .update({ widget_looks: looks as unknown as Json })
+    .eq("streamer_id", profile.id);
+  if (error) return { ok: false, error: dbError("goal look", error) };
+  await notifyOverlay(await channelOf(profile.id), { type: "config" });
+  revalidatePath("/dashboard/goals");
+  return { ok: true };
+}
+
+type PresetResult = { ok: true; presets: SavedPreset[] } | { ok: false; error: string };
+
+async function writePresets(next: SavedPreset[]): Promise<PresetResult> {
+  const { supabase, profile } = await streamerForAction();
+  const { error } = await supabase
+    .from("overlay_settings")
+    .update({ look_presets: next as unknown as Json })
+    .eq("streamer_id", profile.id);
+  if (error) return { ok: false, error: dbError("presets", error) };
+  return { ok: true, presets: next };
+}
+
+async function currentPresets(): Promise<SavedPreset[]> {
+  const { supabase, profile } = await streamerForAction();
+  const { data } = await supabase.from("overlay_settings").select("*").eq("streamer_id", profile.id).single();
+  return parsePresets(data?.look_presets);
+}
+
+/** Saves a look under a name. Saving an existing name of the same kind replaces it. */
+export async function savePreset(kind: PresetKind, name: string, look: unknown): Promise<PresetResult> {
+  const clean = String(name ?? "").trim().slice(0, MAX_PRESET_NAME);
+  if (!clean || (kind !== "alert" && kind !== "goal")) return { ok: false, error: "invalid" };
+  const all = await currentPresets();
+  const others = all.filter((p) => !(p.kind === kind && p.name === clean));
+  if (others.filter((p) => p.kind === kind).length >= MAX_PRESETS_PER_KIND) return { ok: false, error: "too_many" };
+  // parsePresets validates the look for its kind and drops it if it's not valid.
+  const next = parsePresets([{ id: newPresetId(), kind, name: clean, look }, ...others]);
+  if (next.length === others.length) return { ok: false, error: "invalid" };
+  return writePresets(next);
+}
+
+export async function deletePreset(id: string): Promise<PresetResult> {
+  const all = await currentPresets();
+  return writePresets(all.filter((p) => p.id !== id));
 }

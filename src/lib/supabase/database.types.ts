@@ -72,6 +72,8 @@ export type OverlaySettingsRow = {
   custom_css: string;
   alert_gifs: Json;
   gif_min_amount: number;
+  widget_looks: Json;
+  look_presets: Json;
   updated_at: string;
 };
 

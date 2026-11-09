@@ -7,14 +7,22 @@ import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
 import { deleteGoal, endGoal } from "../more-actions";
 import { GoalForm } from "./GoalForm";
+import { GoalLookEditor } from "./GoalLookEditor";
+import { parseGoalLook } from "@moom/shared/goal-look";
+import { parsePresets } from "@moom/shared/presets";
+import { parsePageConfig } from "@/lib/page-config";
 
 export default async function GoalsPage() {
   const { supabase, profile } = await requireStreamer();
   const { d, locale } = await getT();
-  const [goal, { data: past }] = await Promise.all([
+  const [goal, { data: past }, { data: settings }] = await Promise.all([
     activeGoal(profile.id),
     supabase.from("goals").select("*").eq("streamer_id", profile.id).eq("is_active", false).order("created_at", { ascending: false }).limit(20),
+    // "*" so a database that hasn't got widget_looks yet still opens this page.
+    supabase.from("overlay_settings").select("*").eq("streamer_id", profile.id).maybeSingle(),
   ]);
+  const looks = (settings?.widget_looks ?? {}) as Record<string, unknown>;
+  const page = parsePageConfig(profile.page);
   const date = (iso: string) =>
     new Date(iso).toLocaleDateString(locale === "th" ? "th-TH" : "en-GB", { dateStyle: "medium", timeZone: "Asia/Bangkok" });
 
@@ -34,6 +42,18 @@ export default async function GoalsPage() {
           <p className="text-ink-soft">{d.goals.none}</p>
         </Panel>
       )}
+
+      <Panel title={d.goalLook.title}>
+        <p className="mb-4 max-w-2xl text-ink-soft">{d.goalLook.intro}</p>
+        <GoalLookEditor
+          initial={parseGoalLook(looks.goal)}
+          presets={parsePresets(settings?.look_presets)}
+          sample={goal ? { title: goal.title, raised: goal.raised, target: goal.target, endsAt: goal.endsAt } : { title: d.goalLook.sampleTitle, raised: 2730, target: 4500, endsAt: null }}
+          accent={profile.accent_color}
+          locale={locale}
+          brandFont={Boolean(page.brandFontPath)}
+        />
+      </Panel>
 
       <Panel title={d.goals.new}>
         {goal && <p className="mb-3 text-sm text-ink-faint">{d.goals.replaceHint}</p>}

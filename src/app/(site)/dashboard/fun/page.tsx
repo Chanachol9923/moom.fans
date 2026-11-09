@@ -34,6 +34,7 @@ export default async function FunPage() {
         <WheelEditor initial={parseWheel(s.wheel)} />
       </Panel>
 
+      <div id="poll" className="-mb-5 scroll-mt-4" />
       <Panel title={d.fun.poll}>
         <p className="mb-3 text-sm text-ink-soft">{d.fun.pollHint}</p>
         {poll ? (
@@ -67,6 +68,7 @@ export default async function FunPage() {
         <PollForm />
       </Panel>
 
+      <div id="subathon" className="-mb-5 scroll-mt-4" />
       <Panel title={d.fun.subathon}>
         <p className="mb-3 text-sm text-ink-soft">{d.fun.subathonHint}</p>
         <SubathonPanel

@@ -5,6 +5,7 @@ import { creatorUrl } from "@/lib/hosts";
 import { parsePageConfig } from "@/lib/page-config";
 import { overlayTopic } from "@/lib/realtime";
 import { admin } from "@/lib/supabase/admin";
+import { parseGoalLook } from "@moom/shared/goal-look";
 import type { WidgetData } from "@moom/shared/widgets";
 import { streamerByOverlayToken } from "./overlay";
 
@@ -18,12 +19,15 @@ export async function loadWidgetData(token: string): Promise<WidgetData | null> 
     .single();
   if (!profile) return null;
   const page = parsePageConfig(profile.page);
-  const [goal, wall, poll, subathon] = await Promise.all([
+  const [goal, wall, poll, subathon, settings] = await Promise.all([
     activeGoal(s.streamer_id),
     wallData(s.streamer_id, { recentCount: 10, topCount: 5, topPeriod: page.wall.topPeriod, locale: profile.locale }),
     activePoll(s.streamer_id),
     subathonState(s.streamer_id),
+    // "*" so a database without the widget_looks column yet still loads the widget.
+    admin().from("overlay_settings").select("*").eq("streamer_id", s.streamer_id).maybeSingle(),
   ]);
+  const looks = (settings.data?.widget_looks ?? {}) as Record<string, unknown>;
   return {
     accent: profile.accent_color,
     locale: profile.locale,
@@ -31,6 +35,7 @@ export async function loadWidgetData(token: string): Promise<WidgetData | null> 
     showAmounts: page.wall.showAmounts,
     topPeriod: page.wall.topPeriod,
     goal: goal && { title: goal.title, raised: goal.raised, target: goal.target, endsAt: goal.endsAt },
+    goalLook: parseGoalLook(looks.goal),
     recent: wall.recent,
     top: wall.top,
     poll: poll && { title: poll.title, options: poll.options, totals: poll.totals, weightBy: poll.weightBy },

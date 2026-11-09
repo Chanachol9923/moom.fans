@@ -1,4 +1,5 @@
 import { Panel } from "@moom/shared/ui/kit";
+import { parsePresets } from "@moom/shared/presets";
 import { requireStreamer } from "@/lib/auth";
 import { overlayUrl, getPrivate } from "@/lib/domain/streamer";
 import { publicEnv } from "@/lib/env";
@@ -73,6 +74,7 @@ export default async function AlertsPage() {
               key: publicEnv.supabaseKey(),
             }}
             brandFontUrl={brandFontUrl}
+            initialPresets={parsePresets(settings.look_presets)}
           />
           <GifManager
             initialGifs={gifs}

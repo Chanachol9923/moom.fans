@@ -1,11 +1,22 @@
+import Link from "next/link";
 import { CopyField } from "@moom/shared/ui/CopyField";
-import { Panel } from "@moom/shared/ui/kit";
+import { Panel, buttonClass } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
 import { getPrivate } from "@/lib/domain/streamer";
 import { siteUrl } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";
-import { WIDGET_KINDS, WIDGET_SIZES } from "@moom/shared/widgets";
+import { WIDGET_KINDS, WIDGET_SIZES, type WidgetKind } from "@moom/shared/widgets";
 import { PreviewFrame } from "../overlay/PreviewFrame";
+
+/** Where each widget's content and look are set. */
+const SETTINGS: Record<WidgetKind, string> = {
+  goal: "/dashboard/goals",
+  recent: "/dashboard/page#wall",
+  top: "/dashboard/page#wall",
+  qr: "/dashboard/page",
+  poll: "/dashboard/fun#poll",
+  subathon: "/dashboard/fun#subathon",
+};
 
 export default async function WidgetsPage() {
   const { profile } = await requireStreamer();
@@ -23,7 +34,15 @@ export default async function WidgetsPage() {
           const [w, h] = WIDGET_SIZES[k];
           const url = siteUrl(`/widget/${priv.overlay_token}/${k}`);
           return (
-            <Panel key={k} title={d.widgets.kinds[k].name}>
+            <Panel
+              key={k}
+              title={d.widgets.kinds[k].name}
+              aside={
+                <Link href={SETTINGS[k]} className={buttonClass("default", "sm")}>
+                  {d.widgets.settings}
+                </Link>
+              }
+            >
               <p className="mb-2 text-sm text-ink-soft">{d.widgets.kinds[k].desc}</p>
               <PreviewFrame src={url} width={w} height={h} />
               <div className="mt-3">

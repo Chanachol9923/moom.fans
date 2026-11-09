@@ -13,6 +13,7 @@ import type { Locale } from "@moom/shared/i18n";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { DEFAULT_LOOK, MAX_CSS, MAX_TIERS, MAX_TITLE, mediaKindOf, type StoredTier } from "@moom/shared/overlay/design";
+import type { SavedPreset } from "@moom/shared/presets";
 import { ALERT_CSS_CLASSES, AlertBox } from "@moom/shared/ui/AlertBox";
 import { Button, Field, Input, Panel, Select, Textarea } from "@moom/shared/ui/kit";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
@@ -48,6 +49,7 @@ const blankTier = (min: number): StoredTier => ({
 export function AlertDesignEditor({
   initialTiers,
   initialCss,
+  initialPresets,
   urls: initialUrls,
   defaultStyle,
   accent,
@@ -65,8 +67,10 @@ export function AlertDesignEditor({
   userId: string;
   supabase: SupabasePublic;
   brandFontUrl: string | null;
+  initialPresets: SavedPreset[];
 }) {
   const { d } = useT();
+  const [presets, setPresets] = useState(initialPresets);
   const [tiers, setTiers] = useState(initialTiers);
   const [css, setCss] = useState(initialCss);
   const [urls, setUrls] = useState(initialUrls);
@@ -120,6 +124,8 @@ export function AlertDesignEditor({
               accent={accent}
               locale={locale}
               brandFontUrl={brandFontUrl}
+              presets={presets}
+              onPresets={setPresets}
               testing={testing}
               onChange={(patch) => update(i, patch)}
               onRemove={() => {
@@ -189,6 +195,8 @@ function TierCard({
   accent,
   locale,
   brandFontUrl,
+  presets,
+  onPresets,
   testing,
   onChange,
   onRemove,
@@ -202,6 +210,8 @@ function TierCard({
   accent: string;
   locale: Locale;
   brandFontUrl: string | null;
+  presets: SavedPreset[];
+  onPresets: (all: SavedPreset[]) => void;
   testing: boolean;
   onChange: (patch: Partial<StoredTier>) => void;
   onRemove: () => void;
@@ -336,7 +346,13 @@ function TierCard({
         </div>
         {t.look ? (
           <div className="mb-3 border-l-[3px] border-paper-3 pl-3">
-            <LookEditor look={t.look} onChange={(look) => onChange({ look })} brandFont={Boolean(brandFontUrl)} />
+            <LookEditor
+              look={t.look}
+              onChange={(look) => onChange({ look })}
+              brandFont={Boolean(brandFontUrl)}
+              presets={presets}
+              onPresets={onPresets}
+            />
           </div>
         ) : (
           <Field label={d.design.style} htmlFor={`${id}-style`}>
