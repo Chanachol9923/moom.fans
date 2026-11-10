@@ -67,7 +67,7 @@ export function PixelEditor({ value, onChange }: { value: PetSprite; onChange: (
 
       <div className="flex flex-wrap items-start gap-4">
         <div
-          className="grid touch-none select-none bg-[repeating-conic-gradient(#e6dbc2_0_25%,#f2ead7_0_50%)] bg-[length:18px_18px]"
+          className="moom-light grid touch-none select-none bg-[repeating-conic-gradient(#e6dbc2_0_25%,#f2ead7_0_50%)] bg-[length:18px_18px]"
           style={{ gridTemplateColumns: `repeat(${SPRITE_SIZE}, ${CELL}px)` }}
         >
           {rows.map((row, y) =>

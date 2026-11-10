@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PRESETS } from "@moom/shared/pets/sprites";
 import { LocaleSwitch } from "./LocaleSwitch";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
+import { ThemeToggle } from "@moom/shared/ui/ThemeToggle";
 
 export function Logo({ size = 32 }: { size?: number }) {
   return (
@@ -20,6 +21,7 @@ export function SiteHeader({ right }: { right?: React.ReactNode }) {
       </Link>
       <div className="flex items-center gap-3">
         <LocaleSwitch />
+        <ThemeToggle />
         {right}
       </div>
     </header>

@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@moom/shared/ui/ThemeToggle";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import type { Locale } from "@moom/shared/i18n";
@@ -47,18 +48,21 @@ function TitleBar({ locale, onLocale }: { locale: Locale; onLocale: (l: Locale) 
         <PixelSprite sprite={PRESETS.bird} size={28} />
         <span className="font-title text-xl">moom</span>
       </div>
-      <div className="flex items-center gap-1 font-display text-sm" role="group" aria-label="Language">
-        {(["th", "en"] as const).map((l) => (
-          <button
-            key={l}
-            type="button"
-            onClick={() => onLocale(l)}
-            aria-pressed={locale === l}
-            className={`px-1.5 py-0.5 ${locale === l ? "bg-ink text-paper" : "text-ink-soft hover:text-ink"}`}
-          >
-            {l.toUpperCase()}
-          </button>
-        ))}
+      <div className="flex items-center gap-1 font-display text-sm">
+        <ThemeToggle className="mr-1" />
+        <div className="flex items-center gap-1" role="group" aria-label="Language">
+          {(["th", "en"] as const).map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => onLocale(l)}
+              aria-pressed={locale === l}
+              className={`px-1.5 py-0.5 ${locale === l ? "bg-ink text-paper" : "text-ink-soft hover:text-ink"}`}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
     </header>
   );

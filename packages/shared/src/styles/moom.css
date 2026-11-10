@@ -7,7 +7,11 @@
   like old console UI, instead of CSS rounded corners.
 */
 
-:root {
+/* Light tokens. Repeated on .moom-page and .moom-light so a streamer's tip page (and its
+   preview inside the dashboard) keeps the look they designed when the dashboard is dark. */
+:root,
+.moom-page,
+.moom-light {
   --paper: #f2ead7;
   --paper-2: #e6dbc2;
   --paper-3: #d6c8a8;
@@ -24,9 +28,51 @@
   --tomato: #cc4e37;
   --leaf: #5b8f45;
   --sky: #9fc4d6;
-  --accent: var(--teal);
   --field: #fffaf0;
+  /* Drop shadow under raised frames. */
+  --shade: color-mix(in srgb, var(--ink) 22%, transparent);
+  --dots: color-mix(in srgb, var(--ink) 9%, transparent);
+  --on-colour: #fffaf0;
   --px: 3px;
+}
+:root {
+  --accent: var(--teal);
+}
+.moom-light {
+  color-scheme: light;
+  color: var(--ink);
+}
+
+/*
+  Dark mode for the website and dashboard (data-theme is set before first paint by
+  theme.ts). Warm night paper instead of grey, light ink, and the red / green / teal
+  lifted so they read as text on the dark background (WCAG AA against --paper and
+  --paper-2). Coloured fills then carry dark text (--on-colour / text-paper).
+  OBS pages never get data-theme, so overlays and widgets look the same as always.
+*/
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #1d1916;
+  --paper-2: #29241f;
+  --paper-3: #3b342c;
+  --ink: #f1e8d6;
+  --ink-soft: #d3c6ae;
+  --ink-faint: #b0a28c;
+  --pigeon: #a3b0c4;
+  --pigeon-dark: #c3cddc;
+  --teal: #5fbca5;
+  --teal-dark: #8fd3c2;
+  --plum: #c68fbd;
+  --beak: #eab155;
+  --tomato: #ff8b73;
+  --leaf: #8cc86e;
+  --sky: #9fc4d6;
+  --field: #14110e;
+  --shade: rgba(0, 0, 0, 0.55);
+  --dots: color-mix(in srgb, var(--ink) 6%, transparent);
+  --on-colour: #1d1916;
+  /* Buttons keep the deep teal so white text on them stays readable. */
+  --accent: #2f7a6a;
 }
 
 @theme inline {
@@ -65,12 +111,12 @@
     font-family: var(--font-sans);
     background-color: var(--paper);
     /* faint dot grid, like graph paper */
-    background-image: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px);
+    background-image: radial-gradient(var(--dots) 1px, transparent 1px);
     background-size: 12px 12px;
   }
   ::selection {
     background: var(--beak);
-    color: var(--ink);
+    color: #241e19;
   }
   :focus-visible {
     outline: var(--px) dashed var(--ink);
@@ -110,7 +156,7 @@
       0 var(--px) 0 0 var(--ink),
       calc(var(--px) * -1) 0 0 0 var(--ink),
       var(--px) 0 0 0 var(--ink),
-      calc(var(--px) * 2) calc(var(--px) * 2) 0 0 color-mix(in srgb, var(--ink) 22%, transparent);
+      calc(var(--px) * 2) calc(var(--px) * 2) 0 0 var(--shade);
   }
 
   .px-btn {
@@ -158,10 +204,11 @@
   }
   .px-btn-beak {
     background: var(--beak);
+    color: #241e19;
   }
   .px-btn-danger {
     background: var(--tomato);
-    color: #fffaf0;
+    color: var(--on-colour);
   }
   .px-btn-ghost {
     background: transparent;
@@ -400,7 +447,7 @@
   border-radius: 999px;
 }
 .moom-page:is([data-shape="rounded"], [data-shape="square"]) .px-frame-raised {
-  box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--ink) 22%, transparent);
+  box-shadow: 4px 4px 0 0 var(--shade);
 }
 .moom-page:is([data-shape="rounded"], [data-shape="square"]) .px-input:focus {
   border-color: var(--accent);
@@ -415,4 +462,13 @@
     linear-gradient(45deg, #7a6f60 25%, transparent 25%, transparent 75%, #7a6f60 75%);
   background-size: 24px 24px;
   background-position: 0 0, 12px 12px;
+}
+
+/* Dark mode: a solid yellow fill keeps dark ink (light ink on yellow can't be read),
+   for everything inside it too. Not on a tip page, which keeps its own colours. */
+:root[data-theme="dark"] :is(.bg-beak, .px-btn-beak):not(.moom-page *) {
+  --ink: #241e19;
+  --ink-soft: #4a3f35;
+  --ink-faint: #5a4e41;
+  color: var(--ink);
 }

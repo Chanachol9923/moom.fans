@@ -2,6 +2,8 @@ import type { Dict } from "../index";
 
 export const en: Dict = {
   common: {
+    themeDark: "Switch to dark mode",
+    themeLight: "Switch to light mode",
     appName: "Moom",
     save: "Save",
     saved: "Saved",

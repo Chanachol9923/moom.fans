@@ -3,6 +3,8 @@
 
 export const th = {
   common: {
+    themeDark: "เปลี่ยนเป็นโหมดมืด",
+    themeLight: "เปลี่ยนเป็นโหมดสว่าง",
     appName: "Moom",
     save: "บันทึก",
     saved: "บันทึกแล้ว",

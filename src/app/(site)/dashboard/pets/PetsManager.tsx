@@ -48,7 +48,8 @@ export function PetsManager({ pets, userId, supabase }: { pets: Pet[]; userId: s
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {pets.map((p) => (
             <li key={p.id} className="px-frame flex flex-col items-center bg-paper p-4 text-center">
-              <div className="grid h-24 place-items-end">
+              {/* moom-light: pixel art keeps its light backdrop in dark mode, as on stream. */}
+              <div className="moom-light grid h-24 w-full place-items-end justify-center bg-paper-2 pb-1">
                 {p.resolved ? <AnimatedSprite sprite={p.resolved} size={80} sleeping={!p.is_active} /> : null}
               </div>
               <div className="mt-2 font-display text-lg">{p.name}</div>
@@ -308,7 +309,7 @@ function PetForm({ pet, onDone, userId, supabase }: { pet: Pet | null; onDone: (
             </Button>
           </div>
         </div>
-        <div className="grid place-items-center self-start bg-paper-2 p-4 md:sticky md:top-4">
+        <div className="moom-light grid place-items-center self-start bg-paper-2 p-4 md:sticky md:top-4">
           {mode === "picture" && preview && <p className="mb-2 text-center text-xs text-ink-faint">{d.pets.sizePreview}</p>}
           {preview ? <AnimatedSprite sprite={preview} size={mode === "picture" ? picSize : 128} /> : <p className="text-center text-sm text-ink-faint">{d.pets.needPicture}</p>}
         </div>
