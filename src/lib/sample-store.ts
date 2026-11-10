@@ -25,24 +25,7 @@ export function sampleStore(locale: Locale, pageOverrides: Record<string, unknow
     tipPresets: [20, 50, 100, 300],
     minTip: 10,
     media: { bahtPerSecond: 1, maxSeconds: 120 },
-    products: [
-      {
-        id: "00000000-0000-0000-0000-000000000001",
-        title: th ? "Voice pack เสียงปลุกตอนเช้า" : "Morning alarm voice pack",
-        description: th ? "12 ไฟล์ mp3 ทั้งแบบอ่อนโยนและแบบโกรธ" : "12 mp3 files, gentle and grumpy",
-        price: 149,
-        coverUrl: null,
-        previewUrl: null,
-      },
-      {
-        id: "00000000-0000-0000-0000-000000000002",
-        title: th ? "วอลเปเปอร์ฮาโลวีน 4K" : "Halloween wallpaper 4K",
-        description: th ? "ภาพวาดใหม่ 3 แบบ สำหรับจอคอมและมือถือ" : "3 new illustrations for desktop and phone",
-        price: 89,
-        coverUrl: null,
-        previewUrl: null,
-      },
-    ],
+    products: sampleProducts(locale),
     page: parsePageConfig(pageOverrides),
     goal: {
       id: "g",
@@ -73,4 +56,27 @@ export function sampleStore(locale: Locale, pageOverrides: Record<string, unknow
     gifMin: 0,
     brandFontUrl: null,
   };
+}
+
+/** Two made-up products: the dev gallery, and the page designer's "show a sample shop". */
+export function sampleProducts(locale: Locale): Store["products"] {
+  const th = locale === "th";
+  return [
+    {
+      id: "00000000-0000-0000-0000-000000000001",
+      title: th ? "Voice pack เสียงปลุกตอนเช้า" : "Morning alarm voice pack",
+      description: th ? "12 ไฟล์ mp3 ทั้งแบบอ่อนโยนและแบบโกรธ" : "12 mp3 files, gentle and grumpy",
+      price: 149,
+      coverUrl: null,
+      previewUrl: null,
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000002",
+      title: th ? "วอลเปเปอร์ฮาโลวีน 4K" : "Halloween wallpaper 4K",
+      description: th ? "ภาพวาดใหม่ 3 แบบ สำหรับจอคอมและมือถือ" : "3 new illustrations for desktop and phone",
+      price: 89,
+      coverUrl: null,
+      previewUrl: null,
+    },
+  ];
 }

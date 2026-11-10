@@ -26,6 +26,9 @@ const WIDTH = { narrow: "max-w-3xl", normal: "max-w-5xl", wide: "max-w-7xl" } as
 export function StoreView({ store, d, locale, preview = false }: { store: Store; d: Dict; locale: Locale; preview?: boolean }) {
   const cfg = store.page;
   const visible = (id: SectionId) => cfg.sections.find((s) => s.id === id)?.visible ?? true;
+  // No products yet: no empty shop on the page, and phones open on the tip box.
+  const hasShop = store.products.length > 0;
+  const focusShop = cfg.focus === "shop" && hasShop && visible("shop");
 
   const sections: Record<SectionId, React.ReactNode> = {
     goal:
@@ -42,16 +45,13 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
           <p className="whitespace-pre-line text-ink-soft">{store.bio}</p>
         </section>
       ) : null,
-    shop: visible("shop") ? (
-      <section key="shop" id="shop">
-        <h2 className="mb-4 text-2xl">{d.store.shopTitle}</h2>
-        {store.products.length ? (
+    shop:
+      hasShop && visible("shop") ? (
+        <section key="shop" id="shop">
+          <h2 className="mb-4 text-2xl">{d.store.shopTitle}</h2>
           <ProductGrid store={store} preview={preview} />
-        ) : (
-          <p className="px-frame bg-paper-2 p-4 text-ink-soft">{d.store.noProducts}</p>
-        )}
-      </section>
-    ) : null,
+        </section>
+      ) : null,
     supporters: visible("supporters") ? (
       <section key="supporters" className="px-frame bg-paper p-4">
         <h2 className="mb-3 text-xl">{d.store.supportersTitle}</h2>
@@ -159,7 +159,7 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
         >
           <div
             className={`moom-page__tip ${cfg.layout === "single" ? "" : "@min-[64rem]:sticky @min-[64rem]:top-4"} ${
-              cfg.focus === "shop" ? "order-2 @min-[64rem]:order-none" : ""
+              focusShop ? "order-2 @min-[64rem]:order-none" : ""
             } ${cfg.layout === "split-right" ? "@min-[64rem]:order-2" : ""}`}
           >
             {tip}

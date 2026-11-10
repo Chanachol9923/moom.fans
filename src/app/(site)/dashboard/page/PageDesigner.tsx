@@ -27,6 +27,8 @@ import { StoreView } from "../../s/[slug]/StoreView";
 import { savePageConfig } from "../more-actions";
 import { FontPicker } from "@moom/shared/ui/FontPicker";
 import { errorText } from "@/lib/errors";
+import { sampleProducts } from "@/lib/sample-store";
+import Link from "next/link";
 import { Choice, Slider } from "../alerts/LookEditor";
 import { UnitIcon } from "@moom/shared/ui/UnitIcon";
 import { MAX_GIF_BYTES, mediaKindOf } from "@moom/shared/overlay/design";
@@ -52,6 +54,9 @@ export function PageDesigner({
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [full, setFull] = useState(false);
+  // Preview only: fills an empty shop with made-up products to see how it would look.
+  const [demoShop, setDemoShop] = useState(false);
+  const noProducts = store.products.length === 0;
   const [pending, start] = useTransition();
   const [busy, setBusy] = useState<Slot | null>(null);
   const [upErr, setUpErr] = useState<Partial<Record<Slot, string>>>({});
@@ -142,6 +147,7 @@ export function PageDesigner({
     ...store,
     avatarUrl,
     bannerUrl,
+    products: noProducts && demoShop ? sampleProducts(locale) : store.products,
     page: cfg,
     backgroundUrl: bgUrl,
     pet: pets.find((p) => p.id === cfg.petId)?.sprite ?? null,
@@ -607,6 +613,14 @@ export function PageDesigner({
                 />
                 <span className="flex-1 font-display">
                   {d.page.sectionNames[s.id]}
+                  {s.id === "shop" && noProducts && (
+                    <span className="ml-2 font-sans text-xs text-ink-soft">
+                      {d.page.shopHidden}{" "}
+                      <Link href="/dashboard/products" className="underline">
+                        {d.page.shopAdd}
+                      </Link>
+                    </span>
+                  )}
                 </span>
                 <Button
                   type="button"
@@ -838,7 +852,18 @@ export function PageDesigner({
       </div>
 
       <div className={full ? "min-h-0 min-w-0" : "min-w-0 xl:sticky xl:top-4"}>
-        <DevicePreview full={full} onFull={setFull}>
+        <DevicePreview
+          full={full}
+          onFull={setFull}
+          extra={
+            noProducts && (
+              <label className="flex cursor-pointer items-center gap-1.5 text-sm">
+                <input type="checkbox" checked={demoShop} onChange={(e) => setDemoShop(e.target.checked)} />
+                {d.page.shopDemo}
+              </label>
+            )
+          }
+        >
           <StoreView store={previewStore} d={d} locale={locale} preview />
         </DevicePreview>
       </div>
@@ -1017,10 +1042,13 @@ function DevicePreview({
   children,
   full,
   onFull,
+  extra,
 }: {
   children: React.ReactNode;
   full: boolean;
   onFull: (v: boolean) => void;
+  /** Preview-only switches shown under the device buttons. */
+  extra?: React.ReactNode;
 }) {
   const { d } = useT();
   const [device, setDevice] = useState<keyof typeof DEVICES>("phone");
@@ -1062,6 +1090,7 @@ function DevicePreview({
           </button>
         </div>
       </div>
+      {extra && <div className="mb-1 flex flex-wrap gap-3">{extra}</div>}
       <div ref={box} className={`px-checker flex justify-center py-3 ${full ? "min-h-0 flex-1" : ""}`}>
         <div
           className={`px-frame overflow-x-hidden overflow-y-auto ${full ? "max-h-full" : "max-h-[calc(100dvh-7rem)]"}`}

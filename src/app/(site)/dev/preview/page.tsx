@@ -23,19 +23,20 @@ export default async function Preview({ searchParams }: PageProps<"/dev/preview"
   const view = ((await searchParams).view as string) ?? "store";
 
   const sp = await searchParams;
-  // ?theme=night&unit=1&bg=grid lets the gallery show page-design variants.
-  const store = sampleStore(locale, {
+  // ?theme=night&unit=1&bg=grid lets the gallery show page-design variants; ?noshop=1 has no products.
+  const sample = sampleStore(locale, {
     theme: sp.theme,
     background: sp.bg,
     unit: sp.unit ? { enabled: true, name: locale === "th" ? "ข้าวโพด" : "corn", price: 20, icon: "corn", presets: [1, 3, 5, 10] } : undefined,
   });
+  const store = sp.noshop ? { ...sample, products: [] } : sample;
 
   const pay = (status: "awaiting_payment" | "pending_review" | "verified", kind: "tip" | "purchase" = "tip") => ({
     status,
     kind,
     amount: 50,
     supporterName: "sparrow",
-    productTitle: kind === "purchase" ? store.products[0].title : null,
+    productTitle: kind === "purchase" ? sample.products[0].title : null,
     expiresAt: minutesFromNow(29),
     slipDeadline: minutesFromNow(89),
     canDownload: kind === "purchase" && status === "verified",
