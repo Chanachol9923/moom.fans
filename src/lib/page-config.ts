@@ -1,5 +1,31 @@
 import { z } from "zod";
-import { GridSchema, legacyGrid, normalizeGrid } from "./page-grid";
+import { GridSchema, legacyGrid, MAX_TEXTS, normalizeGrid, TEXT_ID, type TextBoxId } from "./page-grid";
+
+/** A text box the streamer adds to the page (rules, schedule, a thank-you note...). */
+export const TextBoxSchema = z.object({
+  id: z.string().regex(TEXT_ID).transform((s) => s as TextBoxId),
+  title: z.string().max(80).catch(""),
+  body: z.string().max(3000).catch(""),
+  /** card: framed like the other boxes; plain: no frame; accent: filled with the channel colour; note: soft card. */
+  look: z.enum(["card", "plain", "accent", "note"]).catch("card"),
+  align: z.enum(["left", "center", "right"]).catch("left"),
+  size: z.enum(["s", "m", "l", "xl"]).catch("m"),
+});
+export type TextBox = z.infer<typeof TextBoxSchema>;
+
+/** Keeps the valid ones (at most 10, no repeated ids) instead of dropping the whole list. */
+const TextsSchema = z
+  .array(z.unknown())
+  .catch([])
+  .transform((list) => {
+    const out: TextBox[] = [];
+    for (const raw of list) {
+      const t = TextBoxSchema.safeParse(raw);
+      if (t.success && !out.some((x) => x.id === t.data.id)) out.push(t.data);
+      if (out.length === MAX_TEXTS) break;
+    }
+    return out;
+  });
 import { ICON_IDS, type IconId } from "@moom/shared/pets/icons";
 import { cleanFontChoice, fontFamilyName } from "@moom/shared/fonts";
 
@@ -149,11 +175,13 @@ export const PageConfigSchema = z.object({
   textScale: z.number().min(0.9).max(1.25).catch(1),
   /** The streamer's own CSS, scoped to the page. */
   css: z.string().max(MAX_PAGE_CSS).catch("").transform(safePageCss),
+  /** The streamer's own text boxes; where they sit is in `grid`. */
+  texts: TextsSchema,
   /** Where each box sits on the page; null on pages saved before free layout. */
   grid: GridSchema,
 })
   // Always a complete layout: older pages get theirs from `layout` and `sections`.
-  .transform((c) => ({ ...c, grid: normalizeGrid(c.grid ?? legacyGrid(c)) }));
+  .transform((c) => ({ ...c, grid: normalizeGrid(c.grid ?? legacyGrid(c), c.texts.map((t) => t.id)) }));
 
 export type PageConfig = z.infer<typeof PageConfigSchema>;
 

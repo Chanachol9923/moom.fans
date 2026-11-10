@@ -28,7 +28,10 @@ import { savePageConfig } from "../more-actions";
 import { FontPicker } from "@moom/shared/ui/FontPicker";
 import { errorText } from "@/lib/errors";
 import { sampleProducts } from "@/lib/sample-store";
-import { flatBoxes, presetGrid, updateBox, type Grid } from "@/lib/page-grid";
+import { flatBoxes, MAX_TEXTS, normalizeGrid, presetGrid, updateBox, type Grid, type TextBoxId } from "@/lib/page-grid";
+import type { TextBox } from "@/lib/page-config";
+import { boxName } from "./box-name";
+import { TextsPanel } from "./TextsPanel";
 import { useArrange } from "./Arrange";
 import Link from "next/link";
 import { Choice, Slider } from "../alerts/LookEditor";
@@ -151,7 +154,29 @@ export function PageDesigner({
     };
   }, [full]);
 
-  const { edit, overlay } = useArrange({ d, grid: cfg.grid, wide: device === "desktop", update: updateGrid });
+  const { edit, overlay } = useArrange({ d, grid: cfg.grid, texts: cfg.texts, wide: device === "desktop", update: updateGrid });
+
+  // Text boxes: adding one puts it at the end of the page, removing it takes it out of the layout.
+  const addText = () => {
+    touch();
+    setCfg((c) => {
+      if (c.texts.length >= MAX_TEXTS) return c;
+      const id = `text-${Math.random().toString(36).slice(2, 10)}` as TextBoxId;
+      const texts: TextBox[] = [...c.texts, { id, title: "", body: "", look: "card", align: "left", size: "m" }];
+      return { ...c, texts, grid: normalizeGrid(c.grid, texts.map((t) => t.id)) };
+    });
+  };
+  const changeText = (id: string, patch: Partial<TextBox>) => {
+    touch();
+    setCfg((c) => ({ ...c, texts: c.texts.map((t) => (t.id === id ? { ...t, ...patch } : t)) }));
+  };
+  const removeText = (id: string) => {
+    touch();
+    setCfg((c) => {
+      const texts = c.texts.filter((t) => t.id !== id);
+      return { ...c, texts, grid: normalizeGrid(c.grid, texts.map((t) => t.id)) };
+    });
+  };
   // Columns only show on a wide page, so arranging starts on the desktop view.
   const toggleArrange = () => {
     if (!arrange && device !== "desktop") setDevice("desktop");
@@ -359,7 +384,7 @@ export function PageDesigner({
             {flatBoxes(cfg.grid).map((b) => (
               <li key={b.id} className="flex flex-wrap items-center gap-2 bg-paper-2 px-2 py-1">
                 <span className={`flex-1 font-display ${b.hidden ? "text-ink-faint line-through" : ""}`}>
-                  {d.page.boxNames[b.id]}
+                  {boxName(d, b.id, cfg.texts)}
                   {b.id === "shop" && noProducts && (
                     <span className="ml-2 font-sans text-xs text-ink-soft no-underline">
                       {d.page.shopHidden}{" "}
@@ -403,6 +428,8 @@ export function PageDesigner({
             </Select>
           </Field>
         </Panel>
+
+        <TextsPanel d={d} texts={cfg.texts} onAdd={addText} onChange={changeText} onRemove={removeText} />
 
         <Panel title={d.page.theme}>
           <div className="grid grid-cols-5 gap-2">

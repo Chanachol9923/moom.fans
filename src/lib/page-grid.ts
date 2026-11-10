@@ -5,7 +5,13 @@ import { z } from "zod";
 // never has gaps or overlaps. On phones everything stacks in reading order.
 
 export const BOX_IDS = ["tip", "goal", "about", "shop", "supporters"] as const;
-export type BoxId = (typeof BOX_IDS)[number];
+export type FixedBoxId = (typeof BOX_IDS)[number];
+/** The streamer's own text boxes: "text-" plus a short random id. */
+export type TextBoxId = `text-${string}`;
+export type BoxId = FixedBoxId | TextBoxId;
+export const MAX_TEXTS = 10;
+export const TEXT_ID = /^text-[a-z0-9]{4,16}$/;
+export const isTextBox = (id: string): id is TextBoxId => TEXT_ID.test(id);
 
 export const MAX_ROWS = 8;
 export const MAX_COLS = 4;
@@ -18,14 +24,14 @@ export type GridRow = { cols: GridCol[] };
 export type Grid = { rows: GridRow[] };
 
 const BoxSchema = z.object({
-  id: z.enum(BOX_IDS),
+  id: z.union([z.enum(BOX_IDS), z.string().regex(TEXT_ID).transform((s) => s as TextBoxId)]),
   hidden: z.boolean().catch(false),
   /** Stretched height in CSS px; 0 = as tall as the content. */
   minH: z.number().int().min(0).max(2000).catch(0),
 });
 const ColSchema = z.object({
   w: z.number().int().min(1).max(12).catch(6),
-  boxes: z.array(BoxSchema).max(BOX_IDS.length).catch([]),
+  boxes: z.array(BoxSchema).max(BOX_IDS.length + MAX_TEXTS).catch([]),
 });
 export const GridSchema = z
   .object({ rows: z.array(z.object({ cols: z.array(ColSchema).max(MAX_COLS).catch([]) })).max(MAX_ROWS).catch([]) })
@@ -61,8 +67,10 @@ export function flatBoxes(g: Grid): GridBox[] {
 /**
  * Every box exactly once, no empty columns or rows, each row at most 12 wide with
  * columns at least MIN_W. The tip box can't be hidden: it is what the page is for.
+ * `texts`: the text boxes that exist; others are dropped and new ones added at the end.
+ * Left out, the text boxes already in the grid stay as they are.
  */
-export function normalizeGrid(g: Grid): Grid {
+export function normalizeGrid(g: Grid, texts?: readonly string[]): Grid {
   const seen = new Set<BoxId>();
   let rows: GridRow[] = g.rows
     .map((r) => ({
@@ -72,6 +80,7 @@ export function normalizeGrid(g: Grid): Grid {
           boxes: c.boxes
             .filter((b) => {
               if (seen.has(b.id)) return false;
+              if (texts && isTextBox(b.id) && !texts.includes(b.id)) return false;
               seen.add(b.id);
               return true;
             })
@@ -83,8 +92,13 @@ export function normalizeGrid(g: Grid): Grid {
     .filter((r) => r.cols.length > 0)
     .slice(0, MAX_ROWS);
 
-  const missing = BOX_IDS.filter((id) => !seen.has(id));
-  if (!rows.length) return presetGrid("left");
+  const missing: BoxId[] = [...BOX_IDS, ...(texts ?? []).filter(isTextBox)].filter((id) => !seen.has(id));
+  if (!rows.length) {
+    const base = presetGrid("left");
+    const extra = (texts ?? []).filter(isTextBox).map((id) => box(id));
+    base.rows[0].cols[1].boxes.push(...extra);
+    return base;
+  }
   for (const id of missing) {
     if (id === "tip") rows[0].cols[0].boxes.unshift(box("tip"));
     else rows.at(-1)!.cols.at(-1)!.boxes.push(box(id));

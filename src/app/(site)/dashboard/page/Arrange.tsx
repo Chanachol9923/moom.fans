@@ -1,7 +1,9 @@
 "use client";
 import { useRef, useState } from "react";
 import type { Dict } from "@moom/shared/i18n";
-import { moveBox, resizeCol, updateBox, type BoxId, type Drop, type Grid } from "@/lib/page-grid";
+import { isTextBox, moveBox, resizeCol, updateBox, type BoxId, type Drop, type Grid } from "@/lib/page-grid";
+import type { TextBox } from "@/lib/page-config";
+import { boxName } from "./box-name";
 import type { StoreEdit } from "../../s/[slug]/StoreView";
 
 type Line = { left: number; top: number; width: number; height: number };
@@ -14,11 +16,13 @@ type Line = { left: number; top: number; width: number; height: number };
 export function useArrange({
   d,
   grid,
+  texts,
   wide,
   update,
 }: {
   d: Dict;
   grid: Grid;
+  texts: TextBox[];
   /** Columns only exist on a wide page; a phone-width preview just stacks. */
   wide: boolean;
   update: (fn: (g: Grid) => Grid) => void;
@@ -101,7 +105,7 @@ export function useArrange({
     );
   };
 
-  const name = (id: BoxId) => d.page.boxNames[id];
+  const name = (id: BoxId) => boxName(d, id, texts);
 
   const edit: StoreEdit = {
     box: (b, node, at) => (
@@ -150,7 +154,7 @@ export function useArrange({
     ),
     empty: (id) => (
       <div className="px-frame grid min-h-28 place-items-center bg-paper-2 p-4 pt-6 text-center text-sm text-ink-soft">
-        <p className="max-w-xs">{d.page.boxEmpty[id]}</p>
+        <p className="max-w-xs">{isTextBox(id) ? d.page.textEmpty : d.page.boxEmpty[id]}</p>
       </div>
     ),
   };

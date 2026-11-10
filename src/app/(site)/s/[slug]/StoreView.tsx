@@ -5,7 +5,8 @@ import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { siteUrl } from "@/lib/hosts";
 import { formatBaht, type Dict, type Locale } from "@moom/shared/i18n";
 import { backgroundStyle, safePageCss, themeVars } from "@/lib/page-config";
-import type { BoxId, GridBox } from "@/lib/page-grid";
+import { isTextBox, type BoxId, type GridBox } from "@/lib/page-grid";
+import { TextBoxView } from "./TextBoxView";
 import { brandFontCss, googleFontsHref } from "@moom/shared/fonts";
 import { mediaKindOf } from "@moom/shared/overlay/design";
 import { PRESETS } from "@moom/shared/pets/sprites";
@@ -48,6 +49,10 @@ export function StoreView({
 
   // null = nothing to show yet. The shop stays hidden until there is a product.
   const content = (id: BoxId): React.ReactNode => {
+    if (isTextBox(id)) {
+      const t = cfg.texts.find((x) => x.id === id);
+      return t && (t.title.trim() || t.body.trim()) ? <TextBoxView box={t} /> : null;
+    }
     switch (id) {
       case "tip":
         return <TipBox store={store} preview={preview} />;

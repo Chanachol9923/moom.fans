@@ -58,3 +58,32 @@ describe("wheel", () => {
     expect(spinFor({ ...cfg, enabled: false }, 500)).toBeNull();
   });
 });
+
+describe("text boxes", () => {
+  const t = (id: string, title = "Hi") => ({ id, title, body: "", look: "card", align: "left", size: "m" });
+
+  it("join the layout at the end and can be moved like any box", () => {
+    const c = parsePageConfig({ texts: [t("text-abcd1234")] });
+    const ids = c.grid.rows.flatMap((r) => r.cols.flatMap((col) => col.boxes.map((b) => b.id)));
+    expect(ids.at(-1)).toBe("text-abcd1234");
+    expect(ids.filter((id) => id === "text-abcd1234")).toHaveLength(1);
+  });
+
+  it("drop layout entries for text boxes that no longer exist", () => {
+    const c = parsePageConfig({
+      texts: [],
+      grid: { rows: [{ cols: [{ w: 12, boxes: [{ id: "tip" }, { id: "text-gone0001" }] }] }] },
+    });
+    const ids = c.grid.rows.flatMap((r) => r.cols.flatMap((col) => col.boxes.map((b) => b.id)));
+    expect(ids).not.toContain("text-gone0001");
+    expect(ids).toContain("tip");
+  });
+
+  it("keep at most 10, skip bad ones and repeats, and fill in missing options", () => {
+    const many = Array.from({ length: 14 }, (_, i) => t(`text-x${String(i).padStart(4, "0")}`));
+    const c = parsePageConfig({ texts: [{ id: "../evil" }, t("text-x0000"), ...many] });
+    expect(c.texts).toHaveLength(10);
+    expect(new Set(c.texts.map((x) => x.id)).size).toBe(10);
+    expect(parsePageConfig({ texts: [{ id: "text-abcd1234", look: "neon" }] }).texts[0]).toMatchObject({ look: "card", size: "m", title: "" });
+  });
+});
