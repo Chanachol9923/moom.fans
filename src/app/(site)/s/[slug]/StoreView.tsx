@@ -51,7 +51,7 @@ export function StoreView({
   const content = (id: BoxId): React.ReactNode => {
     if (isTextBox(id)) {
       const t = cfg.texts.find((x) => x.id === id);
-      return t && (t.title.trim() || t.body.trim()) ? <TextBoxView box={t} /> : null;
+      return t && (t.title.trim() || t.body.trim() || t.image) ? <TextBoxView box={t} /> : null;
     }
     switch (id) {
       case "tip":

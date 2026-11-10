@@ -7,6 +7,10 @@ describe("wheel place", () => {
     expect(parseWheel({ place: "widget" }).place).toBe("widget");
     expect(parseWheel({ place: "elsewhere" }).place).toBe("overlay");
   });
+  it("is a round wheel unless another look was picked", () => {
+    expect(parseWheel({}).look).toBe("wheel");
+    expect(parseWheel({ look: "reel" }).look).toBe("reel");
+  });
 });
 
 describe("isWheelEvent", () => {

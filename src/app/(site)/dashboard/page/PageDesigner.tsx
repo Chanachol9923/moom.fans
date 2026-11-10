@@ -162,13 +162,27 @@ export function PageDesigner({
     setCfg((c) => {
       if (c.texts.length >= MAX_TEXTS) return c;
       const id = `text-${Math.random().toString(36).slice(2, 10)}` as TextBoxId;
-      const texts: TextBox[] = [...c.texts, { id, title: "", body: "", look: "card", align: "left", size: "m" }];
+      const texts: TextBox[] = [...c.texts, { id, title: "", body: "", look: "card", align: "left", size: "m", image: null, imagePlace: "top" }];
       return { ...c, texts, grid: normalizeGrid(c.grid, texts.map((t) => t.id)) };
     });
   };
   const changeText = (id: string, patch: Partial<TextBox>) => {
     touch();
     setCfg((c) => ({ ...c, texts: c.texts.map((t) => (t.id === id ? { ...t, ...patch } : t)) }));
+  };
+  const [textBusy, setTextBusy] = useState<string | null>(null);
+  const [textErr, setTextErr] = useState<Record<string, string | undefined>>({});
+  const uploadTextPicture = async (id: string, f: File) => {
+    setTextErr((e) => ({ ...e, [id]: undefined }));
+    if (f.size > MAX_PICTURE_BYTES) return setTextErr((e) => ({ ...e, [id]: d.common.errTooBig }));
+    setTextBusy(id);
+    try {
+      changeText(id, { image: await uploadPublicMedia(supabase, userId, f, "texts") });
+    } catch (err) {
+      setTextErr((e) => ({ ...e, [id]: errorText((err as Error).message, d) }));
+    } finally {
+      setTextBusy(null);
+    }
   };
   const removeText = (id: string) => {
     touch();
@@ -429,7 +443,16 @@ export function PageDesigner({
           </Field>
         </Panel>
 
-        <TextsPanel d={d} texts={cfg.texts} onAdd={addText} onChange={changeText} onRemove={removeText} />
+        <TextsPanel
+          d={d}
+          texts={cfg.texts}
+          onAdd={addText}
+          onChange={changeText}
+          onRemove={removeText}
+          onPicture={(id, f) => void uploadTextPicture(id, f)}
+          busy={textBusy}
+          errors={textErr}
+        />
 
         <Panel title={d.page.theme}>
           <div className="grid grid-cols-5 gap-2">

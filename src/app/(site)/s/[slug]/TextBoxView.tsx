@@ -1,4 +1,5 @@
 import type { TextBox } from "@/lib/page-config";
+import { publicMediaUrl } from "@/lib/storage";
 
 const SIZE = { s: "text-sm", m: "text-base", l: "text-lg", xl: "text-2xl" } as const;
 const TITLE = { s: "text-base", m: "text-xl", l: "text-2xl", xl: "text-3xl" } as const;
@@ -28,14 +29,36 @@ function withLinks(text: string) {
 /** One of the streamer's own text boxes on the tip page. */
 export function TextBoxView({ box }: { box: TextBox }) {
   const accent = box.look === "accent";
-  return (
-    <section
-      className={`${LOOK[box.look]} ${ALIGN[box.align]} min-w-0`}
-      style={accent ? { background: "var(--accent)", color: "#fffaf0" } : undefined}
-    >
+  const url = publicMediaUrl(box.image);
+  const hasText = Boolean(box.title.trim() || box.body.trim());
+  const text = hasText && (
+    <div className="min-w-0">
       {box.title.trim() && <h2 className={`mb-2 ${TITLE[box.size]}`}>{box.title}</h2>}
       {box.body.trim() && (
         <p className={`whitespace-pre-line break-words ${SIZE[box.size]} ${accent ? "" : "text-ink-soft"}`}>{withLinks(box.body)}</p>
+      )}
+    </div>
+  );
+  // eslint-disable-next-line @next/next/no-img-element -- streamer's own picture or GIF from storage
+  const picture = url && <img src={url} alt={box.title} loading="lazy" className="block h-auto w-full" />;
+  // Beside the text on a wide box; above it when the page is narrow.
+  const side = box.imagePlace === "left" || box.imagePlace === "right";
+  return (
+    <section
+      className={`${LOOK[box.look]} ${ALIGN[box.align]} min-w-0 @container/text`}
+      style={accent ? { background: "var(--accent)", color: "#fffaf0" } : undefined}
+    >
+      {picture && hasText && side ? (
+        <div className="grid gap-3 @min-[28rem]/text:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @min-[28rem]/text:items-start">
+          <div className={box.imagePlace === "right" ? "@min-[28rem]/text:order-2" : ""}>{picture}</div>
+          <div className={box.imagePlace === "right" ? "@min-[28rem]/text:order-1" : ""}>{text}</div>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {box.imagePlace !== "bottom" && picture}
+          {text}
+          {box.imagePlace === "bottom" && picture}
+        </div>
       )}
     </section>
   );

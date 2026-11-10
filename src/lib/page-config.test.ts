@@ -87,3 +87,12 @@ describe("text boxes", () => {
     expect(parsePageConfig({ texts: [{ id: "text-abcd1234", look: "neon" }] }).texts[0]).toMatchObject({ look: "card", size: "m", title: "" });
   });
 });
+
+describe("text box pictures", () => {
+  it("only take a path in a texts folder", () => {
+    const base = { id: "text-abcd1234", title: "", body: "" };
+    expect(parsePageConfig({ texts: [{ ...base, image: "uid/texts/a.gif" }] }).texts[0].image).toBe("uid/texts/a.gif");
+    expect(parsePageConfig({ texts: [{ ...base, image: "https://evil.example/a.png" }] }).texts[0].image).toBeNull();
+    expect(parsePageConfig({ texts: [{ ...base, image: "uid/avatar/a.png" }] }).texts[0].imagePlace).toBe("top");
+  });
+});

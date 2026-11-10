@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { GridSchema, legacyGrid, MAX_TEXTS, normalizeGrid, TEXT_ID, type TextBoxId } from "./page-grid";
 
+const TEXT_IMAGE_PATH = /^[\w-]+\/texts\/[\w.-]+$/;
+
 /** A text box the streamer adds to the page (rules, schedule, a thank-you note...). */
 export const TextBoxSchema = z.object({
   id: z.string().regex(TEXT_ID).transform((s) => s as TextBoxId),
@@ -10,6 +12,10 @@ export const TextBoxSchema = z.object({
   look: z.enum(["card", "plain", "accent", "note"]).catch("card"),
   align: z.enum(["left", "center", "right"]).catch("left"),
   size: z.enum(["s", "m", "l", "xl"]).catch("m"),
+  /** A picture or GIF in the box (storage path in the owner's texts folder). */
+  image: z.string().regex(TEXT_IMAGE_PATH).nullable().catch(null),
+  /** Where the picture sits: above or below the text, or beside it on wide pages. */
+  imagePlace: z.enum(["top", "bottom", "left", "right"]).catch("top"),
 });
 export type TextBox = z.infer<typeof TextBoxSchema>;
 

@@ -63,6 +63,8 @@ export async function savePageConfig(
   if (cfg.unit.iconPath && !(cfg.unit.iconPath.startsWith(`${profile.id}/units/`) && SAFE_PATH.test(cfg.unit.iconPath))) {
     cfg.unit.iconPath = null;
   }
+  // Text box pictures may only come from the streamer's own texts folder.
+  cfg.texts = cfg.texts.map((t) => (t.image && !t.image.startsWith(`${profile.id}/texts/`) ? { ...t, image: null } : t));
   if (cfg.brandFontPath && !(cfg.brandFontPath.startsWith(`${profile.id}/fonts/`) && SAFE_PATH.test(cfg.brandFontPath))) {
     cfg.brandFontPath = null;
   }

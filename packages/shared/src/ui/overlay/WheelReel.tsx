@@ -60,11 +60,11 @@ function Frame({ locale, accent, label, done, children }: { locale: Locale; acce
   );
 }
 
-/** Picks the look. Unknown looks fall back to the reel. */
-export function WheelSpin({ look = "reel", ...p }: SpinProps & { look?: WheelLook }) {
-  if (look === "wheel") return <WheelDisc {...p} />;
+/** Picks the look. Missing or unknown looks get the round wheel. */
+export function WheelSpin({ look = "wheel", ...p }: SpinProps & { look?: WheelLook }) {
+  if (look === "reel") return <WheelReel {...p} />;
   if (look === "lights") return <WheelLights {...p} />;
-  return <WheelReel {...p} />;
+  return <WheelDisc {...p} />;
 }
 
 const ROW = 64;
