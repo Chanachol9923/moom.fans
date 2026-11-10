@@ -14,7 +14,7 @@ export function PollForm() {
     <form action={action} key={state.ok ? "done" : "form"} className="grid gap-x-5 sm:grid-cols-2">
       <div>
         <Field label={d.fun.pollTitle} htmlFor="poll-title">
-          <Input id="poll-title" name="title" required maxLength={100} />
+          <Input id="poll-title" name="title" required maxLength={100} placeholder={d.fun.pollTitlePh} />
         </Field>
         <Field label={d.fun.pollWeight} htmlFor="poll-weight">
           <Select id="poll-weight" name="weightBy" defaultValue="amount">
@@ -28,7 +28,7 @@ export function PollForm() {
       </Field>
       <div className="flex items-center gap-3 sm:col-span-2">
         <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? d.common.loading : d.fun.pollStart}
+          {pending ? d.common.loading : d.fun.pollReplace}
         </Button>
         {state.error && <span className="text-tomato">{errorText(state.error, d)}</span>}
       </div>

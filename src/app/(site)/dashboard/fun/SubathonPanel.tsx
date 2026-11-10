@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
-import { Button, Field, Input } from "@moom/shared/ui/kit";
+import { Button, Input } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { formatClock } from "@moom/shared/widgets";
@@ -22,55 +22,78 @@ export function SubathonPanel({ rate, endsAt, pausedLeft }: { rate: number; ends
   const running = Boolean(endsAt) && left > 0;
   const run = (a: Parameters<typeof subathonControl>[0], m = 0) => start(() => subathonControl(a, m, rateVal));
 
+  const per100 = Math.round(rateVal * 100);
+
   return (
-    <div>
-      <div className="mb-3 font-num text-4xl">
-        {pausedLeft !== null
-          ? fmt(d.fun.subathonPaused, { time: formatClock(pausedLeft) })
-          : running
-            ? fmt(d.fun.subathonLeft, { time: formatClock(left) })
-            : d.fun.subathonIdle}
-      </div>
-      <Field label={d.fun.subathonRate}>
-        <Input type="number" min={0} step="0.5" className="max-w-40" value={rateVal} onChange={(e) => setRateVal(Math.max(0, Number(e.target.value) || 0))} />
-      </Field>
-      <div className="flex flex-wrap items-end gap-2">
-        {!running && pausedLeft === null && (
-          <>
-            <Field label={d.fun.subathonStart}>
-              <Input type="number" min={1} className="w-28" value={minutes} onChange={(e) => setMinutes(Math.max(1, Number(e.target.value) || 1))} />
-            </Field>
-            <Button variant="primary" disabled={pending} onClick={() => run("start", minutes)} className="mb-3">
-              ▶
+    <div className="grid gap-5">
+      <section>
+        <div className="px-label">1 · {d.fun.subathonRateTitle}</div>
+        <label className="flex flex-wrap items-center gap-2">
+          <span>{d.fun.subathonRateA}</span>
+          <Input
+            type="number"
+            min={0}
+            step="0.5"
+            className="w-24"
+            value={rateVal}
+            onChange={(e) => setRateVal(Math.max(0, Number(e.target.value) || 0))}
+          />
+          <span>{d.fun.subathonRateB}</span>
+          <Button size="sm" disabled={pending} onClick={() => start(() => subathonControl("add", 0, rateVal))}>
+            {d.fun.subathonRateSave}
+          </Button>
+        </label>
+        <p className="mt-1 text-sm text-ink-faint">
+          {rateVal > 0 ? fmt(d.fun.subathonExample, { time: formatClock(per100) }) : d.fun.subathonNoAdd}
+        </p>
+      </section>
+
+      <section>
+        <div className="px-label">2 · {d.fun.subathonClockTitle}</div>
+        <div className="mb-3 font-num text-4xl">
+          {pausedLeft !== null
+            ? fmt(d.fun.subathonPaused, { time: formatClock(pausedLeft) })
+            : running
+              ? fmt(d.fun.subathonLeft, { time: formatClock(left) })
+              : d.fun.subathonIdle}
+        </div>
+        {!running && pausedLeft === null ? (
+          <label className="flex flex-wrap items-center gap-2">
+            <span>{d.fun.subathonStartA}</span>
+            <Input type="number" min={1} className="w-24" value={minutes} onChange={(e) => setMinutes(Math.max(1, Number(e.target.value) || 1))} />
+            <span>{d.fun.minutes}</span>
+            <Button variant="primary" disabled={pending} onClick={() => run("start", minutes)}>
+              {d.fun.subathonStartBtn}
             </Button>
-          </>
-        )}
-        {(running || pausedLeft !== null) && (
-          <>
-            <Field label={d.fun.subathonAdd}>
-              <Input type="number" min={1} className="w-28" value={addMin} onChange={(e) => setAddMin(Math.max(1, Number(e.target.value) || 1))} />
-            </Field>
-            <Button disabled={pending} onClick={() => run("add", addMin)} className="mb-3">
-              +
+          </label>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              className="w-20"
+              aria-label={d.fun.subathonAdd}
+              value={addMin}
+              onChange={(e) => setAddMin(Math.max(1, Number(e.target.value) || 1))}
+            />
+            <Button disabled={pending} onClick={() => run("add", addMin)}>
+              {fmt(d.fun.subathonAddBtn, { n: addMin })}
             </Button>
             {running ? (
-              <Button disabled={pending} onClick={() => run("pause")} className="mb-3">
+              <Button disabled={pending} onClick={() => run("pause")}>
                 {d.fun.subathonPause}
               </Button>
             ) : (
-              <Button disabled={pending} onClick={() => run("resume")} className="mb-3">
+              <Button variant="primary" disabled={pending} onClick={() => run("resume")}>
                 {d.fun.subathonResume}
               </Button>
             )}
-            <Button variant="ghost" disabled={pending} onClick={() => run("stop")} className="mb-3">
+            <Button variant="ghost" disabled={pending} onClick={() => run("stop")}>
               {d.fun.subathonStop}
             </Button>
-          </>
+          </div>
         )}
-        <Button variant="ghost" size="sm" disabled={pending} onClick={() => start(() => subathonControl("add", 0, rateVal))} className="mb-3">
-          {d.common.save}
-        </Button>
-      </div>
+      </section>
     </div>
   );
 }

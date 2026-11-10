@@ -7,11 +7,13 @@ import { getT } from "@/lib/i18n/server";
 import { fmt } from "@moom/shared/i18n";
 import { signOut } from "../login/actions";
 import { DashNav } from "./DashNav";
+import { ensureWidgetDefaults } from "@/lib/domain/defaults";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const { supabase, profile, user } = await requireStreamer();
   const { d } = await getT();
-  const [{ count: pendingTx }, { count: heldAlerts }] = await Promise.all([
+  const [, { count: pendingTx }, { count: heldAlerts }] = await Promise.all([
+    ensureWidgetDefaults(supabase, profile.id, profile.locale).then(() => null),
     supabase.from("transactions").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
     supabase.from("alerts").select("id", { count: "exact", head: true }).eq("status", "held"),
   ]);

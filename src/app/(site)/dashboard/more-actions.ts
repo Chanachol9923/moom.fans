@@ -105,13 +105,6 @@ export async function createGoal(_prev: { ok: boolean; error?: string }, form: F
   return { ok: true };
 }
 
-export async function endGoal(goalId: string) {
-  const { supabase, profile } = await streamerForAction();
-  await supabase.from("goals").update({ is_active: false }).eq("id", z.uuid().parse(goalId)).eq("streamer_id", profile.id);
-  await notifyOverlay(await channelOf(profile.id), { type: "config" });
-  revalidatePath("/dashboard/goals");
-}
-
 export async function deleteGoal(goalId: string) {
   const { supabase, profile } = await streamerForAction();
   await supabase.from("goals").delete().eq("id", z.uuid().parse(goalId)).eq("streamer_id", profile.id);
@@ -139,17 +132,6 @@ export async function startPoll(_prev: { ok: boolean; error?: string }, form: Fo
   await notifyOverlay(await channelOf(profile.id), { type: "config" });
   revalidatePath("/dashboard/fun");
   return { ok: true };
-}
-
-export async function closePoll(pollId: string) {
-  const { supabase, profile } = await streamerForAction();
-  await supabase
-    .from("polls")
-    .update({ is_active: false, closed_at: new Date().toISOString() })
-    .eq("id", z.uuid().parse(pollId))
-    .eq("streamer_id", profile.id);
-  await notifyOverlay(await channelOf(profile.id), { type: "config" });
-  revalidatePath("/dashboard/fun");
 }
 
 // ---------------------------------------------------------------------------

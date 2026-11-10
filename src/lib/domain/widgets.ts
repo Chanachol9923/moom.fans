@@ -9,6 +9,7 @@ import { admin } from "@/lib/supabase/admin";
 import { parseGoalLook } from "@moom/shared/goal-look";
 import type { WidgetData } from "@moom/shared/widgets";
 import { streamerByOverlayToken } from "./overlay";
+import { ensureWidgetDefaults } from "./defaults";
 
 export async function loadWidgetData(token: string): Promise<WidgetData | null> {
   const s = await streamerByOverlayToken(token);
@@ -20,6 +21,8 @@ export async function loadWidgetData(token: string): Promise<WidgetData | null> 
     .single();
   if (!profile) return null;
   const page = parsePageConfig(profile.page);
+  // The token identified the streamer above; this only touches their own goal and poll.
+  await ensureWidgetDefaults(admin(), s.streamer_id, profile.locale);
   const [goal, wall, poll, subathon, settings] = await Promise.all([
     activeGoal(s.streamer_id),
     wallData(s.streamer_id, { recentCount: 10, topCount: 5, topPeriod: page.wall.topPeriod, locale: profile.locale }),

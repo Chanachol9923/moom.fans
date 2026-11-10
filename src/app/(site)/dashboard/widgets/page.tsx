@@ -7,6 +7,7 @@ import { siteUrl } from "@/lib/hosts";
 import { getT } from "@/lib/i18n/server";
 import { WIDGET_KINDS, WIDGET_SIZES, type WidgetKind } from "@moom/shared/widgets";
 import { PreviewFrame } from "../overlay/PreviewFrame";
+import { ensureWidgetDefaults } from "@/lib/domain/defaults";
 
 /** Where each widget's content and look are set. */
 const SETTINGS: Record<WidgetKind, string> = {
@@ -19,9 +20,9 @@ const SETTINGS: Record<WidgetKind, string> = {
 };
 
 export default async function WidgetsPage() {
-  const { profile } = await requireStreamer();
+  const { supabase, profile } = await requireStreamer();
   const { d } = await getT();
-  const priv = await getPrivate(profile.id);
+  const [priv] = await Promise.all([getPrivate(profile.id), ensureWidgetDefaults(supabase, profile.id, profile.locale)]);
   return (
     <div className="grid gap-5">
       <div>

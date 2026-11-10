@@ -5,7 +5,8 @@ import { requireStreamer } from "@/lib/auth";
 import { activeGoal } from "@/lib/domain/wall";
 import { formatBaht } from "@moom/shared/i18n";
 import { getT } from "@/lib/i18n/server";
-import { deleteGoal, endGoal } from "../more-actions";
+import { deleteGoal } from "../more-actions";
+import { ensureWidgetDefaults } from "@/lib/domain/defaults";
 import { GoalForm } from "./GoalForm";
 import { GoalLookEditor } from "./GoalLookEditor";
 import { parseGoalLook } from "@moom/shared/goal-look";
@@ -16,6 +17,8 @@ import { publicEnv } from "@/lib/env";
 export default async function GoalsPage() {
   const { supabase, profile } = await requireStreamer();
   const { d, locale } = await getT();
+  // Layout and page render in parallel, so the page makes sure too.
+  await ensureWidgetDefaults(supabase, profile.id, profile.locale);
   const [goal, { data: past }, { data: settings }] = await Promise.all([
     activeGoal(profile.id),
     supabase.from("goals").select("*").eq("streamer_id", profile.id).eq("is_active", false).order("created_at", { ascending: false }).limit(20),
@@ -40,8 +43,9 @@ export default async function GoalsPage() {
       </Panel>
 
       {goal ? (
-        <Panel title={d.goals.active} aside={<ActionButton size="sm" variant="ghost" action={endGoal.bind(null, goal.id)}>{d.goals.end}</ActionButton>}>
+        <Panel title={d.goals.active}>
           <GoalBar {...goal} accent={profile.accent_color} d={d} locale={locale} />
+          <p className="mt-3 text-sm text-ink-faint">{d.goals.alwaysOne}</p>
         </Panel>
       ) : (
         <Panel>

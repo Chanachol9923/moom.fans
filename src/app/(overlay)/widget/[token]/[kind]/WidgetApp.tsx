@@ -73,9 +73,16 @@ function GoalWidget({ data, goal }: { data: WidgetData; goal: NonNullable<Widget
 }
 
 function Ticker({ data }: { data: WidgetData }) {
-  const items = data.recent.length ? data.recent : [];
+  const items = data.recent;
   const d = getDict(data.locale);
-  if (!items.length) return null;
+  if (!items.length) {
+    return (
+      <div className="px-frame flex items-center overflow-hidden bg-paper py-2 whitespace-nowrap">
+        <span className="shrink-0 bg-ink px-2 py-0.5 font-title text-sm text-paper">{d.store.recent}</span>
+        <span className="mx-4 font-title">{d.store.noSupporters}</span>
+      </div>
+    );
+  }
   const row = items.map((r, i) => (
     <span key={i} className="mx-6 inline-flex items-center gap-2">
       <span className="size-3" style={{ background: data.accent }} />
@@ -101,6 +108,7 @@ function Top({ data }: { data: WidgetData }) {
   return (
     <div className="px-frame px-frame-raised bg-paper p-3">
       <div className="mb-2 font-title">{data.topPeriod === "30d" ? d.store.top30 : d.store.topAll}</div>
+      {!data.top.length && <p className="font-title text-ink-soft">{d.store.noSupporters}</p>}
       <ol className="grid gap-1.5">
         {data.top.map((t, i) => (
           <li key={t.name} className="flex items-center gap-2">
