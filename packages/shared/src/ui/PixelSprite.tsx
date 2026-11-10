@@ -19,6 +19,28 @@ export function PixelSprite({
   className?: string;
   title?: string;
 }) {
+  if (sprite.image) {
+    // Sleeping picture pets are drawn faded; GIFs animate on their own.
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- shared with the desktop app
+      <img
+        src={sprite.image}
+        alt={title ?? ""}
+        width={size}
+        height={size}
+        className={className}
+        style={{
+          width: size,
+          height: size,
+          objectFit: "contain",
+          objectPosition: "bottom",
+          imageRendering: "pixelated",
+          opacity: frame === "sleep" ? 0.6 : undefined,
+          transform: [flip ? "scaleX(-1)" : "", frame === "step" ? "translateY(-4%)" : ""].join(" ").trim() || undefined,
+        }}
+      />
+    );
+  }
   const rows = sprite.frames[frame];
   const rects: React.ReactNode[] = [];
   rows.forEach((row, y) => {

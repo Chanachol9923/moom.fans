@@ -25,7 +25,35 @@ function makeCanvas(w: number, h: number) {
 }
 
 /** Pre-rendered sprite frames, name labels and bubbles, drawn with one drawImage each. */
-type Cache = { frames: Map<string, HTMLCanvasElement>; label: HTMLCanvasElement | null };
+type Cache = { frames: Map<string, HTMLCanvasElement>; label: HTMLCanvasElement | null; img?: HTMLImageElement };
+
+/** Picture pets: one <img> per pet. A GIF keeps animating; drawImage shows its current frame. */
+function petImage(cache: Cache, url: string) {
+  if (!cache.img) {
+    // No crossOrigin: the canvas is only drawn to, never read, so a tainted canvas is fine.
+    cache.img = new Image();
+    cache.img.src = url;
+  }
+  return cache.img;
+}
+
+/** Fits a picture into the pet's square, standing on the ground line. */
+function drawPicture(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, ground: number, flip: boolean, sleeping: boolean, bob: number) {
+  if (!img.complete || !img.naturalWidth) return;
+  const k = Math.min(PX / img.naturalWidth, PX / img.naturalHeight);
+  const w = Math.round(img.naturalWidth * k);
+  const h = Math.round(img.naturalHeight * k);
+  const dx = x + Math.round((PX - w) / 2);
+  const dy = ground + PX - h - bob;
+  ctx.save();
+  if (sleeping) ctx.globalAlpha = 0.6;
+  if (flip) {
+    ctx.translate(dx + w, dy);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, 0, 0, w, h);
+  } else ctx.drawImage(img, dx, dy, w, h);
+  ctx.restore();
+}
 
 function spriteBitmap(cache: Cache, wk: Walker, frame: keyof SpriteFrames, flip: boolean) {
   const key = `${frame}:${flip ? 1 : 0}`;
@@ -143,7 +171,9 @@ export function PetsLayer({
         const frame =
           wk.mode === "sleep" ? "sleep" : wk.mode === "walk" && Math.floor(now / 220) % 2 ? "step" : "stand";
         const x = Math.round(wk.x);
-        ctx.drawImage(spriteBitmap(wk.cache, wk, frame, wk.dir === -1), x, ground);
+        if (wk.pet.sprite.image) {
+          drawPicture(ctx, petImage(wk.cache, wk.pet.sprite.image), x, ground, wk.dir === -1, frame === "sleep", frame === "step" ? 2 : 0);
+        } else ctx.drawImage(spriteBitmap(wk.cache, wk, frame, wk.dir === -1), x, ground);
 
         wk.cache.label ??= labelBitmap(wk.pet.name);
         ctx.drawImage(wk.cache.label, Math.round(x + PX / 2 - wk.cache.label.width / 2), ground + PX + 2 - wk.cache.label.height);

@@ -77,6 +77,8 @@ export default async function Preview({ searchParams }: PageProps<"/dev/preview"
       {view === "pets" && (
         <main className="mx-auto max-w-5xl p-4">
           <PetsManager
+            userId="dev"
+            supabase={{ url: "http://127.0.0.1:54321", key: "dev" }}
             pets={[
               {
                 id: "00000000-0000-0000-0000-00000000000a",

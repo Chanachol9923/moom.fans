@@ -98,7 +98,7 @@ export async function loadOverlayState(token: string): Promise<OverlayState | nu
       }),
     ),
     pets: (pets ?? []).flatMap((p): OverlayPet[] => {
-      const sprite = resolveSprite(p.species, p.palette, p.sprite);
+      const sprite = resolveSprite(p.species, p.palette, p.sprite, publicMediaUrl);
       return sprite ? [{ id: p.id, name: p.name, chatter: p.chatter, sprite }] : [];
     }),
     realtime: {

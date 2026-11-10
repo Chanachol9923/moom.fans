@@ -18,7 +18,7 @@ import { newToken } from "@/lib/tokens";
 import { detectPromptPayType, isValidNationalId, normalizePromptPayId } from "@/lib/promptpay";
 import { isTtsVoice } from "@/lib/tts/types";
 import { ttsProvider } from "@/lib/tts";
-import { isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
+import { IMAGE_SPECIES, imagePetPath, isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
 import { MAX_CSS, parseGifs, parseStoredTiers } from "@moom/shared/overlay/design";
 import { dbError } from "@/lib/action-error";
 
@@ -464,13 +464,16 @@ const PetInput = z.object({
 export async function savePet(petId: string | null, input: z.input<typeof PetInput>) {
   const { supabase, profile } = await streamerForAction();
   const v = PetInput.parse(input);
-  if (v.species !== "custom" && !isPresetSpecies(v.species)) throw new Error("species");
+  const picture = v.species === IMAGE_SPECIES ? imagePetPath(v.sprite) : null;
+  if (v.species !== "custom" && v.species !== IMAGE_SPECIES && !isPresetSpecies(v.species)) throw new Error("species");
   if (v.species === "custom" && !isPetSprite(v.sprite)) throw new Error("sprite");
+  // A picture pet may only point into the streamer's own pets folder.
+  if (v.species === IMAGE_SPECIES && !picture?.startsWith(`${profile.id}/pets/`)) throw new Error("sprite");
   const row = {
     name: v.name,
     species: v.species,
-    palette: v.species === "custom" ? {} : { ...(v.body ? { body: v.body } : {}), ...(v.accent ? { accent: v.accent } : {}) },
-    sprite: v.species === "custom" ? (v.sprite as Json) : null,
+    palette: isPresetSpecies(v.species) ? { ...(v.body ? { body: v.body } : {}), ...(v.accent ? { accent: v.accent } : {}) } : {},
+    sprite: v.species === "custom" ? (v.sprite as Json) : picture ? { image: picture } : null,
     chatter: v.chatter,
   };
   if (petId) {

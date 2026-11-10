@@ -1,3 +1,4 @@
+import { publicMediaUrl } from "@/lib/storage";
 import { requireStreamer } from "@/lib/auth";
 import { publicEnv } from "@/lib/env";
 import { getT } from "@/lib/i18n/server";
@@ -24,7 +25,7 @@ export default async function PageDesignPage() {
         store={store}
         initial={parsePageConfig(profile.page)}
         initialPictures={{ avatarPath: profile.avatar_path, bannerPath: profile.banner_path }}
-        pets={(pets ?? []).map((p) => ({ id: p.id, name: p.name, sprite: resolveSprite(p.species, p.palette, p.sprite) }))}
+        pets={(pets ?? []).map((p) => ({ id: p.id, name: p.name, sprite: resolveSprite(p.species, p.palette, p.sprite, publicMediaUrl) }))}
         userId={user.id}
         supabase={{ url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey() }}
       />

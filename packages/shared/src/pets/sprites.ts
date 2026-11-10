@@ -10,11 +10,30 @@ export type SpriteFrames = { stand: string[]; step: string[]; sleep: string[] };
 export type PetSprite = {
   palette: Record<string, string>;
   frames: SpriteFrames;
+  /**
+   * The streamer's own picture or GIF (full URL), drawn instead of the pixel frames.
+   * Only on pets of species "image"; the frames are then blank.
+   */
+  image?: string;
 };
+
+/** Picture pets: species "image", sprite column `{ "image": "<owner>/pets/<file>" }`. */
+export const IMAGE_SPECIES = "image";
+const SAFE_MEDIA_PATH = /^[\w-]+\/pets\/[\w.-]+$/;
+
+export function imagePetPath(custom: unknown): string | null {
+  const p = custom && typeof custom === "object" ? (custom as { image?: unknown }).image : null;
+  return typeof p === "string" && SAFE_MEDIA_PATH.test(p) ? p : null;
+}
 
 export type PresetSpecies = "bird" | "cat" | "dog" | "slime";
 
 const BLANK = ".".repeat(SPRITE_SIZE);
+const BLANK_FRAMES: SpriteFrames = {
+  stand: Array(SPRITE_SIZE).fill(BLANK),
+  step: Array(SPRITE_SIZE).fill(BLANK),
+  sleep: Array(SPRITE_SIZE).fill(BLANK),
+};
 
 /** Sleeping = eyes shut, and legged pets sit down (feet rows dropped, body shifted down). */
 function sleepFrom(stand: string[], legRows: number): string[] {
@@ -170,8 +189,19 @@ export function darken(hex: string, amount = 0.28): string {
  * Final sprite for a pet row: preset + colour overrides, or a custom drawing.
  * Overrides: { body, accent }. The shade colour follows the body colour.
  */
-export function resolveSprite(species: string, palette: unknown, custom: unknown): PetSprite | null {
+export function resolveSprite(
+  species: string,
+  palette: unknown,
+  custom: unknown,
+  /** Turns a storage path into a URL; picture pets need it. */
+  mediaUrl?: (path: string) => string | null,
+): PetSprite | null {
   if (species === "custom") return isPetSprite(custom) ? custom : null;
+  if (species === IMAGE_SPECIES) {
+    const path = imagePetPath(custom);
+    const url = path && mediaUrl?.(path);
+    return url ? { palette: {}, frames: BLANK_FRAMES, image: url } : null;
+  }
   if (!isPresetSpecies(species)) return null;
   const base = PRESETS[species];
   const over = (palette && typeof palette === "object" ? palette : {}) as Record<string, unknown>;

@@ -1,3 +1,5 @@
+import { publicEnv } from "@/lib/env";
+import { publicMediaUrl } from "@/lib/storage";
 import Link from "next/link";
 import { Panel } from "@moom/shared/ui/kit";
 import { requireStreamer } from "@/lib/auth";
@@ -13,7 +15,7 @@ export default async function PetsPage() {
     supabase.from("pets").select("*").order("created_at"),
     supabase.from("overlay_settings").select("pets_enabled, twitch_channel").eq("streamer_id", profile.id).single(),
   ]);
-  const list = (pets ?? []).map((p) => ({ ...p, resolved: resolveSprite(p.species, p.palette, p.sprite) }));
+  const list = (pets ?? []).map((p) => ({ ...p, resolved: resolveSprite(p.species, p.palette, p.sprite, publicMediaUrl) }));
 
   return (
     <div className="grid gap-5">
@@ -29,7 +31,7 @@ export default async function PetsPage() {
           </Link>
         </Panel>
       )}
-      <PetsManager pets={list} />
+      <PetsManager pets={list} userId={profile.id} supabase={{ url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey() }} />
     </div>
   );
 }

@@ -111,7 +111,7 @@ export const loadStore = cache(async (slug: string, locale: Locale): Promise<Sto
     poll,
     recent: wall.recent,
     top: wall.top,
-    pet: pet.data ? resolveSprite(pet.data.species, pet.data.palette, pet.data.sprite) : null,
+    pet: pet.data ? resolveSprite(pet.data.species, pet.data.palette, pet.data.sprite, publicMediaUrl) : null,
     gifs: parseGifs(s?.alert_gifs, `${p.id}/`).flatMap((g): StoreGif[] => {
       const url = publicMediaUrl(g.path);
       const kind = mediaKindOf(g.path);
