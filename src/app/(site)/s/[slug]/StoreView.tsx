@@ -4,7 +4,8 @@ import { LocaleSwitch } from "@/components/LocaleSwitch";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { siteUrl } from "@/lib/hosts";
 import { formatBaht, type Dict, type Locale } from "@moom/shared/i18n";
-import { backgroundStyle, safePageCss, themeVars, type SectionId } from "@/lib/page-config";
+import { backgroundStyle, safePageCss, themeVars } from "@/lib/page-config";
+import type { BoxId, GridBox } from "@/lib/page-grid";
 import { brandFontCss, googleFontsHref } from "@moom/shared/fonts";
 import { mediaKindOf } from "@moom/shared/overlay/design";
 import { PRESETS } from "@moom/shared/pets/sprites";
@@ -23,45 +24,80 @@ const AVATAR = {
 const AVATAR_SHAPE = { square: "", rounded: "rounded-[22%]", round: "rounded-full", hidden: "" } as const;
 const WIDTH = { narrow: "max-w-3xl", normal: "max-w-5xl", wide: "max-w-7xl" } as const;
 
-export function StoreView({ store, d, locale, preview = false }: { store: Store; d: Dict; locale: Locale; preview?: boolean }) {
-  const cfg = store.page;
-  const visible = (id: SectionId) => cfg.sections.find((s) => s.id === id)?.visible ?? true;
-  // No products yet: no empty shop on the page, and phones open on the tip box.
-  const hasShop = store.products.length > 0;
-  const focusShop = cfg.focus === "shop" && hasShop && visible("shop");
+/** Lets the page designer wrap each box with its move / resize / hide controls. */
+export type StoreEdit = {
+  box: (b: GridBox, node: React.ReactNode, at: { row: number; col: number; lastCol: boolean }) => React.ReactNode;
+  /** Shown in place of a box that has nothing in it yet (no goal, no products...). */
+  empty: (id: BoxId) => React.ReactNode;
+};
 
-  const sections: Record<SectionId, React.ReactNode> = {
-    goal:
-      store.goal && visible("goal") ? (
-        <section key="goal" className="px-frame bg-paper p-4">
-          <h2 className="mb-2 text-sm text-ink-soft">{d.store.goal}</h2>
-          <GoalBar {...store.goal} accent={store.accent} d={d} locale={locale} />
-        </section>
-      ) : null,
-    about:
-      store.bio && visible("about") ? (
-        <section key="about" className="px-frame bg-paper p-4">
-          <h2 className="mb-2 text-xl">{d.store.about}</h2>
-          <p className="whitespace-pre-line text-ink-soft">{store.bio}</p>
-        </section>
-      ) : null,
-    shop:
-      hasShop && visible("shop") ? (
-        <section key="shop" id="shop">
-          <h2 className="mb-4 text-2xl">{d.store.shopTitle}</h2>
-          <ProductGrid store={store} preview={preview} />
-        </section>
-      ) : null,
-    supporters: visible("supporters") ? (
-      <section key="supporters" className="px-frame bg-paper p-4">
-        <h2 className="mb-3 text-xl">{d.store.supportersTitle}</h2>
-        <SupportersWall store={store} d={d} locale={locale} />
-      </section>
-    ) : null,
+export function StoreView({
+  store,
+  d,
+  locale,
+  preview = false,
+  edit,
+}: {
+  store: Store;
+  d: Dict;
+  locale: Locale;
+  preview?: boolean;
+  edit?: StoreEdit;
+}) {
+  const cfg = store.page;
+
+  // null = nothing to show yet. The shop stays hidden until there is a product.
+  const content = (id: BoxId): React.ReactNode => {
+    switch (id) {
+      case "tip":
+        return <TipBox store={store} preview={preview} />;
+      case "goal":
+        return store.goal ? (
+          <section className="px-frame bg-paper p-4">
+            <h2 className="mb-2 text-sm text-ink-soft">{d.store.goal}</h2>
+            <GoalBar {...store.goal} accent={store.accent} d={d} locale={locale} />
+          </section>
+        ) : null;
+      case "about":
+        return store.bio ? (
+          <section className="px-frame bg-paper p-4">
+            <h2 className="mb-2 text-xl">{d.store.about}</h2>
+            <p className="whitespace-pre-line text-ink-soft">{store.bio}</p>
+          </section>
+        ) : null;
+      case "shop":
+        return store.products.length ? (
+          <section id="shop">
+            <h2 className="mb-4 text-2xl">{d.store.shopTitle}</h2>
+            <ProductGrid store={store} preview={preview} />
+          </section>
+        ) : null;
+      case "supporters":
+        return (
+          <section className="px-frame bg-paper p-4">
+            <h2 className="mb-3 text-xl">{d.store.supportersTitle}</h2>
+            <SupportersWall store={store} d={d} locale={locale} />
+          </section>
+        );
+    }
   };
 
-  const tip = <TipBox store={store} preview={preview} />;
-  const right = cfg.sections.map((s) => sections[s.id]).filter(Boolean);
+  // The designer shows every box (hidden ones dimmed); viewers only see the ones with something in them.
+  const rows = cfg.grid.rows
+    .map((r, ri) => ({
+      ri,
+      cols: r.cols
+        .map((c, ci) => ({
+          ci,
+          w: c.w,
+          lastCol: ci === r.cols.length - 1,
+          items: c.boxes
+            .map((b) => ({ b, node: edit ? (content(b.id) ?? edit.empty(b.id)) : b.hidden ? null : content(b.id) }))
+            .filter((x) => x.node),
+        }))
+        .filter((c) => c.items.length > 0),
+    }))
+    .filter((r) => r.cols.length > 0);
 
   const fontsHref = googleFontsHref([cfg.fonts.heading, cfg.fonts.body]);
   const brandCss = brandFontCss(store.brandFontUrl);
@@ -148,23 +184,48 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
           </div>
         </header>
 
-        <div
-          className={`mt-8 grid items-start gap-6 ${
-            cfg.layout === "single"
-              ? "mx-auto max-w-2xl"
-              : cfg.layout === "split-right"
-                ? "@min-[64rem]:grid-cols-[1fr_minmax(0,380px)]"
-                : "@min-[64rem]:grid-cols-[minmax(0,380px)_1fr]"
-          }`}
-        >
-          <div
-            className={`moom-page__tip ${cfg.layout === "single" ? "" : "@min-[64rem]:sticky @min-[64rem]:top-4"} ${
-              focusShop ? "order-2 @min-[64rem]:order-none" : ""
-            } ${cfg.layout === "split-right" ? "@min-[64rem]:order-2" : ""}`}
-          >
-            {tip}
-          </div>
-          <div className="moom-page__content grid gap-6">{right}</div>
+        {/* Wide: rows of columns. Narrow: rows and columns melt away (display: contents) and
+            the boxes stack in reading order, with the tip box first unless asked otherwise. */}
+        <div className="mt-8 grid gap-6">
+          {rows.map((r) => {
+            const total = r.cols.reduce((n, c) => n + c.w, 0);
+            return (
+              <div
+                key={r.ri}
+                data-row={r.ri}
+                className="moom-page__row contents @min-[64rem]:mx-auto @min-[64rem]:grid @min-[64rem]:w-full @min-[64rem]:items-start @min-[64rem]:gap-6"
+                style={{
+                  gridTemplateColumns: r.cols.map((c) => `minmax(0, ${c.w}fr)`).join(" "),
+                  maxWidth: total < 12 ? `${(total / 12) * 100}%` : undefined,
+                }}
+              >
+                {r.cols.map((c) => {
+                  const loneTip = c.items.length === 1 && c.items[0].b.id === "tip" && r.cols.length > 1;
+                  return (
+                    <div
+                      key={c.ci}
+                      className={`moom-page__col contents @min-[64rem]:grid @min-[64rem]:content-start @min-[64rem]:gap-6 ${
+                        loneTip ? "@min-[64rem]:sticky @min-[64rem]:top-4" : ""
+                      }`}
+                    >
+                      {c.items.map(({ b, node }) => (
+                        <div
+                          key={b.id}
+                          data-box={b.id}
+                          className={`moom-page__box relative grid ${b.id === "tip" ? "moom-page__tip" : ""} ${
+                            b.id === "tip" && cfg.focus === "tip" ? "@max-[64rem]:-order-1" : ""
+                          }`}
+                          style={b.minH ? { minHeight: b.minH } : undefined}
+                        >
+                          {edit ? edit.box(b, node, { row: r.ri, col: c.ci, lastCol: c.lastCol }) : node}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
 
         <footer className="mt-16 text-center text-sm text-ink-faint">

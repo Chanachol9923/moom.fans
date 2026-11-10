@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GridSchema, legacyGrid, normalizeGrid } from "./page-grid";
 import { ICON_IDS, type IconId } from "@moom/shared/pets/icons";
 import { cleanFontChoice, fontFamilyName } from "@moom/shared/fonts";
 
@@ -148,7 +149,11 @@ export const PageConfigSchema = z.object({
   textScale: z.number().min(0.9).max(1.25).catch(1),
   /** The streamer's own CSS, scoped to the page. */
   css: z.string().max(MAX_PAGE_CSS).catch("").transform(safePageCss),
-});
+  /** Where each box sits on the page; null on pages saved before free layout. */
+  grid: GridSchema,
+})
+  // Always a complete layout: older pages get theirs from `layout` and `sections`.
+  .transform((c) => ({ ...c, grid: normalizeGrid(c.grid ?? legacyGrid(c)) }));
 
 export type PageConfig = z.infer<typeof PageConfigSchema>;
 

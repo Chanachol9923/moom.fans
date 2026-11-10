@@ -28,6 +28,8 @@ import { savePageConfig } from "../more-actions";
 import { FontPicker } from "@moom/shared/ui/FontPicker";
 import { errorText } from "@/lib/errors";
 import { sampleProducts } from "@/lib/sample-store";
+import { flatBoxes, presetGrid, updateBox, type Grid } from "@/lib/page-grid";
+import { useArrange } from "./Arrange";
 import Link from "next/link";
 import { Choice, Slider } from "../alerts/LookEditor";
 import { UnitIcon } from "@moom/shared/ui/UnitIcon";
@@ -54,6 +56,8 @@ export function PageDesigner({
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [full, setFull] = useState(false);
+  const [device, setDevice] = useState<Device>("phone");
+  const [arrange, setArrange] = useState(false);
   // Preview only: fills an empty shop with made-up products to see how it would look.
   const [demoShop, setDemoShop] = useState(false);
   const noProducts = store.products.length === 0;
@@ -86,12 +90,9 @@ export function PageDesigner({
     touch();
     setCfg((c) => ({ ...c, fonts: { ...c.fonts, ...patch } }));
   };
-  const move = (i: number, dir: -1 | 1) => {
-    const j = i + dir;
-    if (j < 0 || j >= cfg.sections.length) return;
-    const next = [...cfg.sections];
-    [next[i], next[j]] = [next[j], next[i]];
-    set("sections", next);
+  const updateGrid = (fn: (g: Grid) => Grid) => {
+    touch();
+    setCfg((c) => ({ ...c, grid: fn(c.grid) }));
   };
 
   const setPic = (k: keyof Pictures, path: string | null) => {
@@ -138,6 +139,13 @@ export function PageDesigner({
       document.body.style.overflow = overflow;
     };
   }, [full]);
+
+  const { edit, overlay } = useArrange({ d, grid: cfg.grid, wide: device === "desktop", update: updateGrid });
+  // Columns only show on a wide page, so arranging starts on the desktop view.
+  const toggleArrange = () => {
+    if (!arrange && device !== "desktop") setDevice("desktop");
+    setArrange(!arrange);
+  };
 
   const avatarUrl = publicMediaUrl(pics.avatarPath);
   const bannerUrl = publicMediaUrl(pics.bannerPath);
@@ -323,6 +331,60 @@ export function PageDesigner({
           </div>
         </Panel>
 
+        <Panel title={d.page.layoutTitle}>
+          <p className="mb-3 text-sm text-ink-soft">{d.page.layoutHint}</p>
+          <Button type="button" variant={arrange ? "primary" : undefined} onClick={toggleArrange} className="mb-3">
+            {arrange ? d.page.arrangeDone : d.page.arrange}
+          </Button>
+          <ul className="mb-3 grid gap-1">
+            {flatBoxes(cfg.grid).map((b) => (
+              <li key={b.id} className="flex flex-wrap items-center gap-2 bg-paper-2 px-2 py-1">
+                <span className={`flex-1 font-display ${b.hidden ? "text-ink-faint line-through" : ""}`}>
+                  {d.page.boxNames[b.id]}
+                  {b.id === "shop" && noProducts && (
+                    <span className="ml-2 font-sans text-xs text-ink-soft no-underline">
+                      {d.page.shopHidden}{" "}
+                      <Link href="/dashboard/products" className="underline">
+                        {d.page.shopAdd}
+                      </Link>
+                    </span>
+                  )}
+                </span>
+                {b.minH > 0 && (
+                  <button type="button" className="text-xs underline" onClick={() => updateGrid((g) => updateBox(g, b.id, { minH: 0 }))}>
+                    {d.page.autoHeight}
+                  </button>
+                )}
+                {b.id !== "tip" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    aria-pressed={b.hidden}
+                    onClick={() => updateGrid((g) => updateBox(g, b.id, { hidden: !b.hidden }))}
+                  >
+                    {b.hidden ? d.page.boxShow : d.page.boxHide}
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="px-label">{d.page.presets}</div>
+          <div className="mb-3 flex flex-wrap gap-1">
+            {(["left", "right", "single"] as const).map((k) => (
+              <button key={k} type="button" className="px-btn px-btn-sm" onClick={() => updateGrid((g) => presetGrid(k, g))}>
+                {d.page.presetNames[k]}
+              </button>
+            ))}
+          </div>
+          <Field label={d.page.focus}>
+            <Select value={cfg.focus} onChange={(e) => set("focus", e.target.value as PageConfig["focus"])}>
+              <option value="tip">{d.page.focusTip}</option>
+              <option value="shop">{d.page.focusLayout}</option>
+            </Select>
+          </Field>
+        </Panel>
+
         <Panel title={d.page.theme}>
           <div className="grid grid-cols-5 gap-2">
             {THEME_IDS.map((t) => (
@@ -459,12 +521,6 @@ export function PageDesigner({
             />
           )}
           <Choice
-            label={d.page.layout}
-            value={cfg.layout}
-            options={d.page.layouts}
-            onChange={(layout) => set("layout", layout)}
-          />
-          <Choice
             label={d.page.width}
             value={cfg.width}
             options={d.page.widths}
@@ -588,71 +644,6 @@ export function PageDesigner({
               placeholder={d.pay.statusVerifiedTip}
               onChange={(e) => set("thanksMessage", e.target.value)}
             />
-          </Field>
-        </Panel>
-
-        <Panel title={d.page.sections}>
-          <ul className="grid gap-1">
-            {cfg.sections.map((s, i) => (
-              <li
-                key={s.id}
-                className="flex items-center gap-2 bg-paper-2 px-2 py-1"
-              >
-                <input
-                  type="checkbox"
-                  checked={s.visible}
-                  aria-label={d.page.visible}
-                  onChange={(e) =>
-                    set(
-                      "sections",
-                      cfg.sections.map((x) =>
-                        x.id === s.id ? { ...x, visible: e.target.checked } : x,
-                      ),
-                    )
-                  }
-                />
-                <span className="flex-1 font-display">
-                  {d.page.sectionNames[s.id]}
-                  {s.id === "shop" && noProducts && (
-                    <span className="ml-2 font-sans text-xs text-ink-soft">
-                      {d.page.shopHidden}{" "}
-                      <Link href="/dashboard/products" className="underline">
-                        {d.page.shopAdd}
-                      </Link>
-                    </span>
-                  )}
-                </span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => move(i, -1)}
-                  aria-label={d.page.up}
-                >
-                  ↑
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => move(i, 1)}
-                  aria-label={d.page.down}
-                >
-                  ↓
-                </Button>
-              </li>
-            ))}
-          </ul>
-          <Field label={d.page.focus}>
-            <Select
-              value={cfg.focus}
-              onChange={(e) =>
-                set("focus", e.target.value as PageConfig["focus"])
-              }
-            >
-              <option value="tip">{d.page.focusTip}</option>
-              <option value="shop">{d.page.focusShop}</option>
-            </Select>
           </Field>
         </Panel>
 
@@ -855,17 +846,26 @@ export function PageDesigner({
         <DevicePreview
           full={full}
           onFull={setFull}
+          device={device}
+          onDevice={setDevice}
           extra={
-            noProducts && (
-              <label className="flex cursor-pointer items-center gap-1.5 text-sm">
-                <input type="checkbox" checked={demoShop} onChange={(e) => setDemoShop(e.target.checked)} />
-                {d.page.shopDemo}
-              </label>
-            )
+            <>
+              <button type="button" onClick={toggleArrange} className={`px-btn px-btn-sm ${arrange ? "px-btn-primary" : ""}`}>
+                {arrange ? d.page.arrangeDone : d.page.arrange}
+              </button>
+              {arrange && device !== "desktop" && <span className="self-center text-sm text-ink-soft">{d.page.narrowHint}</span>}
+              {noProducts && (
+                <label className="flex cursor-pointer items-center gap-1.5 text-sm">
+                  <input type="checkbox" checked={demoShop} onChange={(e) => setDemoShop(e.target.checked)} />
+                  {d.page.shopDemo}
+                </label>
+              )}
+            </>
           }
         >
-          <StoreView store={previewStore} d={d} locale={locale} preview />
+          <StoreView store={previewStore} d={d} locale={locale} preview edit={arrange ? edit : undefined} />
         </DevicePreview>
+        {overlay}
       </div>
     </div>
   );
@@ -1038,20 +1038,25 @@ const MAX_SCALE = { phone: 1.3, tablet: 1, desktop: 1 } as const;
  * The page as viewers see it at a real device width, scaled to fit. The page lays itself
  * out by its own width (container queries), so every size is exact.
  */
+type Device = keyof typeof DEVICES;
+
 function DevicePreview({
   children,
   full,
   onFull,
+  device,
+  onDevice,
   extra,
 }: {
   children: React.ReactNode;
   full: boolean;
   onFull: (v: boolean) => void;
+  device: Device;
+  onDevice: (d: Device) => void;
   /** Preview-only switches shown under the device buttons. */
   extra?: React.ReactNode;
 }) {
   const { d } = useT();
-  const [device, setDevice] = useState<keyof typeof DEVICES>("phone");
   const box = useRef<HTMLDivElement>(null);
   const [room, setRoom] = useState(400);
   useEffect(() => {
@@ -1078,7 +1083,7 @@ function DevicePreview({
                 type="button"
                 role="radio"
                 aria-checked={device === k}
-                onClick={() => setDevice(k)}
+                onClick={() => onDevice(k)}
                 className={`px-btn px-btn-sm ${device === k ? "px-btn-primary" : "px-btn-ghost"}`}
               >
                 {d.page.devices[k]}
@@ -1090,13 +1095,16 @@ function DevicePreview({
           </button>
         </div>
       </div>
-      {extra && <div className="mb-1 flex flex-wrap gap-3">{extra}</div>}
+      {extra && <div className="mb-2 flex flex-wrap items-center gap-3">{extra}</div>}
       <div ref={box} className={`px-checker flex justify-center py-3 ${full ? "min-h-0 flex-1" : ""}`}>
         <div
           className={`px-frame overflow-x-hidden overflow-y-auto ${full ? "max-h-full" : "max-h-[calc(100dvh-7rem)]"}`}
           style={{ width: width * scale }}
         >
-          <div style={{ width, zoom: scale }}>{children}</div>
+          {/* data-zoom: the arrange handles turn screen pixels back into page pixels with it. */}
+          <div style={{ width, zoom: scale }} data-zoom={scale}>
+            {children}
+          </div>
         </div>
       </div>
     </div>
