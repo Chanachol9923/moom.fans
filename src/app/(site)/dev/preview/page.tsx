@@ -5,6 +5,7 @@ import { PRESETS } from "@moom/shared/pets/sprites";
 import { PageDesigner } from "../../dashboard/page/PageDesigner";
 import { PetsManager } from "../../dashboard/pets/PetsManager";
 import { VtsManager } from "../../dashboard/vts/VtsManager";
+import { SettingsForm } from "../../dashboard/settings/SettingsForm";
 import { sampleStore } from "@/lib/sample-store";
 import { StoreView } from "../../s/[slug]/StoreView";
 import { PayClient } from "../../s/[slug]/pay/[token]/PayClient";
@@ -16,7 +17,7 @@ function minutesFromNow(m: number) {
   return new Date(Date.now() + m * 60_000).toISOString();
 }
 
-const VIEWS = ["store", "designer", "pay-waiting", "pay-pending", "pay-done", "pets", "vts"] as const;
+const VIEWS = ["store", "designer", "pay-waiting", "pay-pending", "pay-done", "pets", "vts", "settings"] as const;
 
 export default async function Preview({ searchParams }: PageProps<"/dev/preview">) {
   if (process.env.NODE_ENV !== "development") notFound();
@@ -82,6 +83,11 @@ export default async function Preview({ searchParams }: PageProps<"/dev/preview"
       {view === "pay-pending" && <PayClient token="preview-token-000000" initial={pay("pending_review")} streamerName={store.displayName} />}
       {view === "pay-done" && (
         <PayClient token="preview-token-000000" initial={pay("verified", "purchase")} streamerName={store.displayName} />
+      )}
+      {view === "settings" && (
+        <main className="mx-auto grid max-w-5xl gap-5 p-4">
+          <SettingsForm locale={locale} promptpayMasked="xxx-xxx-5678" verifyMode="manual" slipokAvailable={false} />
+        </main>
       )}
       {view === "vts" && (
         <main className="mx-auto grid max-w-5xl gap-5 p-4">

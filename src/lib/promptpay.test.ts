@@ -52,7 +52,7 @@ describe("helpers", () => {
   });
 
   it("masks ids", () => {
-    expect(maskPromptPayId("phone", "0812345678")).toBe("081-xxx-5678");
+    expect(maskPromptPayId("phone", "0812345678")).toBe("xxx-xxx-5678");
     expect(maskPromptPayId("national_id", "1234567890123")).toBe("xxxxxxxxx0123");
   });
 });

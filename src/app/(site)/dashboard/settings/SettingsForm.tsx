@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button, Field, Input, Panel, Select } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import { saveSettings, type SaveResult } from "../actions";
@@ -10,17 +10,30 @@ const save = guardForm(saveSettings, () => ({ ok: false, error: "network" }));
 
 export function SettingsForm({
   locale,
-  promptpay,
+  promptpayMasked,
   verifyMode,
   slipokAvailable,
 }: {
   locale: string;
-  promptpay: string;
+  promptpayMasked: string;
   verifyMode: "manual" | "slipok";
   slipokAvailable: boolean;
 }) {
   const { d } = useT();
   const [state, action, pending] = useActionState<SaveResult, FormData>(save, { ok: false });
+  const S = d.settings;
+  // The number is never shown in full here: streamers often have this page open on stream.
+  const [changing, setChanging] = useState(false);
+  const [show, setShow] = useState(false);
+  // Saved: fold the field back to the masked number.
+  const [seen, setSeen] = useState(state);
+  if (seen !== state) {
+    setSeen(state);
+    if (state.ok) {
+      setChanging(false);
+      setShow(false);
+    }
+  }
 
   return (
     <form action={action} className="grid gap-5">
@@ -32,9 +45,39 @@ export function SettingsForm({
       </div>
 
       <Panel title={d.settings.payout}>
-        <Field label={d.onboarding.promptpay} hint={d.onboarding.promptpayHint} htmlFor="promptpay">
-          <Input id="promptpay" name="promptpay" required inputMode="numeric" defaultValue={promptpay} autoComplete="off" className="max-w-sm" />
-        </Field>
+        {changing ? (
+          <Field label={S.promptpayNew} hint={d.onboarding.promptpayHint} htmlFor="promptpay">
+            <div className="flex max-w-md flex-wrap items-center gap-2">
+              <Input
+                id="promptpay"
+                name="promptpay"
+                required
+                autoFocus
+                inputMode="numeric"
+                autoComplete="off"
+                spellCheck={false}
+                className={`min-w-0 flex-1 font-num ${show ? "" : "[-webkit-text-security:disc]"}`}
+              />
+              <Button type="button" size="sm" variant="ghost" onClick={() => setShow((v) => !v)}>
+                {show ? S.promptpayHide : S.promptpayShow}
+              </Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => { setChanging(false); setShow(false); }}>
+                {d.common.cancel}
+              </Button>
+            </div>
+          </Field>
+        ) : (
+          <div className="mb-3">
+            <div className="px-label">{d.onboarding.promptpay}</div>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="font-num text-lg">{promptpayMasked}</span>
+              <Button type="button" size="sm" onClick={() => setChanging(true)}>
+                {S.promptpayChange}
+              </Button>
+            </div>
+            <p className="mt-1 text-sm text-ink-faint">{S.promptpayHidden}</p>
+          </div>
+        )}
         <div className="px-label">{d.settings.verify}</div>
         <label className="my-2 flex cursor-pointer gap-2">
           <input type="radio" name="verify_mode" value="manual" defaultChecked={verifyMode === "manual"} />

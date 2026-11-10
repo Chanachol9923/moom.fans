@@ -275,7 +275,8 @@ export async function saveVtsRules(enabled: boolean, rules: VtsRule[]) {
 
 const SettingsInput = z.object({
   locale: z.string().refine(isLocale),
-  promptpay: z.string().trim(),
+  /** Empty or missing: keep the current number (the form only shows it masked). */
+  promptpay: z.string().trim().optional().default(""),
   verify_mode: z.enum(["manual", "slipok"]),
 });
 
@@ -287,8 +288,8 @@ export async function saveSettings(_prev: SaveResult, form: FormData): Promise<S
   const v = parsed.data;
 
   const ppId = normalizePromptPayId(v.promptpay);
-  const ppType = detectPromptPayType(ppId);
-  if (!ppType || (ppType === "national_id" && !isValidNationalId(ppId))) return { ok: false, error: "promptpay" };
+  const ppType = ppId ? detectPromptPayType(ppId) : null;
+  if (ppId && (!ppType || (ppType === "national_id" && !isValidNationalId(ppId)))) return { ok: false, error: "promptpay" };
 
   const { error } = await supabase
     .from("profiles")
@@ -298,7 +299,7 @@ export async function saveSettings(_prev: SaveResult, form: FormData): Promise<S
   const mode = v.verify_mode === "slipok" && isSlipOkConfigured() ? "slipok" : "manual";
   await supabase
     .from("streamer_private")
-    .update({ promptpay_id: ppId, promptpay_type: ppType, verify_mode: mode })
+    .update(ppId && ppType ? { promptpay_id: ppId, promptpay_type: ppType, verify_mode: mode } : { verify_mode: mode })
     .eq("streamer_id", profile.id);
 
   revalidatePath("/dashboard", "layout");

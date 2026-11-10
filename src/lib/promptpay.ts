@@ -75,7 +75,6 @@ export function promptPayPayload(opts: {
   return payload + crc16(payload);
 }
 
-/** Masked for display, e.g. 081-xxx-5678. */
 /** Grouped for reading back: 081-234-5678, 1-2345-67890-12-3. */
 export function formatPromptPayId(type: PromptPayType, raw: string): string {
   const id = normalizePromptPayId(raw);
@@ -84,8 +83,9 @@ export function formatPromptPayId(type: PromptPayType, raw: string): string {
   return id;
 }
 
+/** Masked for display, safe to show on stream: xxx-xxx-5678. Only the last 4 digits. */
 export function maskPromptPayId(type: PromptPayType, raw: string): string {
   const id = normalizePromptPayId(raw);
-  if (type === "phone") return `${id.slice(0, 3)}-xxx-${id.slice(-4)}`;
+  if (type === "phone") return `xxx-xxx-${id.slice(-4)}`;
   return `${"x".repeat(Math.max(0, id.length - 4))}${id.slice(-4)}`;
 }

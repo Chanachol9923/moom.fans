@@ -1,6 +1,7 @@
 import { requireStreamer } from "@/lib/auth";
 import { getPrivate } from "@/lib/domain/streamer";
 import { getT } from "@/lib/i18n/server";
+import { maskPromptPayId } from "@/lib/promptpay";
 import { isSlipOkConfigured } from "@/lib/slipok";
 import { AccountPanel } from "./AccountPanel";
 import { SettingsForm } from "./SettingsForm";
@@ -14,7 +15,8 @@ export default async function SettingsPage() {
       <h1 className="text-3xl">{d.settings.title}</h1>
       <SettingsForm
         locale={profile.locale}
-        promptpay={priv.promptpay_id}
+        // Only the masked number goes to the browser, so it can't show up on stream.
+        promptpayMasked={maskPromptPayId(priv.promptpay_type, priv.promptpay_id)}
         verifyMode={priv.verify_mode}
         slipokAvailable={isSlipOkConfigured()}
       />
