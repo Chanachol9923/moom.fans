@@ -9,6 +9,7 @@ import { mergeQueue, vtsActionsFor } from "./queue";
 import { OverlayAudio } from "./sound";
 import { connectTwitchChat } from "./twitch";
 import { VtsClient } from "../vts";
+import { reelTickTimes, WHEEL_EVENT, WHEEL_SHOW_MS, type WheelEvent } from "../wheel";
 
 // The alert engine: keeps the queue in sync with the server, plays one alert at a time
 // (sound, TTS, VTube Studio, wheel, media), and exposes what should be on screen as a
@@ -112,6 +113,7 @@ export function useOverlayEngine(opts: EngineOptions) {
   const audio = useRef<OverlayAudio | null>(null);
   const abort = useRef<AbortController | null>(null);
   const vts = useRef<VtsClient | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const onSpeak = useRef(opts.onSpeak);
   const speak = useRef(opts.speak);
   useEffect(() => {
@@ -203,12 +205,14 @@ export function useOverlayEngine(opts: EngineOptions) {
           else if (payload.action === "reload") location.reload();
         })
         .subscribe((status) => {
+          channelRef.current = status === "SUBSCRIBED" ? channel : null;
           setConnected(status === "SUBSCRIBED" ? "live" : status === "CLOSED" || status === "CHANNEL_ERROR" ? "offline" : "connecting");
         });
     }
     return () => {
       clearInterval(id);
       window.removeEventListener("online", refresh);
+      channelRef.current = null;
       channel?.unsubscribe();
       // Close the socket too, or every remount leaves one open.
       void sb?.realtime.disconnect();
@@ -289,8 +293,22 @@ export function useOverlayEngine(opts: EngineOptions) {
         }
 
         if (p.wheel && p.wheel.items.length > 1 && !signal.aborted) {
-          setCurrent({ alert, phase: "wheel", startedAt: Date.now(), durationMs: 7500 });
-          await sleep(7500, signal); // spin + time to read the result
+          setCurrent({ alert, phase: "wheel", startedAt: Date.now(), durationMs: WHEEL_SHOW_MS });
+          // In its own widget: tell it to spin, and play the clicks here where the sound is.
+          // Previews stay quiet so the widget doesn't spin twice.
+          if (cfg.wheelPlace === "widget" && !opts.silent) {
+            const send = (payload: WheelEvent) =>
+              void channelRef.current?.send({ type: "broadcast", event: WHEEL_EVENT, payload }).catch(() => {});
+            send({ id: alert.id, items: p.wheel.items, result: p.wheel.result });
+            const timers = reelTickTimes(p.wheel.items.length, p.wheel.result).map((ms) => setTimeout(() => audio.current?.tick(), ms));
+            const stop = () => {
+              timers.forEach(clearTimeout);
+              send({ id: alert.id, stop: true });
+            };
+            signal.addEventListener("abort", stop, { once: true });
+            await sleep(WHEEL_SHOW_MS, signal);
+            signal.removeEventListener("abort", stop);
+          } else await sleep(WHEEL_SHOW_MS, signal); // spin + time to read the result
         }
 
         if (p.media && cfg.mediaEnabled && !signal.aborted) {

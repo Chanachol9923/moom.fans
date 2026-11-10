@@ -271,65 +271,28 @@ export async function saveVtsRules(enabled: boolean, rules: VtsRule[]) {
 // ---------------------------------------------------------------------------
 // profile & payout settings
 
-const ProfileInput = z.object({
-  display_name: z.string().trim().min(1).max(60),
-  bio: z.string().trim().max(500),
-  accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  links: z.string().max(3000),
-  tip_presets: z.string().max(100),
-  min_tip: z.coerce.number().min(1).max(100000),
+const SettingsInput = z.object({
   locale: z.string().refine(isLocale),
-  avatar_path: z.string().max(300).optional(),
-  banner_path: z.string().max(300).optional(),
   promptpay: z.string().trim(),
   verify_mode: z.enum(["manual", "slipok"]),
 });
 
-export async function saveProfile(_prev: SaveResult, form: FormData): Promise<SaveResult> {
+/** Settings: how money comes in and the overlay language. The page itself is in Page design. */
+export async function saveSettings(_prev: SaveResult, form: FormData): Promise<SaveResult> {
   const { supabase, profile } = await streamerForAction();
-  const parsed = ProfileInput.safeParse(Object.fromEntries(form));
+  const parsed = SettingsInput.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.path.join(".") };
   const v = parsed.data;
-
-  const links = v.links
-    .split(/\r?\n/)
-    .map((line) => {
-      const [label, url] = line.includes("|") ? line.split("|").map((s) => s.trim()) : ["", line.trim()];
-      try {
-        const u = new URL(url);
-        if (u.protocol !== "https:" && u.protocol !== "http:") return null;
-        return { label: (label || u.hostname.replace(/^www\./, "")).slice(0, 40), url: u.toString() };
-      } catch {
-        return null;
-      }
-    })
-    .filter((x): x is { label: string; url: string } => x !== null)
-    .slice(0, 12);
-  const presets = [...new Set(v.tip_presets.split(/[,\s]+/).map(Number).filter((n) => Number.isInteger(n) && n > 0 && n <= 100000))]
-    .sort((a, b) => a - b)
-    .slice(0, 6);
-  const own = (p: string | undefined) =>
-    p === undefined ? undefined : p.startsWith(`${profile.id}/`) && SAFE_PATH.test(p) ? p : null;
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      display_name: v.display_name,
-      bio: v.bio,
-      accent_color: v.accent_color,
-      links,
-      tip_presets: presets.length ? presets : [20, 50, 100],
-      min_tip: v.min_tip,
-      locale: v.locale as "th" | "en",
-      ...(own(v.avatar_path) !== undefined ? { avatar_path: own(v.avatar_path) } : {}),
-      ...(own(v.banner_path) !== undefined ? { banner_path: own(v.banner_path) } : {}),
-    })
-    .eq("id", profile.id);
-  if (error) return { ok: false, error: dbError("dashboard", error) };
 
   const ppId = normalizePromptPayId(v.promptpay);
   const ppType = detectPromptPayType(ppId);
   if (!ppType || (ppType === "national_id" && !isValidNationalId(ppId))) return { ok: false, error: "promptpay" };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ locale: v.locale as "th" | "en" })
+    .eq("id", profile.id);
+  if (error) return { ok: false, error: dbError("dashboard", error) };
   const mode = v.verify_mode === "slipok" && isSlipOkConfigured() ? "slipok" : "manual";
   await supabase
     .from("streamer_private")

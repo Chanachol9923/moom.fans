@@ -25,6 +25,14 @@ export default async function PageDesignPage() {
         store={store}
         initial={parsePageConfig(profile.page)}
         initialPictures={{ avatarPath: profile.avatar_path, bannerPath: profile.banner_path }}
+        initialInfo={{
+          displayName: profile.display_name,
+          bio: profile.bio,
+          accent: profile.accent_color,
+          links: store.links,
+          tipPresets: profile.tip_presets,
+          minTip: Number(profile.min_tip),
+        }}
         pets={(pets ?? []).map((p) => ({ id: p.id, name: p.name, sprite: resolveSprite(p.species, p.palette, p.sprite, publicMediaUrl) }))}
         userId={user.id}
         supabase={{ url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey() }}

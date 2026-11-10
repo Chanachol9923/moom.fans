@@ -16,9 +16,41 @@ export const WheelSchema = z.object({
     )
     .max(12)
     .catch([]),
+  /** Where it spins: on the main alert overlay, or in its own OBS widget. */
+  place: z.enum(["overlay", "widget"]).catch("overlay"),
 });
 
 export type WheelConfig = z.infer<typeof WheelSchema>;
+export type WheelPlace = WheelConfig["place"];
+
+/** The reel: laps before it stops, how long it spins, and how long it stays up in total. */
+export const REEL_LAPS = 6;
+export const REEL_SPIN_MS = 4200;
+export const WHEEL_SHOW_MS = 7500;
+
+/** Realtime event the overlay sends to the wheel widget when a spin starts (or is skipped). */
+export const WHEEL_EVENT = "wheel";
+export type WheelEvent = { id: string; items: string[]; result: number } | { id: string; stop: true };
+
+export function isWheelEvent(v: unknown): v is WheelEvent {
+  if (!v || typeof v !== "object") return false;
+  const e = v as Record<string, unknown>;
+  if (typeof e.id !== "string") return false;
+  if (e.stop === true) return true;
+  return Array.isArray(e.items) && e.items.length > 1 && e.items.length <= 12 && e.items.every((x) => typeof x === "string") &&
+    typeof e.result === "number" && Number.isInteger(e.result) && e.result >= 0 && e.result < e.items.length;
+}
+
+/**
+ * When each label passes the marker (ms from the start), for the click sound. Matches the
+ * reel's ease-out: position = target * (1 - (1 - t)^4).
+ */
+export function reelTickTimes(count: number, result: number): number[] {
+  const rows = REEL_LAPS * count + result;
+  const out: number[] = [];
+  for (let k = 1; k <= rows; k++) out.push(Math.round((1 - Math.pow(1 - k / rows, 1 / 4)) * REEL_SPIN_MS));
+  return out;
+}
 
 export function parseWheel(raw: unknown): WheelConfig {
   return WheelSchema.parse(raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {});

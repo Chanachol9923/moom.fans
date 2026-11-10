@@ -59,6 +59,14 @@ export default async function Preview({ searchParams }: PageProps<"/dev/preview"
             store={store}
             initial={store.page}
             initialPictures={{ avatarPath: null, bannerPath: null }}
+            initialInfo={{
+              displayName: store.displayName,
+              bio: store.bio,
+              accent: store.accent,
+              links: store.links,
+              tipPresets: store.tipPresets,
+              minTip: store.minTip,
+            }}
             pets={[{ id: "00000000-0000-0000-0000-00000000000a", name: "Mikan", sprite: PRESETS.cat }]}
             userId="dev"
             supabase={{ url: "http://127.0.0.1:54321", key: "dev" }}

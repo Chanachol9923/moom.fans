@@ -3,7 +3,7 @@ import type { Locale } from "@moom/shared/i18n";
 
 // Client-safe types for the OBS widgets (/widget/<token>/<kind>).
 
-export const WIDGET_KINDS = ["goal", "recent", "top", "qr", "poll", "subathon"] as const;
+export const WIDGET_KINDS = ["goal", "recent", "top", "qr", "poll", "subathon", "wheel"] as const;
 export type WidgetKind = (typeof WIDGET_KINDS)[number];
 
 export function isWidgetKind(v: string): v is WidgetKind {
@@ -18,6 +18,7 @@ export const WIDGET_SIZES: Record<WidgetKind, [number, number]> = {
   qr: [300, 360],
   poll: [600, 400],
   subathon: [480, 160],
+  wheel: [600, 340],
 };
 
 export type WidgetData = {
@@ -34,6 +35,8 @@ export type WidgetData = {
   top: Array<{ name: string; total: number }>;
   poll: { title: string; options: string[]; totals: number[]; weightBy: "amount" | "count" } | null;
   subathon: { endsAt: string | null; pausedLeft: number | null };
+  /** Prize wheel labels (for the preview spin) and where it spins. */
+  wheel: { items: string[]; place: "overlay" | "widget" };
   realtime: { url: string; key: string; channel: string } | null;
 };
 

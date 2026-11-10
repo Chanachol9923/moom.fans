@@ -7,6 +7,7 @@ import { publicMediaUrl } from "@/lib/storage";
 import { overlayTopic } from "@/lib/realtime";
 import { admin } from "@/lib/supabase/admin";
 import { parseGoalLook } from "@moom/shared/goal-look";
+import { parseWheel } from "@moom/shared/wheel";
 import type { WidgetData } from "@moom/shared/widgets";
 import { streamerByOverlayToken } from "./overlay";
 import { ensureWidgetDefaults } from "./defaults";
@@ -33,6 +34,7 @@ export async function loadWidgetData(token: string): Promise<WidgetData | null> 
   ]);
   const looks = (settings.data?.widget_looks ?? {}) as Record<string, unknown>;
   const goalLook = parseGoalLook(looks.goal);
+  const wheel = parseWheel(settings.data?.wheel);
   return {
     accent: profile.accent_color,
     locale: profile.locale,
@@ -46,6 +48,7 @@ export async function loadWidgetData(token: string): Promise<WidgetData | null> 
     top: wall.top,
     poll: poll && { title: poll.title, options: poll.options, totals: poll.totals, weightBy: poll.weightBy },
     subathon,
+    wheel: { items: wheel.items.map((i) => i.label), place: wheel.place },
     realtime: { url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey(), channel: overlayTopic(s.overlay_channel) },
   };
 }

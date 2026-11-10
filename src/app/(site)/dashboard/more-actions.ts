@@ -7,6 +7,7 @@ import { z } from "zod";
 import { streamerForAction } from "@/lib/auth";
 import { replayAlert } from "@/lib/domain/alerts";
 import { PageConfigSchema } from "@/lib/page-config";
+import { normalizeLinks, normalizePresets, PageInfoSchema } from "@/lib/profile-info";
 import { notifyOverlay } from "@/lib/realtime";
 import { BUCKETS } from "@/lib/storage";
 import { removeObjects } from "@/lib/storage.server";
@@ -29,18 +30,33 @@ async function channelOf(streamerId: string) {
 
 /**
  * `pictures` carries the profile and cover pictures picked in Page design; they live in
- * their own columns (also shown in Settings). undefined leaves a picture as it is.
+ * their own columns. `info` is the name, about text, links, colour and tip amounts, also
+ * profile columns. undefined leaves them as they are.
  */
 export async function savePageConfig(
   raw: unknown,
   pictures?: { avatarPath?: string | null; bannerPath?: string | null },
-): Promise<{ ok: boolean }> {
+  info?: unknown,
+): Promise<{ ok: boolean; error?: string }> {
   const { supabase, profile } = await streamerForAction();
   const own = (p: unknown) =>
     p === undefined ? undefined : typeof p === "string" && p.startsWith(`${profile.id}/`) && SAFE_PATH.test(p) ? p : null;
   const avatar = own(pictures?.avatarPath);
   const banner = own(pictures?.bannerPath);
   const cfg = PageConfigSchema.parse(raw ?? {});
+  let details = {};
+  if (info !== undefined) {
+    const v = PageInfoSchema.safeParse(info);
+    if (!v.success) return { ok: false, error: v.error.issues[0]?.path[0] === "displayName" ? "name" : "info" };
+    details = {
+      display_name: v.data.displayName,
+      bio: v.data.bio,
+      accent_color: v.data.accent,
+      links: normalizeLinks(v.data.links),
+      tip_presets: normalizePresets(v.data.tipPresets),
+      min_tip: v.data.minTip,
+    };
+  }
   if (cfg.backgroundImagePath && !(cfg.backgroundImagePath.startsWith(`${profile.id}/`) && SAFE_PATH.test(cfg.backgroundImagePath))) {
     cfg.backgroundImagePath = null;
   }
@@ -58,6 +74,7 @@ export async function savePageConfig(
     .from("profiles")
     .update({
       page: cfg as unknown as Json,
+      ...details,
       ...(avatar !== undefined ? { avatar_path: avatar } : {}),
       ...(banner !== undefined ? { banner_path: banner } : {}),
     })
@@ -140,8 +157,29 @@ export async function startPoll(_prev: { ok: boolean; error?: string }, form: Fo
 export async function saveWheel(raw: unknown) {
   const { supabase, profile } = await streamerForAction();
   const cfg = WheelSchema.parse(raw ?? {});
+  // Where it spins is set on its own (setWheelPlace); an editor opened earlier must not undo it.
+  const { data: cur } = await supabase.from("overlay_settings").select("wheel").eq("streamer_id", profile.id).single();
+  cfg.place = WheelSchema.parse(cur?.wheel && typeof cur.wheel === "object" ? cur.wheel : {}).place;
   await supabase.from("overlay_settings").update({ wheel: cfg as unknown as Json }).eq("streamer_id", profile.id);
   revalidatePath("/dashboard/fun");
+}
+
+/** Wheel on the alert overlay or in its own widget. The overlay refetches its config right away. */
+export async function setWheelPlace(place: unknown): Promise<boolean> {
+  const { supabase, profile } = await streamerForAction();
+  const v = z.enum(["overlay", "widget"]).safeParse(place);
+  if (!v.success) return false;
+  const { data: cur } = await supabase.from("overlay_settings").select("wheel").eq("streamer_id", profile.id).single();
+  const cfg = WheelSchema.parse(cur?.wheel && typeof cur.wheel === "object" ? cur.wheel : {});
+  const { error } = await supabase
+    .from("overlay_settings")
+    .update({ wheel: { ...cfg, place: v.data } as unknown as Json })
+    .eq("streamer_id", profile.id);
+  if (error) return false;
+  await notifyOverlay(await channelOf(profile.id), { type: "config" }).catch(() => {});
+  revalidatePath("/dashboard/fun");
+  revalidatePath("/dashboard/widgets");
+  return true;
 }
 
 /** Subathon controls are cross-row arithmetic on a timestamp, so they run server-side with checks. */

@@ -30,6 +30,10 @@ export function sampleWidgetData(locale: Locale): WidgetData {
       weightBy: "amount",
     },
     subathon: { endsAt: new Date(Date.UTC(2030, 0, 1)).toISOString(), pausedLeft: null },
+    wheel: {
+      items: th ? ["ร้องเพลง 1 เพลง", "ทำเสียงแมว", "อ่านชื่อ 3 รอบ", "เต้น 10 วิ"] : ["Sing a song", "Cat voice", "Name x3", "Dance 10s"],
+      place: "widget",
+    },
     realtime: null,
   };
 }

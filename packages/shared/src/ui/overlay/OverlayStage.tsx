@@ -69,7 +69,7 @@ export function OverlayStage({
         )}
       </div>
 
-      {current?.phase === "wheel" && current.alert.payload.wheel && (
+      {current?.phase === "wheel" && current.alert.payload.wheel && cfg.wheelPlace !== "widget" && (
         <div className="absolute inset-0 grid place-items-center p-10">
           <WheelReel
             key={current.alert.id}

@@ -1,4 +1,5 @@
 import "server-only";
+import { parseWheel } from "@moom/shared/wheel";
 import type { AlertPayload, OverlayAlert, OverlayConfig, OverlayPet, OverlayState, VtsRule } from "@moom/shared/alerts";
 import { publicEnv } from "@/lib/env";
 import { parseStoredTiers, safeCss, toAlertTiers } from "@moom/shared/overlay/design";
@@ -84,6 +85,7 @@ export async function loadOverlayState(token: string): Promise<OverlayState | nu
     tiers: toAlertTiers(parseStoredTiers(settings.alert_tiers, `${s.streamer_id}/`), publicMediaUrl),
     customCss: safeCss(settings.custom_css ?? ""),
     brandFontUrl: brandFontUrl(profile.page, s.streamer_id),
+    wheelPlace: parseWheel(settings.wheel).place,
   };
 
   return {

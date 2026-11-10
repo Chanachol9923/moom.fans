@@ -17,6 +17,7 @@ import { FunTabs } from "./FunTabs";
 import { PollForm } from "./PollForm";
 import { SubathonPanel } from "./SubathonPanel";
 import { WheelEditor } from "./WheelEditor";
+import { WheelPlacePicker } from "./WheelPlacePicker";
 
 /** The server renders once per request; the clock itself ticks in SubathonPanel. */
 function isFuture(iso: string | null) {
@@ -42,7 +43,7 @@ export default async function FunPage() {
   const total = poll ? poll.totals.reduce((a, b) => a + b, 0) || 1 : 1;
   const subRunning = isFuture(s.subathon_ends_at);
   const subPaused = s.subathon_paused_left !== null;
-  const widget = (kind: "poll" | "subathon") => siteUrl(`/widget/${priv.overlay_token}/${kind}`);
+  const widget = (kind: "poll" | "subathon" | "wheel") => siteUrl(`/widget/${priv.overlay_token}/${kind}`);
 
   /** Right-hand card: how the tool shows up on stream. */
   const obsCard = (children: React.ReactNode) => (
@@ -78,8 +79,19 @@ export default async function FunPage() {
               </Panel>,
               obsCard(
                 <>
-                  <p className="mb-3 text-sm text-ink-soft">{f.wheelObs}</p>
-                  <div className="flex flex-wrap gap-2">
+                  <WheelPlacePicker place={wheel.place} />
+                  {wheel.place === "widget" ? (
+                    <>
+                      <p className="mb-3 text-sm text-ink-soft">{f.wheelWidgetObs}</p>
+                      <PreviewFrame src={`${widget("wheel")}?preview=1`} width={WIDGET_SIZES.wheel[0]} height={WIDGET_SIZES.wheel[1]} />
+                      <div className="mt-3">
+                        <CopyField value={widget("wheel")} secret />
+                      </div>
+                    </>
+                  ) : (
+                    <p className="mb-3 text-sm text-ink-soft">{f.wheelObs}</p>
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <ActionButton size="sm" variant="beak" action={sendTestAlert.bind(null, "wheel")}>
                       {d.overlay.testWheel}
                     </ActionButton>

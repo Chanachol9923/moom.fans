@@ -8,6 +8,8 @@ import { getT } from "@/lib/i18n/server";
 import { WIDGET_KINDS, WIDGET_SIZES, type WidgetKind } from "@moom/shared/widgets";
 import { PreviewFrame } from "../overlay/PreviewFrame";
 import { ensureWidgetDefaults } from "@/lib/domain/defaults";
+import { parseWheel } from "@moom/shared/wheel";
+import { WheelPlacePicker } from "../fun/WheelPlacePicker";
 
 /** Where each widget's content and look are set. */
 const SETTINGS: Record<WidgetKind, string> = {
@@ -17,12 +19,18 @@ const SETTINGS: Record<WidgetKind, string> = {
   qr: "/dashboard/page",
   poll: "/dashboard/fun#poll",
   subathon: "/dashboard/fun#subathon",
+  wheel: "/dashboard/fun#wheel",
 };
 
 export default async function WidgetsPage() {
   const { supabase, profile } = await requireStreamer();
   const { d } = await getT();
-  const [priv] = await Promise.all([getPrivate(profile.id), ensureWidgetDefaults(supabase, profile.id, profile.locale)]);
+  const [priv, , { data: s }] = await Promise.all([
+    getPrivate(profile.id),
+    ensureWidgetDefaults(supabase, profile.id, profile.locale),
+    supabase.from("overlay_settings").select("wheel").eq("streamer_id", profile.id).maybeSingle(),
+  ]);
+  const wheel = parseWheel(s?.wheel);
   return (
     <div className="grid gap-5">
       <div>
@@ -45,7 +53,21 @@ export default async function WidgetsPage() {
               }
             >
               <p className="mb-2 text-sm text-ink-soft">{d.widgets.kinds[k].desc}</p>
-              <PreviewFrame src={url} width={w} height={h} />
+              {k === "wheel" && (
+                <>
+                  <WheelPlacePicker place={wheel.place} />
+                  {wheel.place === "overlay" && <p className="mb-2 text-sm text-ink-soft">{d.widgets.wheelOnOverlay}</p>}
+                  {!wheel.enabled && (
+                    <p className="mb-2 text-sm text-ink-soft">
+                      {d.widgets.wheelOff}{" "}
+                      <Link href="/dashboard/fun#wheel" className="underline">
+                        {d.widgets.wheelTurnOn}
+                      </Link>
+                    </p>
+                  )}
+                </>
+              )}
+              <PreviewFrame src={k === "wheel" ? `${url}?preview=1` : url} width={w} height={h} />
               <div className="mt-3">
                 <CopyField value={url} secret />
               </div>

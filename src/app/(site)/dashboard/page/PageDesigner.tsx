@@ -34,11 +34,14 @@ import Link from "next/link";
 import { Choice, Slider } from "../alerts/LookEditor";
 import { UnitIcon } from "@moom/shared/ui/UnitIcon";
 import { MAX_GIF_BYTES, mediaKindOf } from "@moom/shared/overlay/design";
+import { normalizeLinks, normalizePresets, type PageInfo } from "@/lib/profile-info";
+import { InfoPanel } from "./InfoPanel";
 
 export function PageDesigner({
   store,
   initial,
   initialPictures,
+  initialInfo,
   pets,
   userId,
   supabase,
@@ -46,6 +49,7 @@ export function PageDesigner({
   store: Store;
   initial: PageConfig;
   initialPictures: Pictures;
+  initialInfo: PageInfo;
   pets: Array<{ id: string; name: string; sprite: PetSprite | null }>;
   userId: string;
   supabase: SupabasePublic;
@@ -53,6 +57,8 @@ export function PageDesigner({
   const { d, locale } = useT();
   const [cfg, setCfg] = useState<PageConfig>(initial);
   const [pics, setPics] = useState<Pictures>(initialPictures);
+  const [info, setInfo] = useState<PageInfo>(initialInfo);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [full, setFull] = useState(false);
@@ -93,6 +99,11 @@ export function PageDesigner({
   const updateGrid = (fn: (g: Grid) => Grid) => {
     touch();
     setCfg((c) => ({ ...c, grid: fn(c.grid) }));
+  };
+
+  const setInfoPart = (patch: Partial<PageInfo>) => {
+    touch();
+    setInfo((i) => ({ ...i, ...patch }));
   };
 
   const setPic = (k: keyof Pictures, path: string | null) => {
@@ -153,6 +164,12 @@ export function PageDesigner({
 
   const previewStore: Store = {
     ...store,
+    displayName: info.displayName.trim() || store.displayName,
+    bio: info.bio,
+    accent: info.accent,
+    links: normalizeLinks(info.links),
+    tipPresets: normalizePresets(info.tipPresets),
+    minTip: info.minTip || 1,
     avatarUrl,
     bannerUrl,
     products: noProducts && demoShop ? sampleProducts(locale) : store.products,
@@ -209,6 +226,8 @@ export function PageDesigner({
       }
     >
       <div className={full ? "hidden min-h-0 min-w-0 content-start gap-5 overflow-y-auto pr-1 xl:grid" : "grid min-w-0 gap-5"}>
+        <InfoPanel d={d} info={info} onChange={setInfoPart} error={saveErr} />
+
         <Panel title={d.page.pictures}>
           <p className="mb-3 text-sm text-ink-soft">{d.page.picturesHint}</p>
           <div className="grid gap-4">
@@ -822,15 +841,19 @@ export function PageDesigner({
             disabled={pending}
             onClick={() =>
               start(async () => {
-                const r = await savePageConfig(cfg, pics).catch(() => null);
+                if (!info.displayName.trim()) return setSaveErr("name");
+                const r = await savePageConfig(cfg, pics, { ...info, minTip: info.minTip || 1 }).catch(() => null);
                 setSaved(Boolean(r?.ok));
+                setSaveErr(r?.ok ? null : (r?.error ?? "network"));
                 if (r?.ok) setDirty(false);
               })
             }
           >
             {pending ? d.common.loading : d.common.save}
           </Button>
-          {saved ? (
+          {saveErr ? (
+            <span className="text-sm text-tomato">{saveErr === "name" ? d.page.nameNeeded : d.common.error}</span>
+          ) : saved ? (
             <span className="font-display text-leaf">✓ {d.common.saved}</span>
           ) : (
             dirty && <span className="text-sm text-ink-soft">{d.page.unsaved}</span>

@@ -147,6 +147,8 @@ export type OverlayConfig = {
   customCss: string;
   /** Uploaded brand font (font choice "brand"). */
   brandFontUrl?: string | null;
+  /** "widget": the prize wheel spins in its own OBS widget, not on this page. */
+  wheelPlace?: "overlay" | "widget";
 };
 
 export type OverlayState = {

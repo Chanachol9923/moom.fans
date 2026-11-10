@@ -7,11 +7,45 @@ import { GoalBar } from "@moom/shared/ui/GoalBar";
 import { isOverlayEvent } from "@moom/shared/alerts";
 import { formatBaht, getDict } from "@moom/shared/i18n";
 import { formatClock, type WidgetData, type WidgetKind } from "@moom/shared/widgets";
+import { isWheelEvent, WHEEL_EVENT, WHEEL_SHOW_MS, type WheelEvent } from "@moom/shared/wheel";
+import { WheelReel } from "@moom/shared/ui/overlay/WheelReel";
 
 const POLL_MS = 15_000;
 
-export function WidgetApp({ token, kind, initial, demo = false }: { token: string; kind: WidgetKind; initial: WidgetData; demo?: boolean }) {
+export function WidgetApp({
+  token,
+  kind,
+  initial,
+  demo = false,
+  preview = false,
+}: {
+  token: string;
+  kind: WidgetKind;
+  initial: WidgetData;
+  demo?: boolean;
+  /** Dashboard card: the wheel spins on a loop so there is something to see. */
+  preview?: boolean;
+}) {
   const [data, setData] = useState(initial);
+  const [spin, setSpin] = useState<Extract<WheelEvent, { items: string[] }> | null>(null);
+
+  // The wheel widget: the overlay tells it when to spin; it hides again when done.
+  useEffect(() => {
+    if (kind !== "wheel" || !spin) return;
+    const t = setTimeout(() => setSpin((s) => (s === spin ? null : s)), WHEEL_SHOW_MS);
+    return () => clearTimeout(t);
+  }, [kind, spin]);
+  useEffect(() => {
+    if (kind !== "wheel" || !preview) return;
+    let n = 0;
+    const go = () => {
+      const items = data.wheel.items.length > 1 ? data.wheel.items : ["?", "?"];
+      setSpin({ id: `preview-${n++}`, items, result: n % items.length });
+    };
+    go();
+    const id = setInterval(go, WHEEL_SHOW_MS + 1500);
+    return () => clearInterval(id);
+  }, [kind, preview, data.wheel.items]);
 
   useEffect(() => {
     if (demo) return;
@@ -30,13 +64,18 @@ export function WidgetApp({ token, kind, initial, demo = false }: { token: strin
               setTimeout(refresh, 800);
             }
           })
+          .on("broadcast", { event: WHEEL_EVENT }, ({ payload }) => {
+            if (kind !== "wheel" || preview || !isWheelEvent(payload)) return;
+            if ("stop" in payload) setSpin((s) => (s?.id === payload.id ? null : s));
+            else setSpin(payload);
+          })
           .subscribe()
       : null;
     return () => {
       clearInterval(id);
       channel?.unsubscribe();
     };
-  }, [demo, token, initial.realtime]);
+  }, [demo, token, initial.realtime, kind, preview]);
 
   return (
     <div className="h-dvh w-dvw overflow-hidden p-3 text-[18px]" style={{ ["--accent" as string]: data.accent }}>
@@ -46,6 +85,11 @@ export function WidgetApp({ token, kind, initial, demo = false }: { token: strin
       {kind === "qr" && <Qr data={data} />}
       {kind === "poll" && data.poll && <Poll data={data} />}
       {kind === "subathon" && <Subathon data={data} />}
+      {kind === "wheel" && spin && (
+        <div className="grid h-full place-items-center">
+          <WheelReel key={spin.id} items={spin.items} result={spin.result} accent={data.accent} locale={data.locale} />
+        </div>
+      )}
     </div>
   );
 }

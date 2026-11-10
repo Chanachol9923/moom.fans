@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { fmt, getDict, type Locale } from "@moom/shared/i18n";
+import { REEL_LAPS, REEL_SPIN_MS } from "@moom/shared/wheel";
 
 const ROW = 64;
-const SPIN_MS = 4200;
+const SPIN_MS = REEL_SPIN_MS;
 
 /**
  * Slot-machine style reel: the labels scroll past and ease out onto the result
@@ -28,7 +29,7 @@ export function WheelReel({
   const [done, setDone] = useState(false);
   const lastRow = useRef(-1);
   // Long strip: several laps, ending on the result in the middle window.
-  const laps = 6;
+  const laps = REEL_LAPS;
   const strip = Array.from({ length: laps * items.length + items.length }, (_, i) => items[i % items.length]);
   const target = (laps * items.length + result) * ROW;
 
