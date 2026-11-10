@@ -4,8 +4,10 @@ import { AnimatedSprite } from "@moom/shared/ui/AnimatedSprite";
 import { Button, Field, Input, Panel } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
 import {
+  IMAGE_PET_SIZE,
   IMAGE_SPECIES,
   imagePetPath,
+  imagePetSize,
   isPresetSpecies,
   MAX_PETS,
   PRESET_SPECIES,
@@ -103,6 +105,7 @@ function PetForm({ pet, onDone, userId, supabase }: { pet: Pet | null; onDone: (
     const url = pet?.resolved?.image;
     return path && url ? { path, url } : null;
   });
+  const [picSize, setPicSize] = useState(() => (pet?.species === IMAGE_SPECIES ? imagePetSize(pet.sprite) : IMAGE_PET_SIZE.default));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -163,7 +166,7 @@ function PetForm({ pet, onDone, userId, supabase }: { pet: Pet | null; onDone: (
                 body: mode === "preset" ? body || undefined : undefined,
                 accent: mode === "preset" ? accent || undefined : undefined,
                 chatter: String(form.get("chatter") ?? ""),
-                sprite: mode === "draw" ? custom : mode === "picture" ? { image: picture!.path } : undefined,
+                sprite: mode === "draw" ? custom : mode === "picture" ? { image: picture!.path, size: picSize } : undefined,
               });
               onDone();
             } catch {
@@ -171,7 +174,7 @@ function PetForm({ pet, onDone, userId, supabase }: { pet: Pet | null; onDone: (
             }
           })
         }
-        className="grid gap-5 md:grid-cols-[1fr_200px]"
+        className="grid gap-5 md:grid-cols-[1fr_224px]"
       >
         <div className="min-w-0">
           <Field label={d.pets.name} htmlFor="pet-name">
@@ -262,6 +265,25 @@ function PetForm({ pet, onDone, userId, supabase }: { pet: Pet | null; onDone: (
                   </Button>
                 )}
               </div>
+              <label className="mt-2 grid max-w-sm gap-1">
+                <span className="flex items-baseline justify-between">
+                  <span className="px-label mb-0">{d.pets.pictureSize}</span>
+                  <span className="font-num text-sm">{picSize}px</span>
+                </span>
+                <input
+                  type="range"
+                  min={IMAGE_PET_SIZE.min}
+                  max={IMAGE_PET_SIZE.max}
+                  step={IMAGE_PET_SIZE.step}
+                  value={picSize}
+                  onChange={(e) => setPicSize(Number(e.target.value))}
+                  className="accent-ink"
+                />
+                <span className="flex justify-between text-xs text-ink-faint">
+                  <span>{d.pets.sizeSmall}</span>
+                  <span>{d.pets.sizeBig}</span>
+                </span>
+              </label>
             </div>
           )}
 
@@ -287,7 +309,8 @@ function PetForm({ pet, onDone, userId, supabase }: { pet: Pet | null; onDone: (
           </div>
         </div>
         <div className="grid place-items-center self-start bg-paper-2 p-4 md:sticky md:top-4">
-          {preview ? <AnimatedSprite sprite={preview} size={128} /> : <p className="text-center text-sm text-ink-faint">{d.pets.needPicture}</p>}
+          {mode === "picture" && preview && <p className="mb-2 text-center text-xs text-ink-faint">{d.pets.sizePreview}</p>}
+          {preview ? <AnimatedSprite sprite={preview} size={mode === "picture" ? picSize : 128} /> : <p className="text-center text-sm text-ink-faint">{d.pets.needPicture}</p>}
         </div>
       </form>
     </Panel>

@@ -15,15 +15,26 @@ export type PetSprite = {
    * Only on pets of species "image"; the frames are then blank.
    */
   image?: string;
+  /** How tall a picture pet stands on the OBS screen, in px. */
+  imageSize?: number;
 };
 
-/** Picture pets: species "image", sprite column `{ "image": "<owner>/pets/<file>" }`. */
+/** Picture pets: species "image", sprite column `{ "image": "<owner>/pets/<file>", "size": 64 }`. */
 export const IMAGE_SPECIES = "image";
 const SAFE_MEDIA_PATH = /^[\w-]+\/pets\/[\w.-]+$/;
 
 export function imagePetPath(custom: unknown): string | null {
   const p = custom && typeof custom === "object" ? (custom as { image?: unknown }).image : null;
   return typeof p === "string" && SAFE_MEDIA_PATH.test(p) ? p : null;
+}
+
+/** On-screen height range for picture pets (px); pixel pets are always 64. */
+export const IMAGE_PET_SIZE = { min: 32, max: 192, step: 8, default: 64 } as const;
+
+export function imagePetSize(custom: unknown): number {
+  const v = custom && typeof custom === "object" ? (custom as { size?: unknown }).size : null;
+  if (typeof v !== "number" || !Number.isFinite(v)) return IMAGE_PET_SIZE.default;
+  return Math.min(IMAGE_PET_SIZE.max, Math.max(IMAGE_PET_SIZE.min, Math.round(v)));
 }
 
 export type PresetSpecies = "bird" | "cat" | "dog" | "slime";
@@ -200,7 +211,7 @@ export function resolveSprite(
   if (species === IMAGE_SPECIES) {
     const path = imagePetPath(custom);
     const url = path && mediaUrl?.(path);
-    return url ? { palette: {}, frames: BLANK_FRAMES, image: url } : null;
+    return url ? { palette: {}, frames: BLANK_FRAMES, image: url, imageSize: imagePetSize(custom) } : null;
   }
   if (!isPresetSpecies(species)) return null;
   const base = PRESETS[species];

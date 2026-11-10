@@ -104,6 +104,18 @@ export default async function Preview({ searchParams }: PageProps<"/dev/preview"
                 created_at: "",
                 resolved: PRESETS.cat,
               },
+              {
+                id: "00000000-0000-0000-0000-00000000000c",
+                streamer_id: "x",
+                name: "รูปเอง",
+                species: "image",
+                palette: {},
+                sprite: { image: "dev/pets/icon.svg", size: 128 },
+                chatter: null,
+                is_active: false,
+                created_at: "",
+                resolved: { ...PRESETS.cat, palette: {}, image: "/icon.svg", imageSize: 128 },
+              },
             ]}
           />
         </main>

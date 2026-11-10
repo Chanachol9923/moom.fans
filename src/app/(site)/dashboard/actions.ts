@@ -18,7 +18,7 @@ import { newToken } from "@/lib/tokens";
 import { detectPromptPayType, isValidNationalId, normalizePromptPayId } from "@/lib/promptpay";
 import { isTtsVoice } from "@/lib/tts/types";
 import { ttsProvider } from "@/lib/tts";
-import { IMAGE_SPECIES, imagePetPath, isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
+import { IMAGE_SPECIES, imagePetPath, imagePetSize, isPetSprite, isPresetSpecies, MAX_PETS } from "@moom/shared/pets/sprites";
 import { MAX_CSS, parseGifs, parseStoredTiers } from "@moom/shared/overlay/design";
 import { dbError } from "@/lib/action-error";
 
@@ -473,7 +473,7 @@ export async function savePet(petId: string | null, input: z.input<typeof PetInp
     name: v.name,
     species: v.species,
     palette: isPresetSpecies(v.species) ? { ...(v.body ? { body: v.body } : {}), ...(v.accent ? { accent: v.accent } : {}) } : {},
-    sprite: v.species === "custom" ? (v.sprite as Json) : picture ? { image: picture } : null,
+    sprite: v.species === "custom" ? (v.sprite as Json) : picture ? { image: picture, size: imagePetSize(v.sprite) } : null,
     chatter: v.chatter,
   };
   if (petId) {

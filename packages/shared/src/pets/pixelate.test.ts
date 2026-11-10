@@ -36,6 +36,12 @@ describe("picture pets", () => {
   it("resolve to the picture URL when the path is in a pets folder", () => {
     expect(resolveSprite("image", {}, { image: "uid-1/pets/abc-mikan.gif" }, url)?.image).toBe("https://cdn.example/uid-1/pets/abc-mikan.gif");
   });
+  it("carry their on-screen size, kept within range", () => {
+    expect(resolveSprite("image", {}, { image: "uid-1/pets/a.gif" }, url)?.imageSize).toBe(64);
+    expect(resolveSprite("image", {}, { image: "uid-1/pets/a.gif", size: 128 }, url)?.imageSize).toBe(128);
+    expect(resolveSprite("image", {}, { image: "uid-1/pets/a.gif", size: 9999 }, url)?.imageSize).toBe(192);
+    expect(resolveSprite("image", {}, { image: "uid-1/pets/a.gif", size: "big" }, url)?.imageSize).toBe(64);
+  });
   it("refuse paths outside a pets folder", () => {
     expect(resolveSprite("image", {}, { image: "uid-1/avatar/x.png" }, url)).toBeNull();
     expect(resolveSprite("image", {}, { image: "../x.png" }, url)).toBeNull();

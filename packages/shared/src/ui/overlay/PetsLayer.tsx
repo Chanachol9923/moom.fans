@@ -13,6 +13,8 @@ function loadFonts() {
   fonts.body = cs.getPropertyValue("--font-thai-body").trim() || "sans-serif";
 }
 const PX = SPRITE_SIZE * SCALE;
+/** Tall enough for the biggest picture pet plus a chat bubble above it. */
+const LAYER_H = 280;
 const BUBBLE_MS = 7000;
 // Pixel pets don't need 60 fps; halving it halves the CPU OBS spends on this layer.
 const FRAME_MS = 1000 / 30;
@@ -37,14 +39,14 @@ function petImage(cache: Cache, url: string) {
   return cache.img;
 }
 
-/** Fits a picture into the pet's square, standing on the ground line. */
-function drawPicture(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, ground: number, flip: boolean, sleeping: boolean, bob: number) {
+/** Fits a picture into the pet's square (side `size`), standing on the floor line. */
+function drawPicture(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, floor: number, size: number, flip: boolean, sleeping: boolean, bob: number) {
   if (!img.complete || !img.naturalWidth) return;
-  const k = Math.min(PX / img.naturalWidth, PX / img.naturalHeight);
+  const k = Math.min(size / img.naturalWidth, size / img.naturalHeight);
   const w = Math.round(img.naturalWidth * k);
   const h = Math.round(img.naturalHeight * k);
-  const dx = x + Math.round((PX - w) / 2);
-  const dy = ground + PX - h - bob;
+  const dx = x + Math.round((size - w) / 2);
+  const dy = floor - h - bob;
   ctx.save();
   if (sleeping) ctx.globalAlpha = 0.6;
   if (flip) {
@@ -136,7 +138,7 @@ export function PetsLayer({
 
     const resize = () => {
       c.width = window.innerWidth;
-      c.height = 180;
+      c.height = LAYER_H;
     };
     resize();
     window.addEventListener("resize", resize);
@@ -149,7 +151,7 @@ export function PetsLayer({
       last = now;
       ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, c.width, c.height);
-      const ground = c.height - PX - 4;
+      const floor = c.height - 4;
 
       for (const wk of walkers.current) {
         if (now > wk.until) {
@@ -158,13 +160,15 @@ export function PetsLayer({
           if (wk.mode === "walk" && Math.random() < 0.4) wk.dir = wk.dir === 1 ? -1 : 1;
           wk.until = now + (wk.mode === "sleep" ? 6000 : 2000) + Math.random() * 5000;
         }
+        const size = (wk.pet.sprite.image && wk.pet.sprite.imageSize) || PX;
+        const top = floor - size;
         if (wk.mode === "walk") {
           wk.x += wk.dir * dt * 0.045;
           if (wk.x < 0) {
             wk.x = 0;
             wk.dir = 1;
-          } else if (wk.x > c.width - PX) {
-            wk.x = c.width - PX;
+          } else if (wk.x > c.width - size) {
+            wk.x = c.width - size;
             wk.dir = -1;
           }
         }
@@ -172,17 +176,18 @@ export function PetsLayer({
           wk.mode === "sleep" ? "sleep" : wk.mode === "walk" && Math.floor(now / 220) % 2 ? "step" : "stand";
         const x = Math.round(wk.x);
         if (wk.pet.sprite.image) {
-          drawPicture(ctx, petImage(wk.cache, wk.pet.sprite.image), x, ground, wk.dir === -1, frame === "sleep", frame === "step" ? 2 : 0);
-        } else ctx.drawImage(spriteBitmap(wk.cache, wk, frame, wk.dir === -1), x, ground);
+          const bob = frame === "step" ? Math.max(2, Math.round(size / 32)) : 0;
+          drawPicture(ctx, petImage(wk.cache, wk.pet.sprite.image), x, floor, size, wk.dir === -1, frame === "sleep", bob);
+        } else ctx.drawImage(spriteBitmap(wk.cache, wk, frame, wk.dir === -1), x, top);
 
         wk.cache.label ??= labelBitmap(wk.pet.name);
-        ctx.drawImage(wk.cache.label, Math.round(x + PX / 2 - wk.cache.label.width / 2), ground + PX + 2 - wk.cache.label.height);
-        if (wk.mode === "sleep") drawZ(ctx, x + PX - 6, ground + 6, now);
+        ctx.drawImage(wk.cache.label, Math.round(x + size / 2 - wk.cache.label.width / 2), floor + 2 - wk.cache.label.height);
+        if (wk.mode === "sleep") drawZ(ctx, x + size - 6, top + 6, now);
         if (wk.bubble && now < wk.bubble.until) {
           wk.bubble.bmp ??= bubbleBitmap(wk.bubble.text);
           const b = wk.bubble.bmp;
-          const bx = Math.max(1, Math.min(c.width - b.width - 1, Math.round(x + PX / 2 - b.width / 2)));
-          ctx.drawImage(b, bx, ground - 8 - b.height + 9);
+          const bx = Math.max(1, Math.min(c.width - b.width - 1, Math.round(x + size / 2 - b.width / 2)));
+          ctx.drawImage(b, bx, Math.max(0, top + 1 - b.height));
         } else wk.bubble = null;
       }
     };
@@ -193,7 +198,7 @@ export function PetsLayer({
     };
   }, []);
 
-  return <canvas ref={canvas} className="pixelated pointer-events-none absolute inset-x-0 bottom-0" height={180} />;
+  return <canvas ref={canvas} className="pixelated pointer-events-none absolute inset-x-0 bottom-0" height={LAYER_H} />;
 }
 
 function labelBitmap(text: string) {
