@@ -27,8 +27,19 @@ async function channelOf(streamerId: string) {
 // ---------------------------------------------------------------------------
 // page design
 
-export async function savePageConfig(raw: unknown): Promise<{ ok: boolean }> {
+/**
+ * `pictures` carries the profile and cover pictures picked in Page design; they live in
+ * their own columns (also shown in Settings). undefined leaves a picture as it is.
+ */
+export async function savePageConfig(
+  raw: unknown,
+  pictures?: { avatarPath?: string | null; bannerPath?: string | null },
+): Promise<{ ok: boolean }> {
   const { supabase, profile } = await streamerForAction();
+  const own = (p: unknown) =>
+    p === undefined ? undefined : typeof p === "string" && p.startsWith(`${profile.id}/`) && SAFE_PATH.test(p) ? p : null;
+  const avatar = own(pictures?.avatarPath);
+  const banner = own(pictures?.bannerPath);
   const cfg = PageConfigSchema.parse(raw ?? {});
   if (cfg.backgroundImagePath && !(cfg.backgroundImagePath.startsWith(`${profile.id}/`) && SAFE_PATH.test(cfg.backgroundImagePath))) {
     cfg.backgroundImagePath = null;
@@ -43,8 +54,16 @@ export async function savePageConfig(raw: unknown): Promise<{ ok: boolean }> {
     const { data: pet } = await supabase.from("pets").select("id").eq("id", cfg.petId).maybeSingle();
     if (!pet) cfg.petId = null;
   }
-  const { error } = await supabase.from("profiles").update({ page: cfg as unknown as Json }).eq("id", profile.id);
-  revalidatePath("/dashboard/page");
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      page: cfg as unknown as Json,
+      ...(avatar !== undefined ? { avatar_path: avatar } : {}),
+      ...(banner !== undefined ? { banner_path: banner } : {}),
+    })
+    .eq("id", profile.id);
+  // The layout too: the setup checklist and Settings show these pictures.
+  revalidatePath("/dashboard", "layout");
   return { ok: !error };
 }
 

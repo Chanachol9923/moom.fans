@@ -38,6 +38,22 @@ export type SectionId = (typeof SECTION_IDS)[number];
 
 const hexOrNull = z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable();
 
+const DEFAULT_PLACEMENT = { x: 50, y: 50, zoom: 1 };
+const placement = z.object({
+  x: z.number().min(0).max(100).catch(50),
+  y: z.number().min(0).max(100).catch(50),
+  zoom: z.number().min(1).max(3).catch(1),
+});
+const DEFAULT_HEADER = {
+  banner: "short",
+  bannerHeight: 220,
+  avatar: "square",
+  avatarSize: "m",
+  avatarBorder: true,
+  overlap: true,
+  align: "left",
+} as const;
+
 export const PageConfigSchema = z.object({
   theme: z.enum(THEME_IDS as [ThemeId, ...ThemeId[]]).catch("pigeon"),
   background: z.enum(BACKGROUNDS).catch("dots"),
@@ -114,11 +130,21 @@ export const PageConfigSchema = z.object({
   width: z.enum(["narrow", "normal", "wide"]).catch("normal"),
   header: z
     .object({
-      banner: z.enum(["none", "short", "tall"]).catch("short"),
-      avatar: z.enum(["square", "round", "hidden"]).catch("square"),
+      banner: z.enum(["none", "short", "tall", "custom"]).catch("short"),
+      /** Cover height in px when `banner` is "custom". */
+      bannerHeight: z.number().int().min(80).max(480).catch(220),
+      avatar: z.enum(["square", "rounded", "round", "hidden"]).catch("square"),
+      avatarSize: z.enum(["s", "m", "l", "xl"]).catch("m"),
+      /** Frame around the profile picture. */
+      avatarBorder: z.boolean().catch(true),
+      /** Profile picture sits half over the cover, or fully below it. */
+      overlap: z.boolean().catch(true),
       align: z.enum(["left", "center"]).catch("left"),
     })
-    .catch({ banner: "short", avatar: "square", align: "left" }),
+    .catch(DEFAULT_HEADER),
+  /** Where the cover picture sits in its frame (percent) and how far it is zoomed in. */
+  bannerImage: placement.extend({ dim: z.number().min(0).max(80).catch(0) }).catch({ ...DEFAULT_PLACEMENT, dim: 0 }),
+  avatarImage: placement.catch(DEFAULT_PLACEMENT),
   textScale: z.number().min(0.9).max(1.25).catch(1),
   /** The streamer's own CSS, scoped to the page. */
   css: z.string().max(MAX_PAGE_CSS).catch("").transform(safePageCss),

@@ -6,13 +6,21 @@ import { siteUrl } from "@/lib/hosts";
 import { formatBaht, type Dict, type Locale } from "@moom/shared/i18n";
 import { backgroundStyle, safePageCss, themeVars, type SectionId } from "@/lib/page-config";
 import { brandFontCss, googleFontsHref } from "@moom/shared/fonts";
+import { mediaKindOf } from "@moom/shared/overlay/design";
 import { PRESETS } from "@moom/shared/pets/sprites";
 import type { Store } from "./data";
 import { ProductGrid } from "./ProductGrid";
 import { TipBox } from "./TipBox";
 
 /** Presentational storefront. Also rendered by the page designer preview and the dev gallery. */
-const BANNER = { none: "hidden", short: "h-36 @min-[40rem]:h-48", tall: "h-56 @min-[40rem]:h-72" } as const;
+const BANNER = { none: "hidden", short: "h-36 @min-[40rem]:h-48", tall: "h-56 @min-[40rem]:h-72", custom: "" } as const;
+const AVATAR = {
+  s: "size-16 @min-[40rem]:size-20",
+  m: "size-24 @min-[40rem]:size-28",
+  l: "size-28 @min-[40rem]:size-36",
+  xl: "size-32 @min-[40rem]:size-44",
+} as const;
+const AVATAR_SHAPE = { square: "", rounded: "rounded-[22%]", round: "rounded-full", hidden: "" } as const;
 const WIDTH = { narrow: "max-w-3xl", normal: "max-w-5xl", wide: "max-w-7xl" } as const;
 
 export function StoreView({ store, d, locale, preview = false }: { store: Store; d: Dict; locale: Locale; preview?: boolean }) {
@@ -74,34 +82,41 @@ export function StoreView({ store, d, locale, preview = false }: { store: Store;
       {/* Cleaned by safePageCss; @scope keeps it on the page even inside the dashboard preview. */}
       {cfg.css && <style>{`@scope (.moom-page) {\n${safePageCss(cfg.css)}\n}`}</style>}
       <div
-        className={`moom-page__banner w-full ${BANNER[cfg.header.banner]}`}
-        style={
-          store.bannerUrl
-            ? { backgroundImage: `url(${store.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+        className={`moom-page__banner relative w-full overflow-hidden ${BANNER[cfg.header.banner]}`}
+        style={{
+          ...(cfg.header.banner === "custom" ? { height: cfg.header.bannerHeight } : {}),
+          ...(store.bannerUrl
+            ? {}
             : {
                 backgroundColor: store.accent,
                 backgroundImage:
                   "linear-gradient(45deg, rgba(0,0,0,.08) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.08) 75%), linear-gradient(45deg, rgba(0,0,0,.08) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.08) 75%)",
                 backgroundSize: "24px 24px",
                 backgroundPosition: "0 0, 12px 12px",
-              }
-        }
-      />
+              }),
+        }}
+      >
+        {store.bannerUrl && cfg.header.banner !== "none" && <PlacedMedia url={store.bannerUrl} place={cfg.bannerImage} />}
+        {store.bannerUrl && cfg.bannerImage.dim > 0 && (
+          <div className="absolute inset-0 bg-black" style={{ opacity: cfg.bannerImage.dim / 100 }} />
+        )}
+      </div>
       <div className={`mx-auto w-full px-4 ${WIDTH[cfg.width]}`}>
         <header
-          className={`moom-page__header flex flex-wrap gap-4 ${cfg.header.banner === "none" ? "pt-8" : "-mt-12"} ${
+          className={`moom-page__header relative flex flex-wrap gap-4 ${
+            cfg.header.banner === "none" ? "pt-8" : cfg.header.overlap && cfg.header.avatar !== "hidden" ? "-mt-12" : "pt-5"
+          } ${
             cfg.header.align === "center" ? "flex-col items-center text-center" : "items-end"
           }`}
         >
           <div className={cfg.header.avatar === "hidden" ? "hidden" : "relative"}>
             <div
-              className={`moom-page__avatar size-24 shrink-0 overflow-hidden bg-paper @min-[40rem]:size-28 ${
-                cfg.header.avatar === "round" ? "rounded-full border-[3px] border-ink" : "px-frame"
-              }`}
+              className={`moom-page__avatar relative shrink-0 overflow-hidden bg-paper ${AVATAR[cfg.header.avatarSize]} ${
+                AVATAR_SHAPE[cfg.header.avatar]
+              } ${!cfg.header.avatarBorder ? "" : cfg.header.avatar === "square" ? "px-frame" : "border-[3px] border-ink"}`}
             >
               {store.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- user upload on storage CDN
-                <img src={store.avatarUrl} alt="" className="size-full object-cover" />
+                <PlacedMedia url={store.avatarUrl} place={cfg.avatarImage} />
               ) : (
                 <div className="grid size-full place-items-center bg-paper-2">
                   <PixelSprite sprite={PRESETS.bird} size={72} />
@@ -201,5 +216,22 @@ function SupportersWall({ store, d, locale }: { store: Store; d: Dict; locale: L
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * A cover or profile picture filling its box: positioned by percent and zoomed in around
+ * that point. GIFs play as images; WebM/MP4 play muted on a loop.
+ */
+function PlacedMedia({ url, place }: { url: string; place: { x: number; y: number; zoom: number } }) {
+  const style: React.CSSProperties = {
+    objectPosition: `${place.x}% ${place.y}%`,
+    ...(place.zoom !== 1 ? { transform: `scale(${place.zoom})`, transformOrigin: `${place.x}% ${place.y}%` } : {}),
+  };
+  return mediaKindOf(url) === "video" ? (
+    <video src={url} className="absolute inset-0 size-full object-cover" style={style} autoPlay muted loop playsInline />
+  ) : (
+    // eslint-disable-next-line @next/next/no-img-element -- user upload on storage CDN
+    <img src={url} alt="" className="absolute inset-0 size-full object-cover" style={style} />
   );
 }

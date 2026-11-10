@@ -23,6 +23,36 @@ describe("page design options", () => {
   });
 });
 
+describe("profile and cover pictures", () => {
+  it("old saved pages keep their look and gain the new options", () => {
+    const c = parsePageConfig({ header: { banner: "tall", avatar: "round", align: "center" } });
+    expect(c.header).toEqual({
+      banner: "tall",
+      bannerHeight: 220,
+      avatar: "round",
+      avatarSize: "m",
+      avatarBorder: true,
+      overlap: true,
+      align: "center",
+    });
+    expect(c.bannerImage).toEqual({ x: 50, y: 50, zoom: 1, dim: 0 });
+    expect(c.avatarImage).toEqual({ x: 50, y: 50, zoom: 1 });
+  });
+
+  it("keeps placement and sizes inside their ranges", () => {
+    const c = parsePageConfig({
+      header: { banner: "custom", bannerHeight: 9999, avatarSize: "xxl" },
+      bannerImage: { x: 10, y: 120, zoom: 2.5, dim: 40 },
+      avatarImage: { zoom: 0.2 },
+    });
+    expect(c.header.banner).toBe("custom");
+    expect(c.header.bannerHeight).toBe(220);
+    expect(c.header.avatarSize).toBe("m");
+    expect(c.bannerImage).toEqual({ x: 10, y: 50, zoom: 2.5, dim: 40 });
+    expect(c.avatarImage.zoom).toBe(1);
+  });
+});
+
 describe("gift unit picture", () => {
   it("keeps a safe storage path and drops anything else", () => {
     expect(parsePageConfig({ unit: { iconPath: "uid/units/corn.gif" } }).unit.iconPath).toBe("uid/units/corn.gif");

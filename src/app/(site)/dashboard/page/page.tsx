@@ -23,6 +23,7 @@ export default async function PageDesignPage() {
       <PageDesigner
         store={store}
         initial={parsePageConfig(profile.page)}
+        initialPictures={{ avatarPath: profile.avatar_path, bannerPath: profile.banner_path }}
         pets={(pets ?? []).map((p) => ({ id: p.id, name: p.name, sprite: resolveSprite(p.species, p.palette, p.sprite) }))}
         userId={user.id}
         supabase={{ url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey() }}
