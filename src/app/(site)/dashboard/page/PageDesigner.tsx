@@ -55,6 +55,14 @@ export function PageDesigner({
     setSaved(false);
     setCfg((c) => ({ ...c, [k]: v }));
   };
+  /** Merge into one of the grouped settings (header, colours, ...) from the latest state. */
+  const setPart = <K extends "header" | "bgImage" | "colors" | "wall" | "unit">(
+    k: K,
+    patch: Partial<PageConfig[K]>,
+  ) => {
+    setSaved(false);
+    setCfg((c) => ({ ...c, [k]: { ...c[k], ...patch } }));
+  };
   // Functional update: two quick changes in a row must not overwrite each other.
   const setFonts = (patch: Partial<PageConfig["fonts"]>) => {
     setSaved(false);
@@ -110,9 +118,11 @@ export function PageDesigner({
     }
   };
 
+  // minmax(0, …) everywhere: the desktop preview is 1280 px wide inside and must not
+  // widen the column it is measured against.
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,420px)_1fr]">
-      <div className="grid gap-5">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-5">
         <Panel title={d.page.theme}>
           <div className="grid grid-cols-5 gap-2">
             {THEME_IDS.map((t) => (
@@ -189,7 +199,7 @@ export function PageDesigner({
                 label={d.page.bgSize}
                 value={cfg.bgImage.size}
                 options={d.page.bgSizes}
-                onChange={(size) => set("bgImage", { ...cfg.bgImage, size })}
+                onChange={(size) => setPart("bgImage", { size })}
               />
               <Slider
                 label={d.page.bgDim}
@@ -198,7 +208,7 @@ export function PageDesigner({
                 max={80}
                 step={5}
                 show={`${cfg.bgImage.dim}%`}
-                onChange={(dim) => set("bgImage", { ...cfg.bgImage, dim })}
+                onChange={(dim) => setPart("bgImage", { dim })}
               />
               <Slider
                 label={d.design.look.imageX}
@@ -207,7 +217,7 @@ export function PageDesigner({
                 max={100}
                 step={1}
                 show={`${cfg.bgImage.x}%`}
-                onChange={(x) => set("bgImage", { ...cfg.bgImage, x })}
+                onChange={(x) => setPart("bgImage", { x })}
               />
               <Slider
                 label={d.design.look.imageY}
@@ -216,13 +226,13 @@ export function PageDesigner({
                 max={100}
                 step={1}
                 show={`${cfg.bgImage.y}%`}
-                onChange={(y) => set("bgImage", { ...cfg.bgImage, y })}
+                onChange={(y) => setPart("bgImage", { y })}
               />
               <Check
                 label={d.page.bgFixed}
                 checked={cfg.bgImage.fixed}
                 onChange={(e) =>
-                  set("bgImage", { ...cfg.bgImage, fixed: e.target.checked })
+                  setPart("bgImage", { fixed: e.target.checked })
                 }
               />
             </div>
@@ -283,7 +293,7 @@ export function PageDesigner({
                       type="color"
                       value={cfg.colors[k] ?? fallback}
                       onChange={(e) =>
-                        set("colors", { ...cfg.colors, [k]: e.target.value })
+                        setPart("colors", { [k]: e.target.value })
                       }
                       className="h-8 w-10 cursor-pointer border-[3px] border-ink bg-paper"
                     />
@@ -293,9 +303,7 @@ export function PageDesigner({
                     <button
                       type="button"
                       className="justify-self-start text-xs underline"
-                      onClick={() =>
-                        set("colors", { ...cfg.colors, [k]: null })
-                      }
+                      onClick={() => setPart("colors", { [k]: null })}
                     >
                       {d.page.colorReset}
                     </button>
@@ -340,19 +348,19 @@ export function PageDesigner({
             label={d.page.banner}
             value={cfg.header.banner}
             options={d.page.banners}
-            onChange={(banner) => set("header", { ...cfg.header, banner })}
+            onChange={(banner) => setPart("header", { banner })}
           />
           <Choice
             label={d.page.avatar}
             value={cfg.header.avatar}
             options={d.page.avatars}
-            onChange={(avatar) => set("header", { ...cfg.header, avatar })}
+            onChange={(avatar) => setPart("header", { avatar })}
           />
           <Choice
             label={d.page.headerAlign}
             value={cfg.header.align}
             options={d.page.aligns}
-            onChange={(align) => set("header", { ...cfg.header, align })}
+            onChange={(align) => setPart("header", { align })}
           />
           <Slider
             label={d.page.textScale}
@@ -536,9 +544,7 @@ export function PageDesigner({
         <Panel title={d.page.wall}>
           <Check
             checked={cfg.wall.showAmounts}
-            onChange={(e) =>
-              set("wall", { ...cfg.wall, showAmounts: e.target.checked })
-            }
+            onChange={(e) => setPart("wall", { showAmounts: e.target.checked })}
             label={d.page.showAmounts}
           />
           <div className="grid grid-cols-3 gap-3">
@@ -549,10 +555,7 @@ export function PageDesigner({
                 max={20}
                 value={cfg.wall.recentCount}
                 onChange={(e) =>
-                  set("wall", {
-                    ...cfg.wall,
-                    recentCount: clamp(e.target.value, 0, 20),
-                  })
+                  setPart("wall", { recentCount: clamp(e.target.value, 0, 20) })
                 }
               />
             </Field>
@@ -563,10 +566,7 @@ export function PageDesigner({
                 max={10}
                 value={cfg.wall.topCount}
                 onChange={(e) =>
-                  set("wall", {
-                    ...cfg.wall,
-                    topCount: clamp(e.target.value, 0, 10),
-                  })
+                  setPart("wall", { topCount: clamp(e.target.value, 0, 10) })
                 }
               />
             </Field>
@@ -574,8 +574,7 @@ export function PageDesigner({
               <Select
                 value={cfg.wall.topPeriod}
                 onChange={(e) =>
-                  set("wall", {
-                    ...cfg.wall,
+                  setPart("wall", {
                     topPeriod: e.target.value as "30d" | "all",
                   })
                 }
@@ -591,9 +590,7 @@ export function PageDesigner({
           <p className="mb-2 text-sm text-ink-soft">{d.page.unitHint}</p>
           <Check
             checked={cfg.unit.enabled}
-            onChange={(e) =>
-              set("unit", { ...cfg.unit, enabled: e.target.checked })
-            }
+            onChange={(e) => setPart("unit", { enabled: e.target.checked })}
             label={d.page.unitEnabled}
           />
           {cfg.unit.enabled && (
@@ -604,10 +601,7 @@ export function PageDesigner({
                     value={cfg.unit.name}
                     maxLength={20}
                     onChange={(e) =>
-                      set("unit", {
-                        ...cfg.unit,
-                        name: e.target.value || cfg.unit.name,
-                      })
+                      setPart("unit", { name: e.target.value || cfg.unit.name })
                     }
                   />
                 </Field>
@@ -617,8 +611,7 @@ export function PageDesigner({
                     min={1}
                     value={cfg.unit.price}
                     onChange={(e) =>
-                      set("unit", {
-                        ...cfg.unit,
+                      setPart("unit", {
                         price: Math.max(1, Number(e.target.value) || 1),
                       })
                     }
@@ -631,7 +624,7 @@ export function PageDesigner({
                     <button
                       key={id}
                       type="button"
-                      onClick={() => set("unit", { ...cfg.unit, icon: id })}
+                      onClick={() => setPart("unit", { icon: id })}
                       aria-pressed={cfg.unit.icon === id}
                       className={`p-1 ${cfg.unit.icon === id ? "bg-ink/15 outline-[3px] outline-ink outline-solid" : ""}`}
                     >
@@ -654,8 +647,7 @@ export function PageDesigner({
                           ),
                       ),
                     ].slice(0, 5);
-                    if (list.length)
-                      set("unit", { ...cfg.unit, presets: list });
+                    if (list.length) setPart("unit", { presets: list });
                   }}
                 />
               </Field>
@@ -700,7 +692,7 @@ export function PageDesigner({
         </div>
       </div>
 
-      <div className="xl:sticky xl:top-4">
+      <div className="min-w-0 xl:sticky xl:top-4">
         <DevicePreview>
           <StoreView store={previewStore} d={d} locale={locale} preview />
         </DevicePreview>
