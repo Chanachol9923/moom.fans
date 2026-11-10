@@ -161,7 +161,10 @@ export async function saveWheel(raw: unknown) {
   const { data: cur } = await supabase.from("overlay_settings").select("wheel").eq("streamer_id", profile.id).single();
   cfg.place = WheelSchema.parse(cur?.wheel && typeof cur.wheel === "object" ? cur.wheel : {}).place;
   await supabase.from("overlay_settings").update({ wheel: cfg as unknown as Json }).eq("streamer_id", profile.id);
+  // The overlay and widget pick up a new look or new prizes right away.
+  await notifyOverlay(await channelOf(profile.id), { type: "config" }).catch(() => {});
   revalidatePath("/dashboard/fun");
+  revalidatePath("/dashboard/widgets");
 }
 
 /** Wheel on the alert overlay or in its own widget. The overlay refetches its config right away. */

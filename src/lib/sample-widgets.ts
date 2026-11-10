@@ -33,6 +33,7 @@ export function sampleWidgetData(locale: Locale): WidgetData {
     wheel: {
       items: th ? ["ร้องเพลง 1 เพลง", "ทำเสียงแมว", "อ่านชื่อ 3 รอบ", "เต้น 10 วิ"] : ["Sing a song", "Cat voice", "Name x3", "Dance 10s"],
       place: "widget",
+      look: "wheel",
     },
     realtime: null,
   };

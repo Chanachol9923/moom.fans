@@ -149,6 +149,7 @@ export type OverlayConfig = {
   brandFontUrl?: string | null;
   /** "widget": the prize wheel spins in its own OBS widget, not on this page. */
   wheelPlace?: "overlay" | "widget";
+  wheelLook?: "reel" | "wheel" | "lights";
 };
 
 export type OverlayState = {

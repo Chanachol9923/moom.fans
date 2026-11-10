@@ -18,10 +18,14 @@ export const WheelSchema = z.object({
     .catch([]),
   /** Where it spins: on the main alert overlay, or in its own OBS widget. */
   place: z.enum(["overlay", "widget"]).catch("overlay"),
+  /** How it looks: slot-machine reel, round wheel, or a light board of boxes. */
+  look: z.enum(["reel", "wheel", "lights"]).catch("reel"),
 });
 
 export type WheelConfig = z.infer<typeof WheelSchema>;
 export type WheelPlace = WheelConfig["place"];
+export type WheelLook = WheelConfig["look"];
+export const WHEEL_LOOKS: WheelLook[] = ["reel", "wheel", "lights"];
 
 /** The reel: laps before it stops, how long it spins, and how long it stays up in total. */
 export const REEL_LAPS = 6;

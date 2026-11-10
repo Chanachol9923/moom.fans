@@ -8,7 +8,8 @@ import { isOverlayEvent } from "@moom/shared/alerts";
 import { formatBaht, getDict } from "@moom/shared/i18n";
 import { formatClock, type WidgetData, type WidgetKind } from "@moom/shared/widgets";
 import { isWheelEvent, WHEEL_EVENT, WHEEL_SHOW_MS, type WheelEvent } from "@moom/shared/wheel";
-import { WheelReel } from "@moom/shared/ui/overlay/WheelReel";
+import { WheelSpin } from "@moom/shared/ui/overlay/WheelReel";
+import type { WheelLook } from "@moom/shared/wheel";
 
 const POLL_MS = 15_000;
 
@@ -27,6 +28,12 @@ export function WidgetApp({
   preview?: boolean;
 }) {
   const [data, setData] = useState(initial);
+  // ?look= lets a preview show a look before it is saved.
+  const [lookParam] = useState<WheelLook | null>(() => {
+    if (typeof window === "undefined") return null;
+    const v = new URLSearchParams(window.location.search).get("look");
+    return v === "reel" || v === "wheel" || v === "lights" ? v : null;
+  });
   const [spin, setSpin] = useState<Extract<WheelEvent, { items: string[] }> | null>(null);
 
   // The wheel widget: the overlay tells it when to spin; it hides again when done.
@@ -87,7 +94,7 @@ export function WidgetApp({
       {kind === "subathon" && <Subathon data={data} />}
       {kind === "wheel" && spin && (
         <div className="grid h-full place-items-center">
-          <WheelReel key={spin.id} items={spin.items} result={spin.result} accent={data.accent} locale={data.locale} />
+          <WheelSpin key={spin.id} look={lookParam ?? data.wheel.look} items={spin.items} result={spin.result} accent={data.accent} locale={data.locale} />
         </div>
       )}
     </div>

@@ -86,6 +86,7 @@ export async function loadOverlayState(token: string): Promise<OverlayState | nu
     customCss: safeCss(settings.custom_css ?? ""),
     brandFontUrl: brandFontUrl(profile.page, s.streamer_id),
     wheelPlace: parseWheel(settings.wheel).place,
+    wheelLook: parseWheel(settings.wheel).look,
   };
 
   return {

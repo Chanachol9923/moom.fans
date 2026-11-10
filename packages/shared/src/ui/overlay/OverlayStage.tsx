@@ -7,7 +7,7 @@ import type { StageView } from "../../overlay/engine";
 import { POSITION_CLASS } from "../../overlay/queue";
 import { AlertBox } from "../AlertBox";
 import { PetsLayer } from "./PetsLayer";
-import { WheelReel } from "./WheelReel";
+import { WheelSpin } from "./WheelReel";
 
 /**
  * What OBS shows: pets, the alert card, the prize wheel and media share.
@@ -71,8 +71,9 @@ export function OverlayStage({
 
       {current?.phase === "wheel" && current.alert.payload.wheel && cfg.wheelPlace !== "widget" && (
         <div className="absolute inset-0 grid place-items-center p-10">
-          <WheelReel
+          <WheelSpin
             key={current.alert.id}
+            look={cfg.wheelLook}
             items={current.alert.payload.wheel.items}
             result={current.alert.payload.wheel.result}
             accent={cfg.accent}

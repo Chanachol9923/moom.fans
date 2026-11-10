@@ -3,12 +3,15 @@ import { useState, useTransition } from "react";
 import { Button, Check, Input } from "@moom/shared/ui/kit";
 import { fmt } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
-import type { WheelConfig } from "@moom/shared/wheel";
+import { WHEEL_LOOKS, type WheelConfig } from "@moom/shared/wheel";
+import { WheelSpin } from "@moom/shared/ui/overlay/WheelReel";
 import { saveWheel } from "../more-actions";
 import { isNextControl } from "@/lib/errors";
 
-export function WheelEditor({ initial }: { initial: WheelConfig }) {
-  const { d } = useT();
+export function WheelEditor({ initial, accent }: { initial: WheelConfig; accent: string }) {
+  const { d, locale } = useT();
+  // Each press of "Try a spin" remounts the preview with a new random result.
+  const [trial, setTrial] = useState<{ n: number; result: number } | null>(null);
   const [cfg, setCfg] = useState<WheelConfig>(
     initial.items.length
       ? initial
@@ -125,6 +128,55 @@ export function WheelEditor({ initial }: { initial: WheelConfig }) {
         >
           + {d.fun.wheelAdd}
         </Button>
+
+        <div className="px-label mt-5">{d.fun.lookTitle}</div>
+        <div className="mb-3 grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label={d.fun.lookTitle}>
+          {WHEEL_LOOKS.map((l) => (
+            <button
+              key={l}
+              type="button"
+              role="radio"
+              aria-checked={cfg.look === l}
+              onClick={() => {
+                upd({ look: l });
+                setTrial((t) => ({ n: (t?.n ?? 0) + 1, result: t?.result ?? 0 }));
+              }}
+              className={`px-frame grid gap-0.5 p-2.5 text-left ${cfg.look === l ? "bg-ink text-paper" : "bg-paper hover:bg-paper-2"}`}
+            >
+              <span className="font-display">{d.fun.looks[l].name}</span>
+              <span className={`text-sm ${cfg.look === l ? "text-paper/80" : "text-ink-soft"}`}>{d.fun.looks[l].hint}</span>
+            </button>
+          ))}
+        </div>
+        {(() => {
+          const labels = cfg.items.map((i) => i.label.trim()).filter(Boolean);
+          const items = labels.length > 1 ? labels : [...d.fun.lookSample];
+          return (
+            <div className="grid justify-items-center gap-2 bg-paper-2 p-3">
+              {trial ? (
+                <div className="w-full max-w-[520px] [&>.px-frame]:w-full">
+                  <WheelSpin
+                    key={`${cfg.look}-${trial.n}`}
+                    look={cfg.look}
+                    items={items}
+                    result={trial.result % items.length}
+                    accent={accent}
+                    locale={locale}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-ink-soft">{d.fun.lookTryHint}</p>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setTrial((t) => ({ n: (t?.n ?? 0) + 1, result: Math.floor(Math.random() * items.length) }))}
+              >
+                {d.fun.lookTry}
+              </Button>
+            </div>
+          );
+        })()}
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button

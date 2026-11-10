@@ -75,7 +75,7 @@ export default async function FunPage() {
             status: wheel.enabled ? fmt(f.wheelOn, { min: formatBaht(wheel.min_amount, locale) }) : f.statusOff,
             body: layout(
               <Panel title={f.settingsTitle}>
-                <WheelEditor initial={wheel} />
+                <WheelEditor initial={wheel} accent={profile.accent_color} />
               </Panel>,
               obsCard(
                 <>

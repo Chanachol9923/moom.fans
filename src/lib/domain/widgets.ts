@@ -48,7 +48,7 @@ export async function loadWidgetData(token: string): Promise<WidgetData | null> 
     top: wall.top,
     poll: poll && { title: poll.title, options: poll.options, totals: poll.totals, weightBy: poll.weightBy },
     subathon,
-    wheel: { items: wheel.items.map((i) => i.label), place: wheel.place },
+    wheel: { items: wheel.items.map((i) => i.label), place: wheel.place, look: wheel.look },
     realtime: { url: publicEnv.supabaseUrl(), key: publicEnv.supabaseKey(), channel: overlayTopic(s.overlay_channel) },
   };
 }
