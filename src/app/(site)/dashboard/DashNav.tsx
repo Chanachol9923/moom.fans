@@ -20,14 +20,6 @@ export function DashNav({ pending }: { pending: number }) {
   const groups: Group[] = [
     { items: [{ href: "/dashboard", label: d.nav.overview }] },
     {
-      label: d.nav.groupMoney,
-      items: [
-        { href: "/dashboard/review", label: d.nav.review, badge: pending },
-        { href: "/dashboard/ledger", label: d.nav.ledger },
-        { href: "/dashboard/supporters", label: d.nav.supporters },
-      ],
-    },
-    {
       label: d.nav.groupShop,
       items: [
         { href: "/dashboard/page", label: d.nav.page },
@@ -45,6 +37,14 @@ export function DashNav({ pending }: { pending: number }) {
         { href: "/dashboard/fun", label: d.nav.fun },
         { href: "/dashboard/pets", label: d.nav.pets },
         { href: "/dashboard/vts", label: d.nav.vts },
+      ],
+    },
+    {
+      label: d.nav.groupMoney,
+      items: [
+        { href: "/dashboard/review", label: d.nav.review, badge: pending },
+        { href: "/dashboard/ledger", label: d.nav.ledger },
+        { href: "/dashboard/supporters", label: d.nav.supporters },
       ],
     },
     { items: [{ href: "/dashboard/settings", label: d.nav.settings }] },
@@ -105,9 +105,9 @@ function MobileNav({ groups, pending, path }: { groups: Group[]; pending: number
   const live = ["/dashboard/app", "/dashboard/overlay", "/dashboard/alerts", "/dashboard/widgets", "/dashboard/fun", "/dashboard/pets", "/dashboard/vts"];
   const tabs: Array<{ href: string; label: string; icon: Icon; badge?: number; active: boolean }> = [
     { href: "/dashboard", label: d.nav.overview, icon: "home", active: path === "/dashboard" },
-    { href: "/dashboard/review", label: d.nav.review, icon: "check", badge: pending, active: path.startsWith("/dashboard/review") },
     { href: "/dashboard/page", label: d.nav.groupShop, icon: "shop", active: ["/dashboard/page", "/dashboard/products", "/dashboard/goals"].some((h) => path.startsWith(h)) },
     { href: "/dashboard/overlay", label: d.nav.groupLive, icon: "live", active: live.some((h) => path.startsWith(h)) },
+    { href: "/dashboard/review", label: d.nav.review, icon: "check", badge: pending, active: path.startsWith("/dashboard/review") },
   ];
 
   return (
