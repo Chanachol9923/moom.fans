@@ -44,32 +44,62 @@ export class OverlayAudio {
     this.live.clear();
   }
 
-  /** Moom's default alert: a two-note 8-bit "coo-coo". */
-  chirp(): Promise<void> {
-    const t0 = this.ctx.currentTime + 0.02;
-    const notes: Array<[number, number, number, number]> = [
-      // start Hz, end Hz, at, length
-      [620, 880, 0, 0.11],
-      [880, 700, 0.14, 0.16],
-    ];
-    let end = t0;
-    for (const [f0, f1, at, len] of notes) {
-      const osc = this.ctx.createOscillator();
-      const env = this.ctx.createGain();
+  /**
+   * Moom's default alert, for the spider: little legs going "tik-tik-tik" up the wall,
+   * then one plucked web string, "doing~", wobbling as it rings out. 8-bit, about 0.7 s.
+   */
+  spider(): Promise<void> {
+    const ctx = this.ctx;
+    const t0 = ctx.currentTime + 0.02;
+
+    // Six quick steps, alternating feet, climbing a little.
+    const steps = [1500, 1850, 1600, 1950, 1700, 2100];
+    steps.forEach((f, i) => {
+      const at = t0 + i * 0.038;
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
       osc.type = "square";
-      osc.frequency.setValueAtTime(f0, t0 + at);
-      osc.frequency.exponentialRampToValueAtTime(f1, t0 + at + len);
-      env.gain.setValueAtTime(0, t0 + at);
-      env.gain.linearRampToValueAtTime(0.22, t0 + at + 0.01);
-      env.gain.setValueAtTime(0.22, t0 + at + len - 0.03);
-      env.gain.linearRampToValueAtTime(0, t0 + at + len);
+      osc.frequency.setValueAtTime(f, at);
+      env.gain.setValueAtTime(0.2, at);
+      env.gain.exponentialRampToValueAtTime(0.001, at + 0.022);
       osc.connect(env).connect(this.master);
-      osc.start(t0 + at);
-      osc.stop(t0 + at + len + 0.02);
+      osc.start(at);
+      osc.stop(at + 0.03);
       this.track(osc);
-      end = Math.max(end, t0 + at + len);
-    }
-    return new Promise((r) => setTimeout(r, (end - this.ctx.currentTime) * 1000 + 30));
+    });
+
+    // The web string: a pluck that sags in pitch, with a fast wobble (vibrato).
+    const at = t0 + steps.length * 0.038 + 0.05;
+    const len = 0.42;
+    const string = (type: OscillatorType, mult: number, gain: number) => {
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
+      const lfo = ctx.createOscillator();
+      const depth = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(880 * mult, at);
+      osc.frequency.exponentialRampToValueAtTime(660 * mult, at + 0.12);
+      osc.frequency.exponentialRampToValueAtTime(620 * mult, at + len);
+      lfo.frequency.value = 16;
+      depth.gain.setValueAtTime(0, at);
+      depth.gain.linearRampToValueAtTime(22 * mult, at + 0.08);
+      lfo.connect(depth).connect(osc.frequency);
+      env.gain.setValueAtTime(0, at);
+      env.gain.linearRampToValueAtTime(gain, at + 0.006);
+      env.gain.exponentialRampToValueAtTime(0.001, at + len);
+      osc.connect(env).connect(this.master);
+      osc.start(at);
+      lfo.start(at);
+      osc.stop(at + len + 0.02);
+      lfo.stop(at + len + 0.02);
+      this.track(osc);
+      this.track(lfo);
+    };
+    string("triangle", 1, 0.22);
+    string("square", 2, 0.035); // a thin 8-bit edge an octave up
+
+    const end = at + len;
+    return new Promise((r) => setTimeout(r, (end - ctx.currentTime) * 1000 + 30));
   }
 
   /** Short blip for the prize wheel passing a slot. */

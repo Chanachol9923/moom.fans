@@ -11,7 +11,7 @@ import {
   Textarea,
 } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
-import type { Dict } from "@moom/shared/i18n";
+import { fmt, type Dict } from "@moom/shared/i18n";
 import {
   BACKGROUNDS,
   MAX_PAGE_CSS,
@@ -1016,6 +1016,22 @@ export function PageDesigner({
         >
           <StoreView store={previewStore} d={d} locale={locale} preview edit={arrange ? edit : undefined} picture={arrange ? undefined : pictureButton}
             inline={arrange ? undefined : inlineText}
+            textControls={
+              arrange
+                ? undefined
+                : {
+                    add: cfg.texts.length < MAX_TEXTS ? addText : null,
+                    remove: (id) => {
+                      const t = cfg.texts.find((x) => x.id === id);
+                      // Only ask when there's something to lose.
+                      if (t && (t.title.trim() || t.body.trim() || t.image) && !window.confirm(d.page.textRemoveAsk)) return;
+                      removeText(id);
+                    },
+                    addLabel: d.page.textAdd,
+                    fullLabel: fmt(d.page.textsFull, { max: MAX_TEXTS }),
+                    removeLabel: d.page.textRemove,
+                  }
+            }
           />
         </DevicePreview>
         {overlay}

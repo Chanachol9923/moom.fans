@@ -34,6 +34,16 @@ export type StoreEdit = {
 
 /** Where the designer's "change picture" buttons go on the preview. */
 export type PictureSpot = "avatar" | "banner" | "background" | `text-${string}`;
+/** Designer only: add / remove text boxes right on the preview. */
+export type TextBoxControls = {
+  /** null when there are already as many as allowed. */
+  add: (() => void) | null;
+  remove: (id: string) => void;
+  addLabel: string;
+  fullLabel: string;
+  removeLabel: string;
+};
+
 /** Text the designer lets you type straight onto the preview. */
 export type InlineField = "name" | "bio" | `text-${string}.${"title" | "body"}`;
 
@@ -45,6 +55,7 @@ export function StoreView({
   edit,
   picture,
   inline,
+  textControls,
 }: {
   store: Store;
   d: Dict;
@@ -55,6 +66,7 @@ export function StoreView({
   picture?: (spot: PictureSpot) => React.ReactNode;
   /** Designer only: an editable stand-in for that text. */
   inline?: (field: InlineField, value: string) => React.ReactNode;
+  textControls?: TextBoxControls;
 }) {
   const cfg = store.page;
 
@@ -67,7 +79,22 @@ export function StoreView({
       return picture ? (
         <div className="relative grid">
           <TextBoxView box={t} inline={typed || undefined} />
-          <div className="absolute top-2 right-2 z-10">{picture(t.id as PictureSpot)}</div>
+          <div className="absolute top-2 right-2 z-10 flex gap-1">
+            {picture(t.id as PictureSpot)}
+            {textControls && (
+              <button
+                type="button"
+                onClick={() => textControls.remove(t.id)}
+                title={textControls.removeLabel}
+                aria-label={textControls.removeLabel}
+                // Same size on screen whatever the preview's zoom, like the camera button.
+                style={{ zoom: "calc(1 / var(--pz, 1))" }}
+                className="px-btn px-btn-sm px-btn-danger font-num"
+              >
+                −
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <TextBoxView box={t} />
@@ -254,6 +281,16 @@ export function StoreView({
               </div>
             );
           })}
+          {textControls && (
+            <button
+              type="button"
+              onClick={textControls.add ?? undefined}
+              disabled={!textControls.add}
+              className="grid min-h-28 place-items-center border-[3px] border-dashed border-ink/35 p-4 font-display text-2xl text-ink-soft transition-colors hover:border-[var(--accent)] hover:text-ink disabled:cursor-default disabled:opacity-60 disabled:hover:border-ink/35"
+            >
+              {textControls.add ? `+ ${textControls.addLabel}` : textControls.fullLabel}
+            </button>
+          )}
         </div>
 
         <footer className="mt-16 text-center text-sm text-ink-faint">

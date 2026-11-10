@@ -271,8 +271,8 @@ export function useOverlayEngine(opts: EngineOptions) {
         const a = audio.current;
         if (a) {
           const sound = tierFor(cfg.tiers, p.amount)?.tier.soundUrl ?? cfg.alertSoundUrl;
-          if (sound) await a.playUrl(sound, signal).catch(() => a.chirp());
-          else await a.chirp();
+          if (sound) await a.playUrl(sound, signal).catch(() => a.spider());
+          else await a.spider();
         }
         for (const rule of opts.vts && cfg.vtsEnabled ? vtsActionsFor(cfg.vtsRules, p.amount) : []) {
           const c = vts.current;

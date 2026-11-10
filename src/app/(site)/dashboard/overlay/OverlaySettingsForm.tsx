@@ -8,6 +8,16 @@ import { TTS_VOICES } from "@/lib/tts/types";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import { saveOverlaySettings, testTts, type SaveResult } from "../actions";
 import { errorText, guardForm } from "@/lib/errors";
+import { OverlayAudio } from "@moom/shared/overlay/sound";
+
+/** Plays Moom's built-in alert sound once, at a comfortable volume. */
+function playDefault() {
+  const a = new OverlayAudio(70);
+  void a
+    .resume()
+    .then(() => a.spider())
+    .finally(() => void a.ctx.close());
+}
 
 const POSITIONS = ["top-left", "top-center", "top-right", "center", "bottom-left", "bottom-center", "bottom-right"] as const;
 
@@ -82,6 +92,11 @@ export function OverlaySettingsForm({
           <input type="hidden" name="alert_sound_path" value={soundPath} />
           <div className="flex flex-wrap items-center gap-2">
             {preview && <audio src={preview} controls className="h-9" />}
+            {!soundPath && (
+              <Button type="button" size="sm" onClick={playDefault}>
+                ▶ {d.overlay.alertSoundListen}
+              </Button>
+            )}
             <label className="px-btn px-btn-sm cursor-pointer">
               {soundBusy ? "…" : d.overlay.alertSoundUpload}
               <input
