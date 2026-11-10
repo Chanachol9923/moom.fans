@@ -31,7 +31,9 @@ export function PreviewFrame({ src, width = 1920, height = 1080 }: { src: string
         width={width}
         height={height}
         className="pointer-events-none absolute top-0 left-0 origin-top-left border-0"
-        style={{ transform: `scale(${scale})`, background: "transparent" }}
+        // The OBS page is light. If this frame inherited the dashboard's dark color-scheme,
+        // the browser would paint a solid white backdrop behind it instead of the checkerboard.
+        style={{ transform: `scale(${scale})`, background: "transparent", colorScheme: "normal" }}
         allow="autoplay"
       />
     </div>
