@@ -119,6 +119,28 @@ export class VtsClient {
     return this.request("HotkeyTriggerRequest", { hotkeyID });
   }
 
+  /**
+   * Hotkey IDs belong to one model. VTube Studio also takes a hotkey's name, so when the
+   * ID is unknown (the streamer switched models) the same-named hotkey still fires.
+   */
+  async triggerHotkeyOrName(hotkeyID: string, name: string) {
+    try {
+      return await this.triggerHotkey(hotkeyID);
+    } catch (e) {
+      if (name && name !== hotkeyID) return this.triggerHotkey(name);
+      throw e;
+    }
+  }
+
+  /** Several of the same item, a moment apart so they don't land as one. */
+  async throwItems(fileName: string, count = 1) {
+    const n = Math.max(1, Math.min(10, Math.round(count)));
+    for (let i = 0; i < n; i++) {
+      if (i) await new Promise((r) => setTimeout(r, 180));
+      void this.throwItem(fileName).catch(() => {});
+    }
+  }
+
   /** Drop an item from the top of the screen onto the model, then remove it. */
   async throwItem(fileName: string) {
     const x = Math.random() * 1.2 - 0.6;

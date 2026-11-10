@@ -33,14 +33,16 @@ export async function streamerByControlToken(token: string) {
 
 function asRules(v: unknown): VtsRule[] {
   if (!Array.isArray(v)) return [];
-  return v.filter(
-    (r): r is VtsRule =>
-      !!r &&
-      typeof r === "object" &&
-      typeof (r as VtsRule).min_amount === "number" &&
-      ((r as VtsRule).kind === "hotkey" || (r as VtsRule).kind === "item") &&
-      typeof (r as VtsRule).ref === "string",
-  );
+  return v
+    .filter(
+      (r): r is VtsRule =>
+        !!r &&
+        typeof r === "object" &&
+        typeof (r as VtsRule).min_amount === "number" &&
+        ((r as VtsRule).kind === "hotkey" || (r as VtsRule).kind === "item") &&
+        typeof (r as VtsRule).ref === "string",
+    )
+    .map((r) => ({ ...r, label: typeof r.label === "string" ? r.label : "", count: typeof r.count === "number" ? r.count : 1 }));
 }
 
 function brandFontUrl(page: unknown, streamerId: string): string | null {

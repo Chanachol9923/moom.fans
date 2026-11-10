@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/server";
 import { PRESETS } from "@moom/shared/pets/sprites";
 import { PageDesigner } from "../../dashboard/page/PageDesigner";
 import { PetsManager } from "../../dashboard/pets/PetsManager";
+import { VtsManager } from "../../dashboard/vts/VtsManager";
 import { sampleStore } from "@/lib/sample-store";
 import { StoreView } from "../../s/[slug]/StoreView";
 import { PayClient } from "../../s/[slug]/pay/[token]/PayClient";
@@ -15,7 +16,7 @@ function minutesFromNow(m: number) {
   return new Date(Date.now() + m * 60_000).toISOString();
 }
 
-const VIEWS = ["store", "designer", "pay-waiting", "pay-pending", "pay-done", "pets"] as const;
+const VIEWS = ["store", "designer", "pay-waiting", "pay-pending", "pay-done", "pets", "vts"] as const;
 
 export default async function Preview({ searchParams }: PageProps<"/dev/preview">) {
   if (process.env.NODE_ENV !== "development") notFound();
@@ -81,6 +82,18 @@ export default async function Preview({ searchParams }: PageProps<"/dev/preview"
       {view === "pay-pending" && <PayClient token="preview-token-000000" initial={pay("pending_review")} streamerName={store.displayName} />}
       {view === "pay-done" && (
         <PayClient token="preview-token-000000" initial={pay("verified", "purchase")} streamerName={store.displayName} />
+      )}
+      {view === "vts" && (
+        <main className="mx-auto grid max-w-5xl gap-5 p-4">
+          <VtsManager
+            enabled
+            rules={[
+              { min_amount: 50, kind: "hotkey", ref: "abc123", label: "Smile" },
+              { min_amount: 200, kind: "item", ref: "banana.png", label: "banana.png", count: 3 },
+              { min_amount: 500, kind: "hotkey", ref: "", label: "" },
+            ]}
+          />
+        </main>
       )}
       {view === "pets" && (
         <main className="mx-auto max-w-5xl p-4">

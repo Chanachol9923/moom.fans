@@ -42,8 +42,13 @@ export type VtsRule = {
   kind: "hotkey" | "item";
   /** hotkeyID for hotkeys, file name for items. */
   ref: string;
+  /** Hotkey name. Also tried when the ID is gone (another model with a hotkey of that name). */
   label: string;
+  /** Items only: how many to throw (1 when missing). */
+  count?: number;
 };
+
+export const MAX_VTS_ITEMS = 10;
 
 export type OverlayPet = {
   id: string;

@@ -277,7 +277,7 @@ export function useOverlayEngine(opts: EngineOptions) {
         for (const rule of opts.vts && cfg.vtsEnabled ? vtsActionsFor(cfg.vtsRules, p.amount) : []) {
           const c = vts.current;
           if (!c?.connected) break;
-          (rule.kind === "hotkey" ? c.triggerHotkey(rule.ref) : c.throwItem(rule.ref)).catch(() => {});
+          (rule.kind === "hotkey" ? c.triggerHotkeyOrName(rule.ref, rule.label) : c.throwItems(rule.ref, rule.count)).catch(() => {});
         }
         if (p.tts && cfg.ttsEnabled && !opts.silent && !signal.aborted) {
           const local = speak.current;

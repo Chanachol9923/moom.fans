@@ -3,7 +3,7 @@
 // touches rows belonging to that streamer, even when it uses the service-role client.
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { VtsRule } from "@moom/shared/alerts";
+import { MAX_VTS_ITEMS, type VtsRule } from "@moom/shared/alerts";
 import { streamerForAction } from "@/lib/auth";
 import { queueTestAlert } from "@/lib/domain/alerts";
 import { rejectTransaction, verifyTransaction } from "@/lib/domain/transactions";
@@ -258,8 +258,10 @@ export async function saveVtsRules(enabled: boolean, rules: VtsRule[]) {
     kind: z.enum(["hotkey", "item"]),
     ref: z.string().min(1).max(200),
     label: z.string().max(80),
+    count: z.number().int().min(1).max(MAX_VTS_ITEMS).catch(1),
   });
-  const clean = z.array(Rule).max(30).parse(rules);
+  // Smallest amount first, so the list reads in order next time.
+  const clean = z.array(Rule).max(30).parse(rules).sort((a, b) => a.min_amount - b.min_amount);
   await supabase
     .from("overlay_settings")
     .update({ vts_enabled: Boolean(enabled), vts_rules: clean })
