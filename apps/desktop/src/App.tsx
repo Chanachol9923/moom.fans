@@ -3,8 +3,8 @@ import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import type { Locale } from "@moom/shared/i18n";
 import { I18nProvider, useT } from "@moom/shared/i18n/react";
-import { PRESETS } from "@moom/shared/pets/sprites";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
+import { MASCOT } from "@moom/shared/mascot";
 import { Live } from "./Live";
 import { SignIn } from "./SignIn";
 import { configured, supabase } from "./session";
@@ -45,7 +45,7 @@ function TitleBar({ locale, onLocale }: { locale: Locale; onLocale: (l: Locale) 
   return (
     <header className="flex items-center justify-between border-b-[3px] border-ink bg-paper-2 px-4 py-2">
       <div className="flex items-center gap-2">
-        <PixelSprite sprite={PRESETS.bird} size={28} />
+        <PixelSprite sprite={MASCOT} size={30} />
         <span className="font-title text-xl">moom</span>
       </div>
       <div className="flex items-center gap-1 font-display text-sm">

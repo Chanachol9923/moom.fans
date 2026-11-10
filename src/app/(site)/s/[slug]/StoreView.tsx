@@ -2,6 +2,7 @@ import { AnimatedSprite } from "@moom/shared/ui/AnimatedSprite";
 import { GoalBar } from "@moom/shared/ui/GoalBar";
 import { LocaleSwitch } from "@/components/LocaleSwitch";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
+import { MASCOT } from "@moom/shared/mascot";
 import { siteUrl } from "@/lib/hosts";
 import { formatBaht, type Dict, type Locale } from "@moom/shared/i18n";
 import { backgroundStyle, safePageCss, themeVars } from "@/lib/page-config";
@@ -9,7 +10,6 @@ import { isTextBox, type BoxId, type GridBox } from "@/lib/page-grid";
 import { TextBoxView } from "./TextBoxView";
 import { brandFontCss, googleFontsHref } from "@moom/shared/fonts";
 import { mediaKindOf } from "@moom/shared/overlay/design";
-import { PRESETS } from "@moom/shared/pets/sprites";
 import type { Store } from "./data";
 import { ProductGrid } from "./ProductGrid";
 import { TipBox } from "./TipBox";
@@ -182,7 +182,7 @@ export function StoreView({
                 <PlacedMedia url={store.avatarUrl} place={cfg.avatarImage} />
               ) : (
                 <div className="grid size-full place-items-center bg-paper-2">
-                  <PixelSprite sprite={PRESETS.bird} size={72} />
+                  <PixelSprite sprite={MASCOT} size={72} />
                 </div>
               )}
             </div>
@@ -258,7 +258,7 @@ export function StoreView({
 
         <footer className="mt-16 text-center text-sm text-ink-faint">
           <a href={siteUrl("/")} className="inline-flex items-center gap-1.5 hover:text-ink">
-            <PixelSprite sprite={PRESETS.bird} size={18} /> moom.fans
+            <PixelSprite sprite={MASCOT} size={22} /> moom.fans
           </a>
         </footer>
       </div>

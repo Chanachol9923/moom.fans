@@ -1,3 +1,4 @@
+import { SPIDER_PET_LEGS, SPIDER_PET_STAND } from "../mascot";
 // 16x16 pixel pets. Each frame is 16 strings of 16 chars; each char is a palette slot
 // and "." is transparent. Slots:
 //   k outline   b body   d body shade   a accent   w light   e eye   y beak/feet   p pink
@@ -37,7 +38,7 @@ export function imagePetSize(custom: unknown): number {
   return Math.min(IMAGE_PET_SIZE.max, Math.max(IMAGE_PET_SIZE.min, Math.round(v)));
 }
 
-export type PresetSpecies = "bird" | "cat" | "dog" | "slime";
+export type PresetSpecies = "bird" | "cat" | "dog" | "slime" | "spider";
 
 const BLANK = ".".repeat(SPRITE_SIZE);
 const BLANK_FRAMES: SpriteFrames = {
@@ -179,6 +180,15 @@ export const PRESETS: Record<PresetSpecies, PetSprite> = {
   slime: {
     palette: { k: "#241e19", b: "#7cc36a", d: "#4f9a45", w: "#d8f5c8", e: "#241e19" },
     frames: { stand: SLIME_STAND, step: SLIME_SQUISH, sleep: sleepFrom(SLIME_STAND, 0) },
+  },
+  // Moom's own spider. Eyes are the accent; asleep they close into the body.
+  spider: {
+    palette: { b: "#2f2a33", d: "#1f1b22", a: "#f0b030" },
+    frames: {
+      stand: SPIDER_PET_STAND,
+      step: withLegs(SPIDER_PET_STAND, SPIDER_PET_LEGS),
+      sleep: sleepFrom(SPIDER_PET_STAND, 2).map((r) => r.replace(/a/g, "d")),
+    },
   },
 };
 

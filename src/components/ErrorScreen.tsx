@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useT } from "@moom/shared/i18n/react";
-import { PRESETS } from "@moom/shared/pets/sprites";
 import { Button, buttonClass } from "@moom/shared/ui/kit";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
+import { MASCOT } from "@moom/shared/mascot";
 
 /** What an error boundary shows on the site and dashboard: what happened, and a way out. */
 export function ErrorScreen({ error, retry, inDashboard = false }: { error: Error & { digest?: string }; retry: () => void; inDashboard?: boolean }) {
@@ -16,7 +16,7 @@ export function ErrorScreen({ error, retry, inDashboard = false }: { error: Erro
   return (
     <main className="mx-auto grid min-h-[60dvh] max-w-md place-items-center px-4 text-center">
       <div>
-        <PixelSprite sprite={PRESETS.slime} frame="sleep" size={96} />
+        <PixelSprite sprite={MASCOT} frame="sleep" size={112} />
         <h1 className="mt-4 text-3xl">{offline ? d.errorPage.offline : d.errorPage.title}</h1>
         <p className="mt-2 text-ink-soft">{d.errorPage.body}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">

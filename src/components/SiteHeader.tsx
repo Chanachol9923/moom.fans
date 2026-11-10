@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PRESETS } from "@moom/shared/pets/sprites";
+import { MASCOT } from "@moom/shared/mascot";
 import { LocaleSwitch } from "./LocaleSwitch";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { ThemeToggle } from "@moom/shared/ui/ThemeToggle";
@@ -7,7 +7,7 @@ import { ThemeToggle } from "@moom/shared/ui/ThemeToggle";
 export function Logo({ size = 32 }: { size?: number }) {
   return (
     <span className="inline-flex items-center gap-2">
-      <PixelSprite sprite={PRESETS.bird} size={size} />
+      <PixelSprite sprite={MASCOT} size={size} />
       <span className="font-title text-2xl leading-none">Moom</span>
     </span>
   );

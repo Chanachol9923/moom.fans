@@ -2,11 +2,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { PixelSprite } from "@moom/shared/ui/PixelSprite";
+import { MASCOT } from "@moom/shared/mascot";
 import { buttonClass } from "@moom/shared/ui/kit";
 import type { PayView } from "@/lib/domain/pay-view";
 import { fmt, formatBaht } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
-import { PRESETS } from "@moom/shared/pets/sprites";
 
 export function PayClient({
   token,
@@ -138,13 +138,13 @@ export function PayClient({
         )}
 
         {view.status === "pending_review" && (
-          <StatusBlock sprite="bird" title={d.pay.statusPending} body={d.pay.statusPendingHint} bob />
+          <StatusBlock frame="stand" title={d.pay.statusPending} body={d.pay.statusPendingHint} bob />
         )}
 
         {view.status === "verified" && (
           <>
             <StatusBlock
-              sprite="bird"
+              frame="step"
               title={d.pay.statusVerified}
               body={thanks || (view.kind === "tip" ? d.pay.statusVerifiedTip : undefined)}
             />
@@ -160,9 +160,9 @@ export function PayClient({
         )}
 
         {view.status === "rejected" && (
-          <StatusBlock sprite="cat" title={d.pay.statusRejected} body={d.pay.statusRejectedHint} />
+          <StatusBlock frame="stand" title={d.pay.statusRejected} body={d.pay.statusRejectedHint} />
         )}
-        {view.status === "expired" && <StatusBlock sprite="slime" title={d.pay.statusExpired} />}
+        {view.status === "expired" && <StatusBlock frame="sleep" title={d.pay.statusExpired} />}
       </div>
     </main>
   );
@@ -190,12 +190,12 @@ async function fitSlip(file: File): Promise<File> {
 }
 
 function StatusBlock({
-  sprite,
+  frame,
   title,
   body,
   bob,
 }: {
-  sprite: keyof typeof PRESETS;
+  frame: "stand" | "step" | "sleep";
   title: string;
   body?: string;
   bob?: boolean;
@@ -203,7 +203,7 @@ function StatusBlock({
   return (
     <div className="py-4 text-center">
       <div className={`inline-block ${bob ? "px-bob" : ""}`}>
-        <PixelSprite sprite={PRESETS[sprite]} size={80} frame={sprite === "slime" ? "sleep" : "stand"} />
+        <PixelSprite sprite={MASCOT} size={96} frame={frame} />
       </div>
       <h1 className="mt-3 text-2xl">{title}</h1>
       {body && <p className="mt-1 text-ink-soft">{body}</p>}

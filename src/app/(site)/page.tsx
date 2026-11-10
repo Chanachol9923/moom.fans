@@ -9,6 +9,10 @@ import { buttonClass } from "@moom/shared/ui/kit";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getT } from "@/lib/i18n/server";
 import { PRESETS } from "@moom/shared/pets/sprites";
+import { MASCOT_WEB } from "@moom/shared/mascot";
+
+// The mock stream is always a light sky: draw the web pale and the spider dark there.
+const WEB_ON_SKY = { ...MASCOT_WEB, palette: { ...MASCOT_WEB.palette, k: "#241e19", s: "rgba(255,255,255,.55)" } };
 import { getUser } from "@/lib/supabase/server";
 
 const tip = (locale: Locale, name: string, amount: number, message: string): AlertPayload => ({
@@ -76,7 +80,10 @@ export default async function Landing() {
                 <PixelSprite sprite={PRESETS.cat} size={48} />
               </div>
               <div className="absolute bottom-[33%] left-[34%]">
-                <PixelSprite sprite={PRESETS.bird} size={40} frame="step" flip />
+                <PixelSprite sprite={PRESETS.spider} size={40} frame="step" flip />
+              </div>
+              <div className="absolute top-0 left-0" aria-hidden>
+                <PixelSprite sprite={WEB_ON_SKY} size={84} />
               </div>
               <div className="absolute right-[8%] bottom-[34%]">
                 <PixelSprite sprite={PRESETS.slime} size={40} frame="step" />

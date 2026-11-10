@@ -317,7 +317,7 @@ export const th = {
     add: "เพิ่มตัวใหม่",
     name: "ชื่อ",
     species: "ชนิด",
-    speciesNames: { bird: "นก", cat: "แมว", dog: "หมา", slime: "สไลม์", custom: "วาดเอง", image: "รูปของฉัน" },
+    speciesNames: { spider: "แมงมุม", bird: "นก", cat: "แมว", dog: "หมา", slime: "สไลม์", custom: "วาดเอง", image: "รูปของฉัน" },
     body: "สีตัว",
     accent: "สีจุดเด่น",
     chatter: "ผูกกับชื่อในแชท",

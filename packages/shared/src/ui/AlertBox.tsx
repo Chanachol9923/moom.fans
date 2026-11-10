@@ -2,9 +2,9 @@ import { UnitIcon } from "./UnitIcon";
 import { Fragment, type ReactNode } from "react";
 import type { AlertKind, AlertLook, AlertPayload, AlertStyle } from "@moom/shared/alerts";
 import { fmtParts, formatBaht, getDict } from "@moom/shared/i18n";
-import { PRESETS } from "@moom/shared/pets/sprites";
 import { fontStack } from "../fonts";
 import { PixelSprite } from "./PixelSprite";
+import { MASCOT } from "@moom/shared/mascot";
 
 /** Image, GIF or video that replaces the pigeon. */
 export type AlertMedia = { url: string; kind: "image" | "video" };
@@ -193,7 +193,7 @@ export function AlertBox({
     <div {...rootProps} className={`moom-alert moom-alert--card px-frame px-frame-raised bg-paper p-4 ${className}`}>
       <div className="flex items-start gap-3">
         <div className="moom-alert__image shrink-0 p-1" style={{ background: accent }}>
-          <PixelSprite sprite={PRESETS.bird} size={56} />
+          <PixelSprite sprite={MASCOT} size={56} />
         </div>
         <div className="moom-alert__text min-w-0 flex-1">
           {title}
@@ -307,7 +307,7 @@ function CustomAlert({
 }
 
 function Visual({ media, size }: { media?: AlertMedia | null; size: number }) {
-  if (!media) return <PixelSprite sprite={PRESETS.bird} size={size} className="moom-alert__image" />;
+  if (!media) return <PixelSprite sprite={MASCOT} size={size} className="moom-alert__image" />;
   const style = { maxHeight: size, maxWidth: size * 1.8 };
   return media.kind === "video" ? (
     <video className="moom-alert__image block" src={media.url} style={style} autoPlay muted loop playsInline />

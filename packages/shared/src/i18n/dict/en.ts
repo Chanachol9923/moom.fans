@@ -316,7 +316,7 @@ export const en: Dict = {
     add: "Add a pet",
     name: "Name",
     species: "Kind",
-    speciesNames: { bird: "Bird", cat: "Cat", dog: "Dog", slime: "Slime", custom: "Draw my own", image: "My picture" },
+    speciesNames: { spider: "Spider", bird: "Bird", cat: "Cat", dog: "Dog", slime: "Slime", custom: "Draw my own", image: "My picture" },
     body: "Body colour",
     accent: "Accent colour",
     chatter: "Linked chatter",
