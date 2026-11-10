@@ -27,15 +27,24 @@ function withLinks(text: string) {
 }
 
 /** One of the streamer's own text boxes on the tip page. */
-export function TextBoxView({ box }: { box: TextBox }) {
+export function TextBoxView({
+  box,
+  inline,
+}: {
+  box: TextBox;
+  /** Designer only: the title and text typed right on the preview. */
+  inline?: (part: "title" | "body", value: string) => React.ReactNode;
+}) {
   const accent = box.look === "accent";
   const url = publicMediaUrl(box.image);
-  const hasText = Boolean(box.title.trim() || box.body.trim());
+  const hasText = Boolean(inline || box.title.trim() || box.body.trim());
   const text = hasText && (
     <div className="min-w-0">
-      {box.title.trim() && <h2 className={`mb-2 ${TITLE[box.size]}`}>{box.title}</h2>}
-      {box.body.trim() && (
-        <p className={`whitespace-pre-line break-words ${SIZE[box.size]} ${accent ? "" : "text-ink-soft"}`}>{withLinks(box.body)}</p>
+      {(inline || box.title.trim()) && <h2 className={`mb-2 ${TITLE[box.size]}`}>{inline ? inline("title", box.title) : box.title}</h2>}
+      {(inline || box.body.trim()) && (
+        <p className={`whitespace-pre-line break-words ${SIZE[box.size]} ${accent ? "" : "text-ink-soft"}`}>
+          {inline ? inline("body", box.body) : withLinks(box.body)}
+        </p>
       )}
     </div>
   );

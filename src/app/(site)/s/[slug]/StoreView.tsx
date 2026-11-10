@@ -32,18 +32,29 @@ export type StoreEdit = {
   empty: (id: BoxId) => React.ReactNode;
 };
 
+/** Where the designer's "change picture" buttons go on the preview. */
+export type PictureSpot = "avatar" | "banner" | "background" | `text-${string}`;
+/** Text the designer lets you type straight onto the preview. */
+export type InlineField = "name" | "bio" | `text-${string}.${"title" | "body"}`;
+
 export function StoreView({
   store,
   d,
   locale,
   preview = false,
   edit,
+  picture,
+  inline,
 }: {
   store: Store;
   d: Dict;
   locale: Locale;
   preview?: boolean;
   edit?: StoreEdit;
+  /** Designer only: a button to change the picture at that spot. */
+  picture?: (spot: PictureSpot) => React.ReactNode;
+  /** Designer only: an editable stand-in for that text. */
+  inline?: (field: InlineField, value: string) => React.ReactNode;
 }) {
   const cfg = store.page;
 
@@ -51,7 +62,16 @@ export function StoreView({
   const content = (id: BoxId): React.ReactNode => {
     if (isTextBox(id)) {
       const t = cfg.texts.find((x) => x.id === id);
-      return t && (t.title.trim() || t.body.trim() || t.image) ? <TextBoxView box={t} /> : null;
+      if (!t || !(inline || t.title.trim() || t.body.trim() || t.image)) return null;
+      const typed = inline && ((part: "title" | "body", v: string) => inline(`${t.id}.${part}` as InlineField, v));
+      return picture ? (
+        <div className="relative grid">
+          <TextBoxView box={t} inline={typed || undefined} />
+          <div className="absolute top-2 right-2 z-10">{picture(t.id as PictureSpot)}</div>
+        </div>
+      ) : (
+        <TextBoxView box={t} />
+      );
     }
     switch (id) {
       case "tip":
@@ -64,10 +84,10 @@ export function StoreView({
           </section>
         ) : null;
       case "about":
-        return store.bio ? (
+        return store.bio || inline ? (
           <section className="px-frame bg-paper p-4">
             <h2 className="mb-2 text-xl">{d.store.about}</h2>
-            <p className="whitespace-pre-line text-ink-soft">{store.bio}</p>
+            <p className="whitespace-pre-line text-ink-soft">{inline ? inline("bio", store.bio) : store.bio}</p>
           </section>
         ) : null;
       case "shop":
@@ -112,7 +132,7 @@ export function StoreView({
       style={{ ...themeVars(cfg, store.accent), ...backgroundStyle(cfg, store.backgroundUrl) }}
       // A container, so the layout follows the page's own width: the same in the browser,
       // and right in the dashboard's phone/desktop preview whatever the window size.
-      className={`moom-page @container ${preview ? "" : "min-h-dvh"} pb-16`}
+      className={`moom-page @container ${preview ? "" : "min-h-dvh"} relative pb-16`}
       data-shape={cfg.shape}
       data-layout={cfg.layout}
     >
@@ -141,7 +161,9 @@ export function StoreView({
         {store.bannerUrl && cfg.bannerImage.dim > 0 && (
           <div className="absolute inset-0 bg-black" style={{ opacity: cfg.bannerImage.dim / 100 }} />
         )}
+        {picture && cfg.header.banner !== "none" && <div className="absolute top-3 right-3 z-10">{picture("banner")}</div>}
       </div>
+      {picture && <div className={`absolute left-3 z-10 ${cfg.header.banner === "none" ? "top-1" : "top-3"}`}>{picture("background")}</div>}
       <div className={`mx-auto w-full px-4 ${WIDTH[cfg.width]}`}>
         <header
           className={`moom-page__header relative flex flex-wrap gap-4 ${
@@ -164,6 +186,7 @@ export function StoreView({
                 </div>
               )}
             </div>
+            {picture && <div className="absolute -right-2 -bottom-2 z-10">{picture("avatar")}</div>}
             {store.pet && (
               <div className="absolute -right-10 bottom-0">
                 <AnimatedSprite sprite={store.pet} size={48} />
@@ -171,7 +194,7 @@ export function StoreView({
             )}
           </div>
           <div className={`min-w-0 flex-1 pb-1 ${store.pet && cfg.header.align === "left" ? "@min-[40rem]:pl-8" : ""}`}>
-            <h1 className="text-3xl leading-tight break-words @min-[40rem]:text-4xl">{store.displayName}</h1>
+            <h1 className="text-3xl leading-tight break-words @min-[40rem]:text-4xl">{inline ? inline("name", store.displayName) : store.displayName}</h1>
             {store.links.length > 0 && (
               <ul className={`mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm ${cfg.header.align === "center" ? "justify-center" : ""}`}>
                 {store.links.map((l) => (

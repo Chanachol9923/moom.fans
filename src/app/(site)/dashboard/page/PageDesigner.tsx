@@ -11,6 +11,7 @@ import {
   Textarea,
 } from "@moom/shared/ui/kit";
 import { useT } from "@moom/shared/i18n/react";
+import type { Dict } from "@moom/shared/i18n";
 import {
   BACKGROUNDS,
   MAX_PAGE_CSS,
@@ -23,7 +24,7 @@ import type { PetSprite } from "@moom/shared/pets/sprites";
 import { publicMediaUrl } from "@/lib/storage";
 import { uploadPublicMedia, type SupabasePublic } from "@/lib/upload-client";
 import type { Store } from "../../s/[slug]/data";
-import { StoreView } from "../../s/[slug]/StoreView";
+import { StoreView, type InlineField, type PictureSpot } from "../../s/[slug]/StoreView";
 import { savePageConfig } from "../more-actions";
 import { FontPicker } from "@moom/shared/ui/FontPicker";
 import { errorText } from "@/lib/errors";
@@ -65,7 +66,8 @@ export function PageDesigner({
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [full, setFull] = useState(false);
-  const [device, setDevice] = useState<Device>("phone");
+  // Desktop first: it's where columns and arranging make sense; phone is one click away.
+  const [device, setDevice] = useState<Device>("desktop");
   const [arrange, setArrange] = useState(false);
   // Preview only: fills an empty shop with made-up products to see how it would look.
   const [demoShop, setDemoShop] = useState(false);
@@ -158,10 +160,13 @@ export function PageDesigner({
 
   // Text boxes: adding one puts it at the end of the page, removing it takes it out of the layout.
   const addText = () => {
+    if (cfg.texts.length >= MAX_TEXTS) return;
     touch();
+    const id = `text-${Math.random().toString(36).slice(2, 10)}` as TextBoxId;
+    // Show it on the preview with the cursor in its title, ready to type.
+    setFocusBox({ id, type: true });
     setCfg((c) => {
       if (c.texts.length >= MAX_TEXTS) return c;
-      const id = `text-${Math.random().toString(36).slice(2, 10)}` as TextBoxId;
       const texts: TextBox[] = [...c.texts, { id, title: "", body: "", look: "card", align: "left", size: "m", image: null, imagePlace: "top" }];
       return { ...c, texts, grid: normalizeGrid(c.grid, texts.map((t) => t.id)) };
     });
@@ -191,10 +196,77 @@ export function PageDesigner({
       return { ...c, texts, grid: normalizeGrid(c.grid, texts.map((t) => t.id)) };
     });
   };
+  /** The camera buttons on the preview: pick a file and it uploads like the panels do. */
+  const pictureButton = (spot: PictureSpot) => {
+    const text = spot.startsWith("text-");
+    const label = d.page.picEdit[text ? "text" : (spot as Slot)];
+    const working = text ? textBusy === spot : busy === spot;
+    return (
+      <label
+        title={label}
+        aria-label={label}
+        // Same size on screen whatever the preview's zoom.
+        style={{ zoom: "calc(1 / var(--pz, 1))" }}
+        className={`px-btn px-btn-sm flex items-center gap-1.5 ${working ? "cursor-wait" : "cursor-pointer"}`}
+      >
+        {working ? <span className="font-num">…</span> : <CameraIcon />}
+        {(spot === "background" || spot === "banner") && <span>{label}</span>}
+        <input
+          type="file"
+          accept={spot === "banner" ? MEDIA_TYPES : text ? "image/png,image/jpeg,image/webp,image/gif" : IMAGE_TYPES}
+          className="hidden"
+          disabled={working}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (!f) return;
+            if (text) void uploadTextPicture(spot, f);
+            else void upload(spot as Slot, f);
+          }}
+        />
+      </label>
+    );
+  };
+  const pictureError = Object.values(upErr).find(Boolean) ?? Object.values(textErr).find(Boolean);
+
   // Columns only show on a wide page, so arranging starts on the desktop view.
   const toggleArrange = () => {
     if (!arrange && device !== "desktop") setDevice("desktop");
     setArrange(!arrange);
+  };
+  // Double-click anywhere on the preview: start arranging, with the box that was clicked in view.
+  const [focusBox, setFocusBox] = useState<{ id: string; type?: boolean } | null>(null);
+  const arrangeAt = (e: React.MouseEvent<HTMLElement>) => {
+    if (arrange) return;
+    window.getSelection()?.removeAllRanges();
+    const id = (e.target as HTMLElement).closest<HTMLElement>("[data-box]")?.dataset.box;
+    setFocusBox(id ? { id } : null);
+    if (device !== "desktop") setDevice("desktop");
+    setArrange(true);
+  };
+  useEffect(() => {
+    if ((!arrange && !focusBox?.type) || !focusBox) return;
+    const el = document.querySelector<HTMLElement>(`[data-zoom] [data-box="${CSS.escape(focusBox.id)}"]`);
+    if (!el) return;
+    el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    el.animate([{ transform: "scale(1.03)" }, { transform: "none" }], { duration: 350, easing: "ease-out" });
+    if (focusBox.type) el.querySelector<HTMLElement>("[contenteditable]")?.focus({ preventScroll: true });
+  }, [arrange, focusBox, cfg.texts.length]);
+
+  /** Typing on the preview writes to the same state as the panels on the left. */
+  const inlineText = (field: InlineField, value: string) => {
+    if (field === "name") {
+      return <InlineText value={info.displayName} placeholder={d.page.inlineName} max={60} onChange={(v) => setInfoPart({ displayName: v })} />;
+    }
+    if (field === "bio") {
+      return <InlineText value={info.bio} placeholder={d.page.inlineBio} max={500} multiline onChange={(v) => setInfoPart({ bio: v })} />;
+    }
+    const [id, part] = field.split(".") as [string, "title" | "body"];
+    return part === "title" ? (
+      <InlineText value={value} placeholder={d.page.textTitlePh} max={80} onChange={(v) => changeText(id, { title: v })} />
+    ) : (
+      <InlineText value={value} placeholder={d.page.textBodyPh} max={3000} multiline onChange={(v) => changeText(id, { body: v })} />
+    );
   };
 
   const avatarUrl = publicMediaUrl(pics.avatarPath);
@@ -391,9 +463,7 @@ export function PageDesigner({
 
         <Panel title={d.page.layoutTitle}>
           <p className="mb-3 text-sm text-ink-soft">{d.page.layoutHint}</p>
-          <Button type="button" variant={arrange ? "primary" : undefined} onClick={toggleArrange} className="mb-3">
-            {arrange ? d.page.arrangeDone : d.page.arrange}
-          </Button>
+          <ArrangeButton d={d} arrange={arrange} onClick={toggleArrange} className="mb-3 w-full justify-center" />
           <ul className="mb-3 grid gap-1">
             {flatBoxes(cfg.grid).map((b) => (
               <li key={b.id} className="flex flex-wrap items-center gap-2 bg-paper-2 px-2 py-1">
@@ -921,12 +991,20 @@ export function PageDesigner({
           onFull={setFull}
           device={device}
           onDevice={setDevice}
+          onDoubleClick={arrangeAt}
+          hint={arrange ? undefined : d.page.arrangeDblClick}
           extra={
             <>
-              <button type="button" onClick={toggleArrange} className={`px-btn px-btn-sm ${arrange ? "px-btn-primary" : ""}`}>
-                {arrange ? d.page.arrangeDone : d.page.arrange}
-              </button>
-              {arrange && device !== "desktop" && <span className="self-center text-sm text-ink-soft">{d.page.narrowHint}</span>}
+              <ArrangeButton d={d} arrange={arrange} onClick={toggleArrange} />
+              {!arrange && cfg.texts.length < MAX_TEXTS && (
+                <button type="button" onClick={addText} className="px-btn px-btn-sm">
+                  + {d.page.textAdd}
+                </button>
+              )}
+              <span className="self-center text-sm text-ink-soft">
+                {arrange ? (device !== "desktop" ? d.page.narrowHint : d.page.arrangeHint) : d.page.previewHint}
+              </span>
+              {pictureError && !arrange && <span className="self-center text-sm text-tomato">{pictureError}</span>}
               {noProducts && (
                 <label className="flex cursor-pointer items-center gap-1.5 text-sm">
                   <input type="checkbox" checked={demoShop} onChange={(e) => setDemoShop(e.target.checked)} />
@@ -936,7 +1014,9 @@ export function PageDesigner({
             </>
           }
         >
-          <StoreView store={previewStore} d={d} locale={locale} preview edit={arrange ? edit : undefined} />
+          <StoreView store={previewStore} d={d} locale={locale} preview edit={arrange ? edit : undefined} picture={arrange ? undefined : pictureButton}
+            inline={arrange ? undefined : inlineText}
+          />
         </DevicePreview>
         {overlay}
       </div>
@@ -1113,12 +1193,101 @@ const MAX_SCALE = { phone: 1.3, tablet: 1, desktop: 1 } as const;
  */
 type Device = keyof typeof DEVICES;
 
+/**
+ * Text typed straight onto the preview. The browser owns the text while you type (React
+ * only writes it when it changed from elsewhere), so the cursor never jumps.
+ */
+function InlineText({
+  value,
+  placeholder,
+  max,
+  multiline = false,
+  onChange,
+}: {
+  value: string;
+  placeholder: string;
+  max: number;
+  multiline?: boolean;
+  onChange: (v: string) => void;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (el && el.innerText !== value) el.textContent = value;
+  }, [value]);
+  return (
+    <span
+      ref={ref}
+      contentEditable="plaintext-only"
+      suppressContentEditableWarning
+      role="textbox"
+      aria-label={placeholder}
+      aria-multiline={multiline}
+      data-ph={placeholder}
+      spellCheck={false}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" || (!multiline && e.key === "Enter")) {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+      onInput={(e) => {
+        const el = e.currentTarget;
+        let v = el.innerText.replace(/\n$/, "");
+        if (!multiline) v = v.replace(/\s*\n\s*/g, " ");
+        if (v.length > max) {
+          v = v.slice(0, max);
+          el.textContent = v;
+        }
+        onChange(v);
+      }}
+      className={`${multiline ? "block min-h-[1.5em]" : "inline-block min-w-[3ch] max-w-full"} cursor-text whitespace-pre-wrap outline-2 outline-offset-4 outline-transparent outline-dashed hover:outline-[var(--accent)] focus:outline-[var(--accent)] empty:before:opacity-45 empty:before:content-[attr(data-ph)]`}
+    />
+  );
+}
+
+/** A pixel camera: "change this picture". */
+function CameraIcon() {
+  return (
+    <svg width="14" height="12" viewBox="0 0 14 12" aria-hidden shapeRendering="crispEdges" className="shrink-0">
+      <path d="M4 0h6v2h4v10H0V2h4zM2 4v6h10V4zm3 1h4v1h1v2H9v1H5V8H4V6h1z" fill="currentColor" fillRule="evenodd" />
+    </svg>
+  );
+}
+
+/** The main way into arranging, so it stands out: yellow with a grid mark, green while on. */
+function ArrangeButton({ d, arrange, onClick, className = "" }: { d: Dict; arrange: boolean; onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={arrange}
+      className={`px-btn flex items-center gap-2 font-display ${arrange ? "px-btn-primary" : "px-btn-beak"} ${className}`}
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden shapeRendering="crispEdges" className="shrink-0">
+        {arrange ? (
+          <path d="M1 7h3v3h2V9h2V7h2V5h2V3h2v3h-2v2h-2v2H8v2H6v1H4v-1H3v-2H1z" fill="currentColor" />
+        ) : (
+          <>
+            <rect x="0" y="0" width="6" height="6" fill="currentColor" />
+            <rect x="8" y="0" width="6" height="6" fill="currentColor" />
+            <rect x="0" y="8" width="14" height="6" fill="currentColor" />
+          </>
+        )}
+      </svg>
+      {arrange ? d.page.arrangeDone : d.page.arrange}
+    </button>
+  );
+}
+
 function DevicePreview({
   children,
   full,
   onFull,
   device,
   onDevice,
+  onDoubleClick,
+  hint,
   extra,
 }: {
   children: React.ReactNode;
@@ -1126,6 +1295,9 @@ function DevicePreview({
   onFull: (v: boolean) => void;
   device: Device;
   onDevice: (d: Device) => void;
+  onDoubleClick?: (e: React.MouseEvent<HTMLElement>) => void;
+  /** Tooltip on the page itself. */
+  hint?: string;
   /** Preview-only switches shown under the device buttons. */
   extra?: React.ReactNode;
 }) {
@@ -1175,7 +1347,16 @@ function DevicePreview({
           style={{ width: width * scale }}
         >
           {/* data-zoom: the arrange handles turn screen pixels back into page pixels with it. */}
-          <div style={{ width, zoom: scale }} data-zoom={scale}>
+          <div
+            style={{ width, zoom: scale, ["--pz" as string]: scale }}
+            data-zoom={scale}
+            onDoubleClick={(e) => {
+              // Not on the picture buttons: a quick double click there is someone picking a file.
+              if ((e.target as HTMLElement).closest("label, button, input, a")) return;
+              onDoubleClick?.(e);
+            }}
+            title={hint}
+          >
             {children}
           </div>
         </div>
