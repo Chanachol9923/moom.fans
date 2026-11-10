@@ -3,3 +3,11 @@
 
 /* Shared components use Tailwind classes too; make sure they are scanned. */
 @source "../../packages/shared/src";
+
+/* Keep room for the scrollbar on every page, so moving between a short page and a long
+   one doesn't nudge the whole layout sideways. */
+@layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+}

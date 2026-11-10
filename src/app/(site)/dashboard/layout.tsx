@@ -28,8 +28,9 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         }
       />
       {/* pb-28 on phones keeps content clear of the bottom tab bar. */}
-      {/* Page design marks itself data-wide-page: its live preview needs the room. */}
-      <div className="mx-auto grid w-full max-w-6xl gap-5 px-4 pb-28 has-[[data-wide-page]]:max-w-[1680px] md:grid-cols-[200px_1fr] md:pb-16">
+      {/* One width on every page so the menu never moves. Pages keep a readable width;
+          Page design (data-wide-page) takes the whole row for its live preview. */}
+      <div className="mx-auto grid w-full max-w-[1680px] gap-5 px-4 pb-28 md:grid-cols-[200px_1fr] md:pb-16">
         <aside className="min-w-0 md:sticky md:top-4 md:self-start">
           <div className="mb-3 hidden md:block">
             <div className="font-display text-lg leading-tight">{profile.display_name}</div>
@@ -51,7 +52,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             </p>
           )}
         </aside>
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0 max-w-[1180px] has-[[data-wide-page]]:max-w-none">{children}</main>
       </div>
     </div>
   );
