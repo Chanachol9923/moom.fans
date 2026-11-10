@@ -23,6 +23,14 @@ describe("page design options", () => {
   });
 });
 
+describe("gift unit picture", () => {
+  it("keeps a safe storage path and drops anything else", () => {
+    expect(parsePageConfig({ unit: { iconPath: "uid/units/corn.gif" } }).unit.iconPath).toBe("uid/units/corn.gif");
+    expect(parsePageConfig({ unit: { iconPath: "https://evil.example/x.gif" } }).unit.iconPath).toBeNull();
+    expect(DEFAULT_PAGE_CONFIG.unit.iconPath).toBeNull();
+  });
+});
+
 describe("safePageCss", () => {
   it("can't close the style tag or import other stylesheets", () => {
     const out = safePageCss('</style><script>x</script> @import url("https://evil.example/a.css"); .x{color:red}');

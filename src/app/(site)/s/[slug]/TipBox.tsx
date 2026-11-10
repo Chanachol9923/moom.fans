@@ -1,12 +1,12 @@
 "use client";
+import { UnitIcon } from "@moom/shared/ui/UnitIcon";
+import { publicMediaUrl } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PixelSprite } from "@moom/shared/ui/PixelSprite";
 import { Button, Check, Field, Input, Textarea } from "@moom/shared/ui/kit";
 import { fmt, formatBaht } from "@moom/shared/i18n";
 import { useT } from "@moom/shared/i18n/react";
 import { mediaSecondsFor, parseMediaUrl } from "@/lib/media";
-import { iconSprite } from "@moom/shared/pets/icons";
 import type { Store } from "./data";
 
 export function TipBox({ store, preview = false }: { store: Store; preview?: boolean }) {
@@ -79,7 +79,7 @@ export function TipBox({ store, preview = false }: { store: Store; preview?: boo
       {unit ? (
         <>
           <div className="mt-3 flex items-center gap-2">
-            <PixelSprite sprite={iconSprite(unit.icon)} size={36} />
+            <UnitIcon icon={unit.icon} url={publicMediaUrl(unit.iconPath)} size={36} />
             <span className="text-sm text-ink-soft">
               {fmt(d.store.unitEach, { price: formatBaht(unit.price, locale), unit: unit.name })}
             </span>

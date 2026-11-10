@@ -28,6 +28,8 @@ import { savePageConfig } from "../more-actions";
 import { FontPicker } from "@moom/shared/ui/FontPicker";
 import { errorText } from "@/lib/errors";
 import { Choice, Slider } from "../alerts/LookEditor";
+import { UnitIcon } from "@moom/shared/ui/UnitIcon";
+import { MAX_GIF_BYTES } from "@moom/shared/overlay/design";
 
 export function PageDesigner({
   store,
@@ -47,6 +49,8 @@ export function PageDesigner({
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
   const [bgBusy, setBgBusy] = useState(false);
+  const [unitBusy, setUnitBusy] = useState(false);
+  const [unitErr, setUnitErr] = useState<string | null>(null);
   const [bgError, setBgError] = useState<string | null>(null);
   const [fontBusy, setFontBusy] = useState(false);
   const [fontError, setFontError] = useState<string | null>(null);
@@ -619,12 +623,44 @@ export function PageDesigner({
                 </Field>
               </div>
               <Field label={d.page.unitIcon}>
-                <div className="flex gap-2">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  {cfg.unit.iconPath && <UnitIcon icon={cfg.unit.icon} url={publicMediaUrl(cfg.unit.iconPath)} size={40} />}
+                  <label className="px-btn px-btn-sm cursor-pointer">
+                    {unitBusy ? d.common.uploading : cfg.unit.iconPath ? d.page.unitIconChange : d.page.unitIconUpload}
+                    <input
+                      type="file"
+                      accept="image/gif,image/webp,image/png,image/jpeg,video/webm"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        e.target.value = "";
+                        if (!f) return;
+                        setUnitErr(null);
+                        if (f.size > MAX_GIF_BYTES) return setUnitErr(d.common.errTooBig);
+                        setUnitBusy(true);
+                        try {
+                          setPart("unit", { iconPath: await uploadPublicMedia(supabase, userId, f, "units") });
+                        } catch (err) {
+                          setUnitErr(errorText((err as Error).message, d));
+                        } finally {
+                          setUnitBusy(false);
+                        }
+                      }}
+                    />
+                  </label>
+                  {cfg.unit.iconPath && (
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setPart("unit", { iconPath: null })}>
+                      {d.page.unitIconBuiltin}
+                    </Button>
+                  )}
+                </div>
+                {unitErr && <p className="mb-2 text-sm text-tomato">{unitErr}</p>}
+                <div className={`flex gap-2 ${cfg.unit.iconPath ? "opacity-50" : ""}`}>
                   {ICON_IDS.map((id) => (
                     <button
                       key={id}
                       type="button"
-                      onClick={() => setPart("unit", { icon: id })}
+                      onClick={() => setPart("unit", { icon: id, iconPath: null })}
                       aria-pressed={cfg.unit.icon === id}
                       className={`p-1 ${cfg.unit.icon === id ? "bg-ink/15 outline-[3px] outline-ink outline-solid" : ""}`}
                     >

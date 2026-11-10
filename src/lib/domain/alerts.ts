@@ -68,7 +68,15 @@ export function buildPayload(tx: PayloadSource, ctx: Ctx): AlertPayload {
     media: media ? { id: media.id, start: media.start, seconds: tx.media_seconds! } : null,
     tts: ctx.settings.tts_enabled && amount >= Number(ctx.settings.tts_min_amount),
     locale: ctx.locale,
-    unit: tx.unit_qty && unit.enabled ? { name: unit.name, qty: tx.unit_qty, icon: unit.icon } : null,
+    unit:
+      tx.unit_qty && unit.enabled
+        ? {
+            name: unit.name,
+            qty: tx.unit_qty,
+            icon: unit.icon,
+            iconUrl: unit.iconPath?.startsWith(`${ctx.settings.streamer_id}/`) ? publicMediaUrl(unit.iconPath) : null,
+          }
+        : null,
     wheel: tx.spin === false ? null : spinFor(parseWheel(ctx.settings.wheel), amount),
     vote: tx.voteLabel ? filter.mask(tx.voteLabel) : null,
     gif: pickedGif(tx.alert_gif, ctx),

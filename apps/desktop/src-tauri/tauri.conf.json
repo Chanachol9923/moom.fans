@@ -28,15 +28,45 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
     "windows": {
-      "nsis": { "installMode": "currentUser" }
-    }
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "installer/header.bmp",
+        "sidebarImage": "installer/sidebar.bmp",
+        "languages": [
+          "Thai",
+          "English"
+        ],
+        "customLanguageFiles": {
+          "Thai": "installer/Thai.nsh"
+        },
+        "displayLanguageSelector": true,
+        "startMenuFolder": "Moom"
+      }
+    },
+    "publisher": "Moom",
+    "copyright": "© 2026 Moom",
+    "category": "Utility",
+    "shortDescription": "Moom: alerts, chat and read-aloud for your stream",
+    "longDescription": "Plays your Moom tip alerts on this PC, reads messages aloud with the PC's own voices, shows YouTube and Twitch chat in OBS, and talks to VTube Studio."
   },
   "plugins": {
     "deep-link": {
-      "desktop": { "schemes": ["moom"] }
+      "desktop": {
+        "schemes": [
+          "moom"
+        ]
+      }
     }
   }
 }

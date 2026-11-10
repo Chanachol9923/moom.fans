@@ -17,7 +17,8 @@ export type AlertPayload = {
   tts: boolean;
   locale: Locale;
   /** "3 × corn" gifts. Optional: alerts queued before this existed don't have it. */
-  unit?: { name: string; qty: number; icon: string } | null;
+  /** iconUrl: the streamer's own picture/GIF for the unit, when uploaded. */
+  unit?: { name: string; qty: number; icon: string; iconUrl?: string | null } | null;
   /** Prize wheel spin decided when the alert was queued. */
   wheel?: { items: string[]; result: number } | null;
   /** Poll option the supporter voted for. */

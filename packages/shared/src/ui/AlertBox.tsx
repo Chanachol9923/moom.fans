@@ -1,7 +1,7 @@
+import { UnitIcon } from "./UnitIcon";
 import { Fragment, type ReactNode } from "react";
 import type { AlertKind, AlertLook, AlertPayload, AlertStyle } from "@moom/shared/alerts";
 import { fmtParts, formatBaht, getDict } from "@moom/shared/i18n";
-import { iconSprite, isIconId } from "@moom/shared/pets/icons";
 import { PRESETS } from "@moom/shared/pets/sprites";
 import { fontStack } from "../fonts";
 import { PixelSprite } from "./PixelSprite";
@@ -52,7 +52,7 @@ export function AlertBox({
   const amountNode = <span className="moom-alert__amount font-num">{amount}</span>;
   const unitNode = unit ? (
     <span className="inline-flex items-center gap-1 align-[-0.15em]">
-      {isIconId(unit.icon) && <PixelSprite sprite={iconSprite(unit.icon)} size={22} />}
+      <UnitIcon icon={unit.icon} url={unit.iconUrl} size={22} />
       {unit.name}
     </span>
   ) : (

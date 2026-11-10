@@ -33,6 +33,9 @@ export async function savePageConfig(raw: unknown): Promise<{ ok: boolean }> {
   if (cfg.backgroundImagePath && !(cfg.backgroundImagePath.startsWith(`${profile.id}/`) && SAFE_PATH.test(cfg.backgroundImagePath))) {
     cfg.backgroundImagePath = null;
   }
+  if (cfg.unit.iconPath && !(cfg.unit.iconPath.startsWith(`${profile.id}/units/`) && SAFE_PATH.test(cfg.unit.iconPath))) {
+    cfg.unit.iconPath = null;
+  }
   if (cfg.brandFontPath && !(cfg.brandFontPath.startsWith(`${profile.id}/fonts/`) && SAFE_PATH.test(cfg.brandFontPath))) {
     cfg.brandFontPath = null;
   }

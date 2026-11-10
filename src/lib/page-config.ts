@@ -69,9 +69,11 @@ export const PageConfigSchema = z.object({
       name: z.string().min(1).max(20).catch("ข้าวโพด"),
       price: z.number().min(1).max(10000).catch(20),
       icon: z.enum(ICON_IDS as [IconId, ...IconId[]]).catch("corn"),
+      /** The streamer's own picture or GIF in public media; replaces the pixel icon. */
+      iconPath: z.string().max(300).regex(/^[\w\-./]+$/).nullable().catch(null),
       presets: z.array(z.number().int().min(1).max(999)).min(1).max(5).catch([1, 3, 5, 10]),
     })
-    .catch({ enabled: false, name: "ข้าวโพด", price: 20, icon: "corn", presets: [1, 3, 5, 10] }),
+    .catch({ enabled: false, name: "ข้าวโพด", price: 20, icon: "corn", iconPath: null, presets: [1, 3, 5, 10] }),
   /** A pet shown next to the avatar. */
   petId: z.uuid().nullable().catch(null),
   /** Page fonts (FontChoice strings); "default" = the theme's. */
